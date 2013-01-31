@@ -474,7 +474,7 @@ declaration."
     (cond
      ((re-search-forward "^import ([^)]+)" nil t)
       (backward-char 2))
-     ((re-search-forward "\\(^import \"[^\"]+\"\n?\\)+" nil t))
+     ((re-search-forward "\\(^import \\([^\"]+ \\)?\"[^\"]+\"\n?\\)+" nil t))
      ((re-search-forward "^[[:space:]\n]*package .+?\n" nil t))
      (t
       (goto-char old-point)
