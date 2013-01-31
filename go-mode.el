@@ -556,7 +556,10 @@ When called with a prefix argument asks for an alternative name
 to import the package as.
 
 If no list exists yet, one will be created if possible."
-  (interactive "P\nMPackage: ")
+  (interactive
+   (list
+    current-prefix-arg
+    (completing-read "Package: " (go-packages))))
   (save-excursion
     (let (as line)
       (if arg
@@ -570,5 +573,55 @@ If no list exists yet, one will be created if possible."
         ('single (insert "import " line "\n"))
         ('none (insert "\nimport (\n\t" line "\n)\n"))))))
 
-(provide 'go-mode)
+(defun go-directory-dirs (dir)
+  (unless (file-directory-p dir)
+    (error "Not a directory `%s'" dir))
+  (let ((dir (directory-file-name dir))
+        (dirs '())
+        (files (directory-files dir nil nil t)))
+    (dolist (file files)
+      (unless (member file '("." ".."))
+        (let ((file (concat dir "/" file)))
+          (when (file-directory-p file)
+            (setq dirs (append (cons file
+                                     (go-directory-dirs file))
+                               dirs))))))
+    dirs))
 
+(defun go-flatten (lst)
+  (if (atom lst)
+      (list lst)
+    (let ((item (car lst))
+          (rest (cdr lst)))
+      (if (not (atom item))
+          (if rest
+              (append (go-flatten item) (go-flatten rest))
+            (let ((item-rest (cdr item)))
+              (if item-rest
+                  (append (go-flatten (car item))(go-flatten item-rest))
+                (go-flatten (car item)))))
+        (if rest
+            (if item
+                (append (list item) (go-flatten rest))
+              (go-flatten rest))
+          (if item
+              (list item)
+            nil))))))
+
+(defun go-packages ()
+  (sort (delete-dups (go-flatten (mapcar (lambda (topdir)
+            (let ((pkgdir (concat topdir "/pkg/")))
+            (mapcar (lambda (dir)
+                                (mapcar (lambda (file)
+                                          (let ((sub (substring file (length pkgdir) -2)))
+                                            (unless (or (string-prefix-p "obj/" sub) (string-prefix-p "tool/" sub))
+                                              (mapconcat 'identity (cdr (split-string sub "/")) "/")
+                                            )
+                                          ))
+                                        (directory-files dir t "\\.a$")))
+                              (go-directory-dirs pkgdir))
+            ))
+          (list (getenv "GOROOT") (getenv "GOPATH"))))) 'string<))
+
+
+(provide 'go-mode)
