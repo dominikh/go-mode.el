@@ -1,0 +1,10 @@
+This is a replacement for the Go mode that comes with the Go
+distribution. It fixes several issues and adds new features, such as
+movement by functions, like one is used to from other major modes in
+emacs.
+
+For a complete list of changes, check the header of go-mode.el.
+
+To use this mode instead of the default one, add it to your load path
+and load it instead of the old one. It acts as a direct drop-in
+replacement.
