@@ -475,10 +475,11 @@ declaration."
      ((re-search-forward "^import ([^)]+)" nil t)
       (backward-char 2))
      ((re-search-forward "\\(^import \\([^\"]+ \\)?\"[^\"]+\"\n?\\)+" nil t))
-     ((re-search-forward "^[[:space:]\n]*package .+?\n" nil t))
+     ((re-search-forward "^[[:space:]\n]*package .+?\n" nil t)
+      (message "No imports found, moving point after package declaration"))
      (t
       (goto-char old-point)
-      (message "No imports found. Is this really a Go file?")))))
+      (message "No imports or package declaration found. Is this really a Go file?")))))
 
 
 (defun go-play-buffer ()
