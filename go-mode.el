@@ -15,6 +15,7 @@
 ;; - Support for C-M-e (end-of-defun)
 ;; - Support for C-M-h (mark-defun
 ;; - go-goto-imports
+;; - go-play-buffer and go-play-region
 ;;
 ;; Minor changes:
 ;; - use view-mode for the godoc buffer
@@ -459,6 +460,28 @@ Replace the current buffer on success; display errors on failure."
      (t
       (goto-char old-point)
       (message "No imports found. Is this really a Go file?")))))
+
+
+(defun go-play-buffer ()
+  (interactive)
+  (go-play-region (point-min) (point-max)))
+
+(defun go-play-region (start end)
+  (interactive "r")
+  (let* ((url-request-method "POST")
+         (url-request-extra-headers
+          '(("Content-Type" . "application/x-www-form-urlencoded")))
+         (url-request-data (buffer-substring-no-properties start end))
+         (content-buf (url-retrieve
+                       "http://play.golang.org/share"
+                       (lambda (arg)
+                         (cond
+                          ((equal :error (car arg))
+                           (signal 'go-play-error (cdr arg)))
+                          (t
+                           (re-search-forward "\n\n")
+                           (kill-new (format "http://play.golang.org/p/%s" (buffer-substring (point) (point-max))))
+                           (message "http://play.golang.org/p/%s" (buffer-substring (point) (point-max)))))))))))
 
 
 ;; "However, it should not call syntax-ppss-flush-cache; so, it is not allowed to call syntax-ppss on some position and later modify the buffer at an earlier position."
