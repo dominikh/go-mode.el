@@ -226,7 +226,6 @@ built-ins, functions, and some types.")
         (goto-char (- (point-max) pos)))))
 
 (defun go-beginning-of-defun (&optional count)
-  (interactive "p")
   (unless count (setq count 1))
   (let ((first t) failure)
     (dotimes (i (abs count))
