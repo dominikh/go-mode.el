@@ -443,6 +443,26 @@ Replace the current buffer on success; display errors on failure."
     nil))
 
 (defun go-goto-imports ()
+  "Move point to the block of imports.
+
+If using
+
+  import (
+    \"foo\"
+    \"bar\"
+  )
+
+it will move point directly behind the last import.
+
+If using
+
+  import \"foo\"
+  import \"bar\"
+
+it will move point to the next line after the last import.
+
+If no imports can be found, point will be moved after the package
+declaration."
   (interactive)
   ;; FIXME if there's a block-commented import before the real
   ;; imports, we'll jump to that one.
@@ -462,10 +482,13 @@ Replace the current buffer on success; display errors on failure."
 
 
 (defun go-play-buffer ()
+  "Like `go-play-region', but acts on the entire buffer."
   (interactive)
   (go-play-region (point-min) (point-max)))
 
 (defun go-play-region (start end)
+  "Send the region to the Playground and stores the resulting
+link in the kill ring."
   (interactive "r")
   (let* ((url-request-method "POST")
          (url-request-extra-headers
