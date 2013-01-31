@@ -254,7 +254,6 @@ built-ins, functions, and some types.")
       (skip-chars-forward "^}")
       (forward-char))))
 
-;;;###autoload
 (define-derived-mode go-mode fundamental-mode "Go"
   "Major mode for editing Go source text.
 
@@ -300,10 +299,8 @@ functions, and some types.  It also provides indentation that is
     (add-to-list 'compilation-error-regexp-alist-alist
                  '(go-test . ("^\t+\\([^()\t\n]+\\):\\([0-9]+\\):? .*$" 1 2)) t)))
 
-;;;###autoload
 (add-to-list 'auto-mode-alist (cons "\\.go\\'" 'go-mode))
 
-;;;###autoload
 (defun gofmt ()
   "Pipe the current buffer through the external tool `gofmt`.
 Replace the current buffer on success; display errors on failure."
@@ -395,7 +392,6 @@ Replace the current buffer on success; display errors on failure."
     (display-buffer errbuf)
     (compilation-mode)))
 
-;;;###autoload
 (defun gofmt-before-save ()
   "Add this to .emacs to run gofmt on the current buffer when saving:
  (add-hook 'before-save-hook 'gofmt-before-save)"
@@ -436,7 +432,6 @@ Replace the current buffer on success; display errors on failure."
              (kill-buffer (current-buffer))
              (message (concat "godoc: " output)))))))
 
-;;;###autoload
 (defun godoc (query)
   "Show go documentation for a query, much like M-x man."
   (interactive (list (godoc-read-query)))
