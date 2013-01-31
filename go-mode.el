@@ -473,13 +473,20 @@ declaration."
     (goto-char (point-min))
     (cond
      ((re-search-forward "^import ([^)]+)" nil t)
-      (backward-char 2))
-     ((re-search-forward "\\(^import \\([^\"]+ \\)?\"[^\"]+\"\n?\\)+" nil t))
+      (backward-char 2)
+      'block
+      )
+     ((re-search-forward "\\(^import \\([^\"]+ \\)?\"[^\"]+\"\n?\\)+" nil t)
+      'single
+      )
      ((re-search-forward "^[[:space:]\n]*package .+?\n" nil t)
-      (message "No imports found, moving point after package declaration"))
+      (message "No imports found, moving point after package declaration")
+      'none
+      )
      (t
       (goto-char old-point)
-      (message "No imports or package declaration found. Is this really a Go file?")))))
+      (message "No imports or package declaration found. Is this really a Go file?")
+      'fail))))
 
 
 (defun go-play-buffer ()
