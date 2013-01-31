@@ -16,6 +16,7 @@
 ;; - Support for C-M-h (mark-defun
 ;; - go-goto-imports
 ;; - go-play-buffer and go-play-region
+;; - go-import-add (bound to C-c C-a)
 ;;
 ;; Minor changes:
 ;; - use view-mode for the godoc buffer
@@ -108,6 +109,7 @@ built-ins, functions, and some types.")
     (define-key m "," 'go-mode-insert-and-indent)
     (define-key m ":" 'go-mode-insert-and-indent)
     (define-key m "=" 'go-mode-insert-and-indent)
+    (define-key m (kbd "C-c C-a") 'go-import-add)
     m)
   "Keymap used by Go mode to implement electric keys.")
 
@@ -547,7 +549,26 @@ link in the kill ring."
                           (if diff-pos (subseq s1 0 diff-pos) s1))))
     (reduce #'common-prefix sequences)))
 
+(defun go-import-add (arg import)
+  "Add a new import to the list of imports.
 
+When called with a prefix argument asks for an alternative name
+to import the package as.
+
+If no list exists yet, one will be created if possible."
+  (interactive "P\nMPackage: ")
+  (save-excursion
+    (let (as line)
+      (if arg
+          (setq as (read-from-minibuffer "Import as: ")))
+      (if as
+          (setq line (format "%s \"%s\"" as import))
+        (setq line (format "\"%s\"" import)))
+      (case (go-goto-imports)
+        ('fail (message "Could not find a place to add import."))
+        ('block (insert "\n\t" line))
+        ('single (insert "import " line "\n"))
+        ('none (insert "\nimport (\n\t" line "\n)\n"))))))
 
 (provide 'go-mode)
 
