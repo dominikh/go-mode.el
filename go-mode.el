@@ -1,26 +1,5 @@
 ;;; go-mode.el --- Major mode for the Go programming language
 
-;; Improvements over original go-mode:
-;; - Use a proper syntax table, so that emacs and other packages know
-;;   about strings and comments (e.g. expand-region needs this)
-;; - Fix various indentation/font locking problems caused by the lack
-;;   of proper syntax table
-;; - Fix gofmt issue with buffers that do not end with a newline
-;; - Correctly fontify (foo)(bar) function calls
-;; - Correctly fontify identifiers with unicode characters in them
-;; - Fontifies type names in struct literals
-;; - Fontifies type names in maps, slices and arrays
-;; - Does not fontify anonymous functions as if they were methods
-;; - Support for C-M-a (beginning-of-defun)
-;; - Support for C-M-e (end-of-defun)
-;; - Support for C-M-h (mark-defun
-;; - go-goto-imports
-;; - go-play-buffer and go-play-region
-;; - go-import-add (bound to C-c C-a)
-;;
-;; Minor changes:
-;; - use view-mode for the godoc buffer
-;;
 ;; TODO:
 ;; Features:
 ;; - imports manipulations (add, remove, with sorting and grouping)
