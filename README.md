@@ -5,7 +5,9 @@ emacs.
 
 To use this mode instead of the default one, add it to your load path
 and load it instead of the old one. It acts as a direct drop-in
-replacement.
+replacement. Please make sure, however, that you **load only this
+go-mode and not the old one first**. The old one installs some hooks
+that will interfere with this mode.
 
 Fixes
 =====
