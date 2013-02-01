@@ -114,7 +114,7 @@ built-ins, functions, and some types.")
 (defun go-goto-beginning-of-string-or-comment ()
   (goto-char (nth 8 (syntax-ppss))))
 
-(defun go-backward-irrelevant ()
+(defun go--backward-irrelevant ()
   (let (pos (start-pos (point)))
     (skip-chars-backward "\n[:blank:]")
     (if (looking-back "`")
@@ -132,13 +132,13 @@ built-ins, functions, and some types.")
                (end-of-line))
       (goto-char pos))
     (if (not (= start-pos (point)))
-        (go-backward-irrelevant))
+        (go--backward-irrelevant))
     (not (= start-pos (point)))))
 
 (defun go-previous-line-has-dangling-op-p ()
   (save-excursion
     (beginning-of-line)
-    (go-backward-irrelevant)
+    (go--backward-irrelevant)
     (looking-back go-dangling-operators-regexp)))
 
 (defun go-indentation-at-point (point)
@@ -161,7 +161,7 @@ built-ins, functions, and some types.")
                     (- (current-indentation) tab-width)
                   (current-indentation)))
             (progn
-              (go-backward-irrelevant)
+              (go--backward-irrelevant)
               (if (looking-back go-dangling-operators-regexp)
                   ;; only one nesting for all dangling operators in one operation
                   (if (go-previous-line-has-dangling-op-p)
@@ -322,28 +322,28 @@ Replace the current buffer on success; display errors on failure."
                         (kill-buffer errbuf)
                         (if newfile
                             ;; New file, replace it (diff-mode won't work)
-                            (gofmt-replace-buffer srcbuf patchbuf)
+                            (gofmt--replace-buffer srcbuf patchbuf)
                           ;; Existing file, patch it
-                          (gofmt-apply-patch filename srcbuf patchbuf))
+                          (gofmt--apply-patch filename srcbuf patchbuf))
                         (goto-char (min old-point (point-max)))
                         ;; Restore the mark and point
                         (if old-mark (push-mark (min old-mark (point-max)) t))
                         (set-window-configuration currconf))
 
                     ;; gofmt failed: display the errors
-                    (gofmt-process-errors filename errbuf))))))
+                    (gofmt--process-errors filename errbuf))))))
 
           ;; Collapse any window opened on outbuf if shell-command-on-region
           ;; displayed it.
           (delete-windows-on patchbuf)))
       (kill-buffer patchbuf))))
 
-(defun gofmt-replace-buffer (srcbuf patchbuf)
+(defun gofmt--replace-buffer (srcbuf patchbuf)
   (with-current-buffer srcbuf
     (erase-buffer)
     (insert-buffer-substring patchbuf)))
 
-(defun gofmt-apply-patch (filename srcbuf patchbuf)
+(defun gofmt--apply-patch (filename srcbuf patchbuf)
   (require 'diff-mode)
   ;; apply all the patch hunks
   (with-current-buffer patchbuf
@@ -360,7 +360,7 @@ Replace the current buffer on success; display errors on failure."
       ;; When there's no more hunks, diff-hunk-next signals an error, ignore it
       (error nil))))
 
-(defun gofmt-process-errors (filename errbuf)
+(defun gofmt--process-errors (filename errbuf)
   ;; Convert the gofmt stderr to something understood by the compilation mode.
   (with-current-buffer errbuf
     (goto-char (point-min))
@@ -377,7 +377,7 @@ Replace the current buffer on success; display errors on failure."
   (interactive)
   (when (eq major-mode 'go-mode) (gofmt)))
 
-(defun godoc-read-query ()
+(defun godoc--read-query ()
   "Read a godoc query from the minibuffer."
   ;; Compute the default query as the symbol under the cursor.
   ;; TODO: This does the wrong thing for e.g. multipart.NewReader (it only grabs
@@ -391,7 +391,7 @@ Replace the current buffer on success; display errors on failure."
                    "godoc: ")
                  nil nil symbol)))
 
-(defun godoc-get-buffer (query)
+(defun godoc--get-buffer (query)
   "Get an empty buffer for a godoc query."
   (let* ((buffer-name (concat "*godoc " query "*"))
          (buffer (get-buffer buffer-name)))
@@ -399,7 +399,7 @@ Replace the current buffer on success; display errors on failure."
     (when buffer (kill-buffer buffer))
     (get-buffer-create buffer-name)))
 
-(defun godoc-buffer-sentinel (proc event)
+(defun godoc--buffer-sentinel (proc event)
   "Sentinel function run when godoc command completes."
   (with-current-buffer (process-buffer proc)
     (cond ((string= event "finished\n")  ;; Successful exit.
@@ -412,12 +412,12 @@ Replace the current buffer on success; display errors on failure."
 
 (defun godoc (query)
   "Show go documentation for a query, much like M-x man."
-  (interactive (list (godoc-read-query)))
+  (interactive (list (godoc--read-query)))
   (unless (string= query "")
     (set-process-sentinel
-     (start-process-shell-command "godoc" (godoc-get-buffer query)
+     (start-process-shell-command "godoc" (godoc--get-buffer query)
                                   (concat "godoc " query))
-     'godoc-buffer-sentinel)
+     'godoc--buffer-sentinel)
     nil))
 
 (defun go-goto-imports ()
@@ -518,7 +518,7 @@ link in the kill ring."
                       (message "%s" (point))
                     (put-text-property (1- (point)) (point) 'syntax-table (string-to-syntax "."))))))))))
 
-(defun go-common-prefix (sequences)
+(defun go--common-prefix (sequences)
   (assert sequences)
   (flet ((common-prefix (s1 s2)
                         (let ((diff-pos (mismatch s1 s2)))
@@ -549,7 +549,7 @@ If no list exists yet, one will be created if possible."
         ('single (insert "import " line "\n"))
         ('none (insert "\nimport (\n\t" line "\n)\n"))))))
 
-(defun go-directory-dirs (dir)
+(defun go--directory-dirs (dir)
   (if (file-directory-p dir)
       (let ((dir (directory-file-name dir))
             (dirs '())
@@ -559,27 +559,27 @@ If no list exists yet, one will be created if possible."
             (let ((file (concat dir "/" file)))
               (when (file-directory-p file)
                 (setq dirs (append (cons file
-                                         (go-directory-dirs file))
+                                         (go--directory-dirs file))
                                    dirs))))))
         dirs)
     '()))
 
-(defun go-flatten (lst)
+(defun go--flatten (lst)
   (if (atom lst)
       (list lst)
     (let ((item (car lst))
           (rest (cdr lst)))
       (if (not (atom item))
           (if rest
-              (append (go-flatten item) (go-flatten rest))
+              (append (go--flatten item) (go--flatten rest))
             (let ((item-rest (cdr item)))
               (if item-rest
-                  (append (go-flatten (car item))(go-flatten item-rest))
-                (go-flatten (car item)))))
+                  (append (go--flatten (car item))(go--flatten item-rest))
+                (go--flatten (car item)))))
         (if rest
             (if item
-                (append (list item) (go-flatten rest))
-              (go-flatten rest))
+                (append (list item) (go--flatten rest))
+              (go--flatten rest))
           (if item
               (list item)
             nil))))))
@@ -593,7 +593,7 @@ If no list exists yet, one will be created if possible."
 (defun go-packages ()
   (sort
    (delete-dups
-    (go-flatten
+    (go--flatten
      (mapcar
       (lambda (topdir)
         (let ((pkgdir (concat topdir "/pkg/")))
@@ -606,7 +606,7 @@ If no list exists yet, one will be created if possible."
                                 ))
                             (if (file-directory-p dir)
                                 (directory-files dir t "\\.a$"))))
-                  (go-directory-dirs pkgdir))))
+                  (go--directory-dirs pkgdir))))
       (go-root-and-paths)))) 'string<))
 
 
