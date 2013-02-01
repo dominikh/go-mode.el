@@ -184,7 +184,6 @@ built-ins, functions, and some types.")
 (defun go-mode-indent-line ()
   (interactive)
   (let ((indent (go-indentation-at-point (point)))
-        shift-amt
         end
         (pos (- (point-max) (point)))
         (beg (progn (beginning-of-line) (point))))
@@ -197,10 +196,8 @@ built-ins, functions, and some types.")
         (setq indent 0))
     (skip-chars-forward " \t")
     (setq shift-amt (- indent (current-column)))
-    (if (zerop shift-amt)
-        nil
-      (delete-region beg (point))
-      (indent-to indent))
+    (delete-region beg (point))
+    (indent-to indent)
     ;; If initial point was within line's indentation,
     ;; position after the indentation.  Else stay at same point in text.
     (if (> (- (point-max) pos) (point))
