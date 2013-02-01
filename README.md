@@ -32,3 +32,13 @@ Features
 - Two functions for sending code to the Playground (`go-play-buffer` and `go-play-region`)
 - A function for adding imports, including tab completion (`go-import-add`, bound to `C-c C-a`)
 - A function for jumping to the file's imports (`go-goto-imports`)
+
+Other extensions
+================
+For a richer experience, consider installing
+[goflymake](https://github.com/dougm/goflymake) for on-the-fly syntax
+checking and [gocode](https://github.com/nsf/gocode) for auto
+completion.
+
+Also, if you're using YASnippet, consider using the snippets from
+[yasnippet-go](https://github.com/dominikh/yasnippet-go).
