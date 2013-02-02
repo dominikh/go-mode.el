@@ -34,6 +34,7 @@ Features
 - Two functions for sending code to the Playground (`go-play-buffer` and `go-play-region`)
 - A function for adding imports, including tab completion (`go-import-add`, bound to `C-c C-a`)
 - A function for jumping to the file's imports (`go-goto-imports`)
+- Adds basic support for imenu (functions and variables)
 
 Other extensions
 ================
