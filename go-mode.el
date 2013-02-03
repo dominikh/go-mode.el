@@ -6,12 +6,16 @@
 ;; Bugs:
 ;; - Disable escapes in `` strings
 ;; - Correct indentation for http://sprunge.us/iEaN
-;; - fontify types in struct definitions
+;; - Fontify types in struct definitions
+;; - Fontify unicode in method receiver types, array/slice/map types
+;;   and everywhere where type-name is being used
 
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
 (defconst gofmt-stdin-tag "<standard input>")
 (defconst go-identifier-regexp "[[:word:][:multibyte:]_]+")
+(defconst go-type-regexp "[[:word:][:multibyte:]_*]+")
 (defconst go-func-regexp (concat "\\<func\\>\\s *\\(" go-identifier-regexp "\\)"))
+(defconst go-func-meth-regexp (concat "\\<func\\>\\s *\\((\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
 
 (defvar go-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -212,11 +216,11 @@ built-ins, functions, and some types.")
     (dotimes (i (abs count))
       (while (or first (go-in-string-or-comment-p))
         (if (>= count 0)
-            (if (not (re-search-backward go-func-regexp nil t))
+            (if (not (re-search-backward go-func-meth-regexp nil t))
                 (setq failure t))
-          (if (looking-at go-func-regexp)
+          (if (looking-at go-func-meth-regexp)
               (forward-char))
-          (if (not (re-search-forward go-func-regexp nil t))
+          (if (not (re-search-forward go-func-meth-regexp nil t))
               (setq failure t)))
         (setq first nil)))
     (if (< count 0)
