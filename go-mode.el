@@ -612,5 +612,26 @@ If no list exists yet, one will be created if possible."
                   (go--directory-dirs pkgdir))))
       (go-root-and-paths)))) 'string<))
 
+(defun go-unused-imports-lines ()
+  ;; TODO handle *_test.gi files
+  (reverse (remove nil
+                   (mapcar
+                    (lambda (line)
+                      (if (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\"$" line)
+                          (if (string= (file-truename (match-string 1 line)) buffer-file-truename)
+                              (string-to-number (match-string 2 line)))))
+                    (split-string (shell-command-to-string "go build -o /dev/null") "\n")))))
+
+(defun go-remove-unused-imports (arg)
+  (interactive "P")
+  (save-excursion
+    (let ((lines (go-unused-imports-lines)))
+      (dolist (import lines)
+        (goto-line import)
+        (beginning-of-line)
+        (if arg
+            (comment-region (line-beginning-position) (line-end-position))
+          (kill-line)))
+      (message "Removed %d imports" (length lines)))))
 
 (provide 'go-mode)
