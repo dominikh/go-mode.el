@@ -540,23 +540,40 @@ link in the kill ring."
 When called with a prefix argument asks for an alternative name
 to import the package as.
 
-If no list exists yet, one will be created if possible."
+If no list exists yet, one will be created if possible.
+
+If an identical import has been commented, it will be
+uncommented, otherwise a new import will be added."
+
+  ;; - If there's a matching `// import "foo"`, uncomment it
+  ;; - If we're in an import() block and there's a matching `"foo"`, uncomment it
+  ;; - Otherwise add a new import, with the appropriate syntax
   (interactive
    (list
     current-prefix-arg
     (completing-read "Package: " (go-packages))))
   (save-excursion
-    (let (as line)
+    (let (as line import-start)
       (if arg
           (setq as (read-from-minibuffer "Import as: ")))
       (if as
           (setq line (format "%s \"%s\"" as import))
         (setq line (format "\"%s\"" import)))
-      (case (go-goto-imports)
-        ('fail (message "Could not find a place to add import."))
-        ('block (insert "\n\t" line))
-        ('single (insert "import " line "\n"))
-        ('none (insert "\nimport (\n\t" line "\n)\n"))))))
+
+      (beginning-of-buffer)
+      (if (re-search-forward (concat "^// import " line "$") nil t)
+          (uncomment-region (line-beginning-position) (line-end-position))
+        (case (go-goto-imports)
+          ('fail (message "Could not find a place to add import."))
+          ('block
+              (save-excursion
+                (re-search-backward "^import (")
+                (setq import-start (point)))
+            (if (re-search-backward (concat "^[[:space:]]+// " line "$")  import-start t)
+                (uncomment-region (line-beginning-position) (line-end-position))
+              (insert "\n\t" line)))
+          ('single (insert "import " line "\n"))
+          ('none (insert "\nimport (\n\t" line "\n)\n")))))))
 
 (defun go--directory-dirs (dir)
   (if (file-directory-p dir)
@@ -618,5 +635,35 @@ If no list exists yet, one will be created if possible."
                   (go--directory-dirs pkgdir))))
       (go-root-and-paths)))) 'string<))
 
+(defun go-unused-imports-lines ()
+  (let (cmd)
+    (if (string-match "_test\.go$" buffer-file-truename)
+        (setq cmd "go test -c")
+      (setq cmd "go build -o /dev/null"))
+    (reverse (remove nil
+                     (mapcar
+                      (lambda (line)
+                        (if (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\"$" line)
+                            (if (string= (file-truename (match-string 1 line)) buffer-file-truename)
+                                (string-to-number (match-string 2 line)))))
+                      (split-string (shell-command-to-string cmd) "\n"))))))
+
+(defun go-remove-unused-imports (arg)
+  "Removes all unused imports. If ARG is non-nil, unused imports
+will be commented, otherwise they will be removed completely."
+  (interactive "P")
+  (save-excursion
+    (let ((cur-buffer (current-buffer)) lines)
+      (save-some-buffers nil (lambda () (equal cur-buffer (current-buffer))))
+      (if (buffer-modified-p)
+          (message "Cannot operate on unsaved buffer")
+        (setq lines (go-unused-imports-lines))
+        (dolist (import lines)
+          (goto-line import)
+          (beginning-of-line)
+          (if arg
+              (comment-region (line-beginning-position) (line-end-position))
+            (kill-line)))
+        (message "Removed %d imports" (length lines))))))
 
 (provide 'go-mode)

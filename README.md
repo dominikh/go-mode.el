@@ -33,6 +33,7 @@ Features
 - Support for `C-M-h` (`mark-defun`)
 - Two functions for sending code to the Playground (`go-play-buffer` and `go-play-region`)
 - A function for adding imports, including tab completion (`go-import-add`, bound to `C-c C-a`)
+- A function for removing or commenting unused imports (`go-remove-unused-imports`)
 - A function for jumping to the file's imports (`go-goto-imports`)
 - Adds basic support for imenu (functions and variables)
 
