@@ -625,13 +625,17 @@ If no list exists yet, one will be created if possible."
 (defun go-remove-unused-imports (arg)
   (interactive "P")
   (save-excursion
-    (let ((lines (go-unused-imports-lines)))
-      (dolist (import lines)
-        (goto-line import)
-        (beginning-of-line)
-        (if arg
-            (comment-region (line-beginning-position) (line-end-position))
-          (kill-line)))
-      (message "Removed %d imports" (length lines)))))
+    (let ((cur-buffer (current-buffer)) lines)
+      (save-some-buffers nil (lambda () (equal cur-buffer (current-buffer))))
+      (if (buffer-modified-p)
+          (message "Cannot operate on unsaved buffer")
+        (setq lines (go-unused-imports-lines))
+        (dolist (import lines)
+          (goto-line import)
+          (beginning-of-line)
+          (if arg
+              (comment-region (line-beginning-position) (line-end-position))
+            (kill-line)))
+        (message "Removed %d imports" (length lines))))))
 
 (provide 'go-mode)
