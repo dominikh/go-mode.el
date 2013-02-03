@@ -634,7 +634,6 @@ uncommented, otherwise a new import will be added."
     (if (string-match "_test\.go$" buffer-file-truename)
         (setq cmd "go test -c")
       (setq cmd "go build -o /dev/null"))
-    ;; TODO handle *_test.go files
     (reverse (remove nil
                      (mapcar
                       (lambda (line)
@@ -644,6 +643,8 @@ uncommented, otherwise a new import will be added."
                       (split-string (shell-command-to-string cmd) "\n"))))))
 
 (defun go-remove-unused-imports (arg)
+  "Removes all unused imports. If ARG is non-nil, unused imports
+will be commented, otherwise they will be removed completely."
   (interactive "P")
   (save-excursion
     (let ((cur-buffer (current-buffer)) lines)
