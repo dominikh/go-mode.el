@@ -630,14 +630,18 @@ uncommented, otherwise a new import will be added."
       (go-root-and-paths)))) 'string<))
 
 (defun go-unused-imports-lines ()
-  ;; TODO handle *_test.gi files
-  (reverse (remove nil
-                   (mapcar
-                    (lambda (line)
-                      (if (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\"$" line)
-                          (if (string= (file-truename (match-string 1 line)) buffer-file-truename)
-                              (string-to-number (match-string 2 line)))))
-                    (split-string (shell-command-to-string "go build -o /dev/null") "\n")))))
+  (let (cmd)
+    (if (string-match "_test\.go$" buffer-file-truename)
+        (setq cmd "go test -c")
+      (setq cmd "go build -o /dev/null"))
+    ;; TODO handle *_test.go files
+    (reverse (remove nil
+                     (mapcar
+                      (lambda (line)
+                        (if (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\"$" line)
+                            (if (string= (file-truename (match-string 1 line)) buffer-file-truename)
+                                (string-to-number (match-string 2 line)))))
+                      (split-string (shell-command-to-string cmd) "\n"))))))
 
 (defun go-remove-unused-imports (arg)
   (interactive "P")
