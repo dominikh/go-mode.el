@@ -131,9 +131,9 @@ built-ins, functions, and some types.")
         (progn (previous-line)
                (end-of-line))
       (goto-char pos))
-    (if (not (= start-pos (point)))
+    (if (/= start-pos (point))
         (go--backward-irrelevant))
-    (not (= start-pos (point)))))
+    (/= start-pos (point))))
 
 (defun go-previous-line-has-dangling-op-p ()
   (save-excursion
@@ -408,7 +408,7 @@ Replace the current buffer on success; display errors on failure."
     (cond ((string= event "finished\n")  ;; Successful exit.
            (goto-char (point-min))
            (view-buffer (current-buffer) 'kill-buffer))
-          ((not (= (process-exit-status proc) 0))  ;; Error exit.
+          ((/= (process-exit-status proc) 0)  ;; Error exit.
            (let ((output (buffer-string)))
              (kill-buffer (current-buffer))
              (message (concat "godoc: " output)))))))
