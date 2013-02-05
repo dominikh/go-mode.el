@@ -302,8 +302,8 @@ Replace the current buffer on success; display errors on failure."
               (coding-system-for-read 'utf-8)    ;; use utf-8 with subprocesses
               (coding-system-for-write 'utf-8))
           (with-current-buffer errbuf
-            (toggle-read-only 0)
-            (erase-buffer))
+            (let ((inhibit-read-only t))
+              (erase-buffer)))
           (with-current-buffer srcbuf
             (save-restriction
               (let (deactivate-mark)
