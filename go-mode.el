@@ -10,7 +10,9 @@
 ;; - Fontify unicode in method receiver types, array/slice/map types
 ;;   and everywhere where type-name is being used
 
-(eval-when-compile (require 'diff-mode))
+(eval-when-compile
+  (require 'diff-mode)
+  (require 'cl))
 
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
 (defconst gofmt-stdin-tag "<standard input>")
