@@ -560,7 +560,7 @@ uncommented, otherwise a new import will be added."
           (setq line (format "%s \"%s\"" as import))
         (setq line (format "\"%s\"" import)))
 
-      (beginning-of-buffer)
+      (goto-char (point-min))
       (if (re-search-forward (concat "^// import " line "$") nil t)
           (uncomment-region (line-beginning-position) (line-end-position))
         (case (go-goto-imports)
