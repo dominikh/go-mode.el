@@ -659,7 +659,8 @@ will be commented, otherwise they will be removed completely."
           (message "Cannot operate on unsaved buffer")
         (setq lines (go-unused-imports-lines))
         (dolist (import lines)
-          (goto-line import)
+          (goto-char (point-min))
+          (forward-line (1- import))
           (beginning-of-line)
           (if arg
               (comment-region (line-beginning-position) (line-end-position))
