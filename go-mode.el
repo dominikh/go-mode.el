@@ -10,6 +10,10 @@
 ;; - Fontify unicode in method receiver types, array/slice/map types
 ;;   and everywhere where type-name is being used
 
+(eval-when-compile
+  (require 'diff-mode)
+  (require 'cl))
+
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
 (defconst gofmt-stdin-tag "<standard input>")
 (defconst go-identifier-regexp "[[:word:][:multibyte:]_]+")
@@ -132,7 +136,7 @@ built-ins, functions, and some types.")
     (setq pos (point))
     (beginning-of-line)
     (if (or (looking-at "^[[:word:]]+:$") (looking-at "^[[:space:]]*\\(case .+\\|default\\):"))
-        (progn (previous-line)
+        (progn (forward-line -1)
                (end-of-line))
       (goto-char pos))
     (if (/= start-pos (point))
@@ -302,8 +306,8 @@ Replace the current buffer on success; display errors on failure."
               (coding-system-for-read 'utf-8)    ;; use utf-8 with subprocesses
               (coding-system-for-write 'utf-8))
           (with-current-buffer errbuf
-            (toggle-read-only 0)
-            (erase-buffer))
+            (let ((inhibit-read-only t))
+              (erase-buffer)))
           (with-current-buffer srcbuf
             (save-restriction
               (let (deactivate-mark)
@@ -527,12 +531,14 @@ link in the kill ring."
                       (message "%s" (point))
                     (put-text-property (1- (point)) (point) 'syntax-table (string-to-syntax "."))))))))))
 
-(defun go--common-prefix (sequences)
-  (assert sequences)
-  (flet ((common-prefix (s1 s2)
-                        (let ((diff-pos (mismatch s1 s2)))
-                          (if diff-pos (subseq s1 0 diff-pos) s1))))
-    (reduce #'common-prefix sequences)))
+;; ;; Commented until we actually make use of this function
+;; (defun go--common-prefix (sequences)
+;;   ;; mismatch and reduce are cl
+;;   (assert sequences)
+;;   (flet ((common-prefix (s1 s2)
+;;                         (let ((diff-pos (mismatch s1 s2)))
+;;                           (if diff-pos (subseq s1 0 diff-pos) s1))))
+;;     (reduce #'common-prefix sequences)))
 
 (defun go-import-add (arg import)
   "Add a new import to the list of imports.
@@ -560,7 +566,7 @@ uncommented, otherwise a new import will be added."
           (setq line (format "%s \"%s\"" as import))
         (setq line (format "\"%s\"" import)))
 
-      (beginning-of-buffer)
+      (goto-char (point-min))
       (if (re-search-forward (concat "^// import " line "$") nil t)
           (uncomment-region (line-beginning-position) (line-end-position))
         (case (go-goto-imports)
@@ -659,7 +665,8 @@ will be commented, otherwise they will be removed completely."
           (message "Cannot operate on unsaved buffer")
         (setq lines (go-unused-imports-lines))
         (dolist (import lines)
-          (goto-line import)
+          (goto-char (point-min))
+          (forward-line (1- import))
           (beginning-of-line)
           (if arg
               (comment-region (line-beginning-position) (line-end-position))
