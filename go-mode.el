@@ -159,9 +159,8 @@ built-ins, functions, and some types.")
         (setq start-nesting (go-paren-level))
         (if (looking-at "[])}]")
             (progn
-              (while (and
-                      (not (bobp))
-                      (>= (go-paren-level) start-nesting))
+              (while (and (not (bobp))
+                          (>= (go-paren-level) start-nesting))
                 (skip-chars-backward "^[]{}()")
                 (backward-char))
               (if (go-previous-line-has-dangling-op-p)
@@ -177,16 +176,15 @@ built-ins, functions, and some types.")
             (setq line-begin (line-beginning-position))
             (if (= (go-paren-level) 0)
                 0
-              (while (and
-                      (not (bobp))
-                      (>= (go-paren-level) start-nesting))
+              (while (and (not (bobp))
+                          (>= (go-paren-level) start-nesting))
                 (if (= 0 (skip-chars-backward "^[]{}()"))
                     (backward-char))
                 (if (go-in-string-p)
                     (progn
                       (go--backward-irrelevant)
                       (setq line-begin (line-beginning-position)))))
-              (if (and (< (go-paren-level) start-nesting))
+              (if (< (go-paren-level) start-nesting)
                   (+ (current-indentation) tab-width (- outindent))
                 (- (current-indentation) outindent)))))))))
 
@@ -219,7 +217,8 @@ built-ins, functions, and some types.")
   (unless count (setq count 1))
   (let ((first t) failure)
     (dotimes (i (abs count))
-      (while (and (not failure) (or first (go-in-string-or-comment-p)))
+      (while (and (not failure)
+                  (or first (go-in-string-or-comment-p)))
         (if (>= count 0)
             (progn
               (go--backward-irrelevant)
@@ -306,7 +305,8 @@ Replace the current buffer on success; display errors on failure."
           (patchbuf (get-buffer-create "*Gofmt patch*")))
       (with-current-buffer patchbuf
         (let ((errbuf (get-buffer-create "*Gofmt Errors*"))
-              (coding-system-for-read 'utf-8)    ;; use utf-8 with subprocesses
+              ;; use utf-8 with subprocesses
+              (coding-system-for-read 'utf-8)
               (coding-system-for-write 'utf-8))
           (with-current-buffer errbuf
             (let ((inhibit-read-only t))
