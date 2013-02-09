@@ -206,11 +206,9 @@ built-ins, functions, and some types.")
         nil
       (if (looking-at "case .+:\\|default:")
           (setq indent (- indent tab-width)))
-      (beginning-of-line)
-      (if (and (looking-at "^[[:space:]]*[[:word:]]+:\\([[:space:]]*/.+\\)?$")
-               (not (looking-at "^[[:space:]]*default:")))
+      (if (and (looking-at "[[:word:]]+:\\([[:space:]]*/.+\\)?$")
+               (not (looking-at "default:")))
           (setq indent 0))
-      (skip-chars-forward " \t")
       (setq shift-amt (- indent (current-column)))
       (if (zerop shift-amt)
           nil
