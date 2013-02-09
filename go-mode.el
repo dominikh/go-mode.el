@@ -196,30 +196,30 @@ built-ins, functions, and some types.")
 
 (defun go-mode-indent-line ()
   (interactive)
-  (beginning-of-line)
-  (if (not (go-in-comment-p))
-      (let ((indent (go-indentation-at-point (point)))
-            shift-amt
-            end
-            (pos (- (point-max) (point)))
-            (beg (progn (beginning-of-line) (point))))
-        (back-to-indentation)
-        (if (looking-at "case .+:\\|default:")
-            (setq indent (- indent tab-width)))
-        (beginning-of-line)
-        (if (and (looking-at "^[[:space:]]*[[:word:]]+:\\([[:space:]]*/.+\\)?$")
-                 (not (looking-at "^[[:space:]]*default:")))
-            (setq indent 0))
-        (skip-chars-forward " \t")
-        (setq shift-amt (- indent (current-column)))
-        (if (zerop shift-amt)
-            nil
-          (delete-region beg (point))
-          (indent-to indent))
-        ;; If initial point was within line's indentation,
-        ;; position after the indentation.  Else stay at same point in text.
-        (if (> (- (point-max) pos) (point))
-            (goto-char (- (point-max) pos))))))
+  (let ((indent (go-indentation-at-point (point)))
+        shift-amt
+        end
+        (pos (- (point-max) (point)))
+        (beg (progn (beginning-of-line) (point))))
+    (back-to-indentation)
+    (if (go-in-comment-p) ;; Do not change the indentation of multi-line comments
+        nil
+      (if (looking-at "case .+:\\|default:")
+          (setq indent (- indent tab-width)))
+      (beginning-of-line)
+      (if (and (looking-at "^[[:space:]]*[[:word:]]+:\\([[:space:]]*/.+\\)?$")
+               (not (looking-at "^[[:space:]]*default:")))
+          (setq indent 0))
+      (skip-chars-forward " \t")
+      (setq shift-amt (- indent (current-column)))
+      (if (zerop shift-amt)
+          nil
+        (delete-region beg (point))
+        (indent-to indent))
+      ;; If initial point was within line's indentation,
+      ;; position after the indentation.  Else stay at same point in text.
+      (if (> (- (point-max) pos) (point))
+          (goto-char (- (point-max) pos))))))
 
 (defun go-beginning-of-defun (&optional count)
   (unless count (setq count 1))
