@@ -175,18 +175,20 @@ built-ins, functions, and some types.")
                 (+ (current-indentation) tab-width))
             (go--backward-irrelevant)
             (setq line-begin (line-beginning-position))
-            (while (and
-                    (not (bobp))
-                    (>= (go-paren-level) start-nesting))
-              (if (= 0 (skip-chars-backward "^[]{}()"))
-                  (backward-char))
-              (if (go-in-string-p)
-                  (progn
-                    (go--backward-irrelevant)
-                    (setq line-begin (line-beginning-position)))))
-            (if (and (< (go-paren-level) start-nesting))
-                (+ (current-indentation) tab-width (- outindent))
-              (- (current-indentation) outindent))))))))
+            (if (= (go-paren-level) 0)
+                0
+              (while (and
+                      (not (bobp))
+                      (>= (go-paren-level) start-nesting))
+                (if (= 0 (skip-chars-backward "^[]{}()"))
+                    (backward-char))
+                (if (go-in-string-p)
+                    (progn
+                      (go--backward-irrelevant)
+                      (setq line-begin (line-beginning-position)))))
+              (if (and (< (go-paren-level) start-nesting))
+                  (+ (current-indentation) tab-width (- outindent))
+                (- (current-indentation) outindent)))))))))
 
 (defun go-mode-indent-line ()
   (interactive)
