@@ -663,8 +663,11 @@ uncommented, otherwise a new import will be added."
 will be commented, otherwise they will be removed completely."
   (interactive "P")
   (save-excursion
-    (let ((cur-buffer (current-buffer)) (flymake-state flymake-mode) lines)
-      (flymake-mode-off)
+    (let ((cur-buffer (current-buffer)) flymake-state lines)
+      (if (boundp 'flymake-mode)
+          (progn
+            (setq flymake-state flymake-mode)
+            (flymake-mode-off)))
       (save-some-buffers nil (lambda () (equal cur-buffer (current-buffer))))
       (if (buffer-modified-p)
           (message "Cannot operate on unsaved buffer")
