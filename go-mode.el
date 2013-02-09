@@ -669,7 +669,8 @@ uncommented, otherwise a new import will be added."
 will be commented, otherwise they will be removed completely."
   (interactive "P")
   (save-excursion
-    (let ((cur-buffer (current-buffer)) lines)
+    (let ((cur-buffer (current-buffer)) (flymake-state flymake-mode) lines)
+      (flymake-mode-off)
       (save-some-buffers nil (lambda () (equal cur-buffer (current-buffer))))
       (if (buffer-modified-p)
           (message "Cannot operate on unsaved buffer")
@@ -681,6 +682,7 @@ will be commented, otherwise they will be removed completely."
           (if arg
               (comment-region (line-beginning-position) (line-end-position))
             (kill-line)))
-        (message "Removed %d imports" (length lines))))))
+        (message "Removed %d imports" (length lines)))
+      (if flymake-state (flymake-mode-on)))))
 
 (provide 'go-mode)
