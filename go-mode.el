@@ -420,7 +420,8 @@ Replace the current buffer on success; display errors on failure."
   (with-current-buffer (process-buffer proc)
     (cond ((string= event "finished\n")  ;; Successful exit.
            (goto-char (point-min))
-           (view-buffer (current-buffer) 'kill-buffer))
+           (view-mode 1)
+           (display-buffer (current-buffer) t))
           ((/= (process-exit-status proc) 0)  ;; Error exit.
            (let ((output (buffer-string)))
              (kill-buffer (current-buffer))
