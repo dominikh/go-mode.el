@@ -194,10 +194,11 @@ built-ins, functions, and some types.")
         shift-amt
         end
         (pos (- (point-max) (point)))
+        (point (point))
         (beg (progn (beginning-of-line) (point))))
     (back-to-indentation)
     (if (go-in-comment-p) ;; Do not change the indentation of multi-line comments
-        nil
+        (goto-char point)
       (if (looking-at "case .+:\\|default:")
           (setq indent (- indent tab-width)))
       (if (and (looking-at "[[:word:]]+:\\([[:space:]]*/.+\\)?$")
