@@ -161,53 +161,52 @@ built-ins, functions, and some types.")
               (go-goto-beginning-of-string-or-comment)
             (backward-char))))))
 
-(defun go-indentation-at-point (point)
+(defun go-indentation-at-point ()
   (save-excursion
     (let (start-nesting (outindent 0))
-      (goto-char point)
       (back-to-indentation)
-      (if (go-in-string-p)
-          (current-indentation)
-        (setq start-nesting (go-paren-level))
-        (if (looking-at "[])}]")
-            (progn
-              (go-goto-opening-parenthesis (char-after))
-              (if (go-previous-line-has-dangling-op-p)
-                  (- (current-indentation) tab-width)
-                (current-indentation)))
-          (go--backward-irrelevant t)
-          (if (looking-back go-dangling-operators-regexp)
-              ;; only one nesting for all dangling operators in one operation
-              (if (go-previous-line-has-dangling-op-p)
-                  (current-indentation)
-                (+ (current-indentation) tab-width))
-            (go--backward-irrelevant)
-            (if (= (go-paren-level) 0)
-                0
-              (go-goto-opening-parenthesis)
-              (if (< (go-paren-level) start-nesting)
-                  (progn
-                    (if (go-previous-line-has-dangling-op-p)
-                        (setq outindent tab-width))
-                    (+ (current-indentation) tab-width (- outindent)))
-                (- (current-indentation) outindent)))))))))
+      (setq start-nesting (go-paren-level))
+
+      (cond
+       ((go-in-string-p)
+        (current-indentation))
+       ((looking-at "[])}]")
+        (go-goto-opening-parenthesis (char-after))
+        (if (go-previous-line-has-dangling-op-p)
+            (- (current-indentation) tab-width)
+          (current-indentation)))
+       ((progn (go--backward-irrelevant t) (looking-back go-dangling-operators-regexp))
+        ;; only one nesting for all dangling operators in one operation
+        (if (go-previous-line-has-dangling-op-p)
+            (current-indentation)
+          (+ (current-indentation) tab-width)))
+       ((progn  (= (go-paren-level) 0))
+        0)
+       ((progn (go-goto-opening-parenthesis) (< (go-paren-level) start-nesting))
+        (if (go-previous-line-has-dangling-op-p)
+            (current-indentation)
+          (+ (current-indentation) tab-width)))
+       (t
+        (current-indentation))))))
 
 (defun go-mode-indent-line ()
   (interactive)
-  (let ((indent (go-indentation-at-point (point)))
+  (let (indent
         shift-amt
         end
         (pos (- (point-max) (point)))
         (point (point))
-        (beg (progn (beginning-of-line) (point))))
+        (beg (line-beginning-position)))
     (back-to-indentation)
-    (if (go-in-comment-p) ;; Do not change the indentation of multi-line comments
+    (if (go-in-comment-p)
         (goto-char point)
-      (if (looking-at "case .+:\\|default:")
-          (setq indent (- indent tab-width)))
-      (if (and (looking-at "[[:word:]]+:\\([[:space:]]*/.+\\)?$")
-               (not (looking-at "default:")))
-          (setq indent 0))
+      (setq indent (go-indentation-at-point))
+      (cond
+       ((looking-at "case .+:\\|default:")
+        (setq indent (- indent tab-width)))
+       ((looking-at "[[:word:]]+:\\([[:space:]]*/.+\\)?$")
+        (setq indent 0)))
+
       (setq shift-amt (- indent (current-column)))
       (if (zerop shift-amt)
           nil
