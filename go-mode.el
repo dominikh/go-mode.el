@@ -193,6 +193,8 @@ built-ins, functions, and some types.")
               (if (< (go-paren-level) start-nesting)
                   (if (go-previous-line-has-opening-parenthesis-p)
                       (current-indentation)
+                    (if (go-previous-line-has-dangling-op-p)
+                        (setq outindent tab-width))
                     (+ (current-indentation) tab-width (- outindent)))
                 (- (current-indentation) outindent)))))))))
 
