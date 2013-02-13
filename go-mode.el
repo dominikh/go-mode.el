@@ -25,6 +25,10 @@
 (defconst go-type-name-regexp "\\(?:[*(]\\)*\\(?:\\w+\\.\\)?\\(\\w+\\)") ;; TODO replace this with something sane
 
 
+(defgroup go nil
+  "Major mode for editing Go code"
+  :group 'languages)
+
 (defcustom go-fontify-function-calls t
   "Fontify function and method calls if this is non-nil."
   :type 'boolean
