@@ -14,6 +14,8 @@
   (require 'diff-mode)
   (require 'cl))
 
+(require 'ffap)
+
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
 (defconst gofmt-stdin-tag "<standard input>")
 (defconst go-identifier-regexp "[[:word:][:multibyte:]_]+")
@@ -524,6 +526,20 @@ link in the kill ring."
                            (kill-new (format "http://play.golang.org/p/%s" (buffer-substring (point) (point-max))))
                            (message "http://play.golang.org/p/%s" (buffer-substring (point) (point-max)))))))))))
 
+;;;###autoload
+(defun go-download-play (url)
+  "Downloads a paste from the playground and inserts it in a Go
+buffer. Tries to look for a URL at point."
+  (interactive (list (read-from-minibuffer "Playground URL: " (ffap-url-p (ffap-string-at-point 'url)))))
+  (with-current-buffer (url-retrieve-synchronously (concat url ".go"))
+    (let ((buffer (generate-new-buffer (concat (car (reverse (split-string url "/"))) ".go"))))
+      (goto-char (point-min))
+      (re-search-forward "\n\n")
+      (copy-to-buffer buffer (point) (point-max))
+      (kill-buffer)
+      (with-current-buffer buffer
+        (go-mode)
+        (switch-to-buffer buffer)))))
 
 ;; "However, it should not call syntax-ppss-flush-cache; so, it is not allowed to call syntax-ppss on some position and later modify the buffer at an earlier position."
 ;; ↑ let's hope this doesn't screw me over

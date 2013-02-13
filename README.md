@@ -32,6 +32,7 @@ Features
 - Support for `C-M-e` (`end-of-defun`)
 - Support for `C-M-h` (`mark-defun`)
 - Two functions for sending code to the Playground (`go-play-buffer` and `go-play-region`)
+- A function for downloading code from the Playground into a Go buffer (`go-download-play`)
 - A function for adding imports, including tab completion (`go-import-add`, bound to `C-c C-a`)
 - A function for removing or commenting unused imports (`go-remove-unused-imports`)
 - A function for jumping to the file's imports (`go-goto-imports`)
