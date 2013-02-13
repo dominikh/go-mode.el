@@ -19,7 +19,16 @@
 (defconst go-identifier-regexp "[[:word:][:multibyte:]_]+")
 (defconst go-type-regexp "[[:word:][:multibyte:]_*]+")
 (defconst go-func-regexp (concat "\\<func\\>\\s *\\(" go-identifier-regexp "\\)"))
-(defconst go-func-meth-regexp (concat "\\<func\\>\\s *\\((\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
+(defconst go-func-meth-regexp (concat "\\<func\\>\\s *\\(?:(\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
+(defconst go-builtins '("append" "cap" "close" "complex" "copy" "delete" "imag" "len" "make" "new" "panic" "print" "println" "real" "recover"))
+(defconst go-constants '("nil" "true" "false" "iota"))
+(defconst go-type-name-regexp "\\(?:[*(]\\)*\\(?:\\w+\\.\\)?\\(\\w+\\)") ;; TODO replace this with something sane
+
+
+(defcustom go-fontify-function-calls t
+  "Fontify function and method calls if this is non-nil."
+  :type 'boolean
+  :group 'go)
 
 (defvar go-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -55,39 +64,37 @@
 some syntax analysis.")
 
 
-(defvar go-mode-font-lock-keywords
-  (let ((builtins '("append" "cap" "close" "complex" "copy" "delete" "imag" "len"
-                    "make" "new" "panic" "print" "println" "real" "recover"))
-        (constants '("nil" "true" "false" "iota"))
-        (type-name "\\(?:[*(]\\)*\\(?:\\w+\\.\\)?\\(\\w+\\)") ;; XXX wtf? and what about unicode? and is this an identifier or wtf is it?
-        )
-    `((,(regexp-opt go-mode-keywords 'words) . font-lock-keyword-face)
-      (,(regexp-opt builtins 'words) . font-lock-builtin-face)
-      (,(regexp-opt constants 'words) . font-lock-constant-face)
-      (,go-func-regexp 1 font-lock-function-name-face) ;; function (not method) name
-      (,(concat "\\(" go-identifier-regexp "\\)\\s *(") 1 font-lock-function-name-face) ;; function call/method name
-      (,(concat "(\\(" go-identifier-regexp "\\))\\s *(") 1 font-lock-function-name-face) ;; bracketed function call
-      ("\\<type\\>\\s *\\(\\S +\\)" 1 font-lock-type-face) ;; types
-      (,(concat "\\<type\\>\\s *" go-identifier-regexp "\\s *" type-name) 1 font-lock-type-face) ;; types
-      (,(concat "\\(?:[[:space:]]+\\|\\]\\)\\[\\([[:digit:]]+\\|\\.\\.\\.\\)?\\]" type-name) 2 font-lock-type-face) ;; Arrays/slices
-      (,(concat "map\\[[^]]+\\]" type-name) 1 font-lock-type-face) ;; map value type
+(defun go--build-font-lock-keywords ()
+  (message "%s" "Builting keywords...")
+  (append
+   `((,(regexp-opt go-mode-keywords 'words) . font-lock-keyword-face)
+     (,(regexp-opt go-builtins 'words) . font-lock-builtin-face)
+     (,(regexp-opt go-constants 'words) . font-lock-constant-face)
+     (,go-func-regexp 1 font-lock-function-name-face) ;; function (not method) name
+     )
 
-      (,(concat "\\(" go-identifier-regexp "\\)" "{") 1 font-lock-type-face)
+   (if go-fontify-function-calls
+       `((,(concat "\\(" go-identifier-regexp "\\)\\s *(") 1 font-lock-function-name-face) ;; function call/method name
+         (,(concat "(\\(" go-identifier-regexp "\\))\\s *(") 1 font-lock-function-name-face)) ;; bracketed function call
+     `((,go-func-meth-regexp 1 font-lock-function-name-face))) ;; method name
 
-      (,(concat "\\<map\\[" type-name) 1 font-lock-type-face) ;; map key type
-      (,(concat "\\<chan\\>\\s *\\(?:<-\\)?" type-name) 1 font-lock-type-face) ;; channel type
-      (,(concat "\\<\\(?:new\\|make\\)\\>\\(?:\\s \\|)\\)*(" type-name) 1 font-lock-type-face) ;; new/make type
-      ;; TODO do we actually need this one or isn't it just a function call?
-      (,(concat "\\.\\s *(" type-name) 1 font-lock-type-face) ;; Type conversion
-      (,(concat "\\<func\\>\\s +(" go-identifier-regexp "\\s +" type-name ")") 1 font-lock-type-face) ;; Method receiver
-      ;; Like the original go-mode this also marks compound literal
-      ;; fields. There, it was marked as to fix, but I grew quite
-      ;; accustomed to it, so it'll stay for now.
-      ("^\\s *\\(\\w+\\)\\s *:\\(\\S.\\|$\\)" 1 font-lock-constant-face) ;; Labels and compound literal fields
-      ("\\<\\(goto\\|break\\|continue\\)\\>\\s *\\(\\w+\\)" 2 font-lock-constant-face))) ;; labels in goto/break/continue
-  "Basic font lock keywords for Go mode.  Highlights keywords,
-built-ins, functions, and some types.")
-
+   `(
+     ("\\<type\\>\\s *\\(\\S +\\)" 1 font-lock-type-face) ;; types
+     (,(concat "\\<type\\>\\s *" go-identifier-regexp "\\s *" go-type-name-regexp) 1 font-lock-type-face) ;; types
+     (,(concat "\\(?:[[:space:]]+\\|\\]\\)\\[\\([[:digit:]]+\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 2 font-lock-type-face) ;; Arrays/slices
+     (,(concat "map\\[[^]]+\\]" go-type-name-regexp) 1 font-lock-type-face) ;; map value type
+     (,(concat "\\(" go-identifier-regexp "\\)" "{") 1 font-lock-type-face)
+     (,(concat "\\<map\\[" go-type-name-regexp) 1 font-lock-type-face) ;; map key type
+     (,(concat "\\<chan\\>\\s *\\(?:<-\\)?" go-type-name-regexp) 1 font-lock-type-face) ;; channel type
+     (,(concat "\\<\\(?:new\\|make\\)\\>\\(?:\\s \\|)\\)*(" go-type-name-regexp) 1 font-lock-type-face) ;; new/make type
+     ;; TODO do we actually need this one or isn't it just a function call?
+     (,(concat "\\.\\s *(" go-type-name-regexp) 1 font-lock-type-face) ;; Type conversion
+     (,(concat "\\<func\\>\\s +(" go-identifier-regexp "\\s +" go-type-name-regexp ")") 1 font-lock-type-face) ;; Method receiver
+     ;; Like the original go-mode this also marks compound literal
+     ;; fields. There, it was marked as to fix, but I grew quite
+     ;; accustomed to it, so it'll stay for now.
+     ("^\\s *\\(\\w+\\)\\s *:\\(\\S.\\|$\\)" 1 font-lock-constant-face) ;; Labels and compound literal fields
+     ("\\<\\(goto\\|break\\|continue\\)\\>\\s *\\(\\w+\\)" 2 font-lock-constant-face)))) ;; labels in goto/break/continue
 
 (defvar go-mode-map
   (let ((m (make-sparse-keymap)))
@@ -259,7 +266,7 @@ functions, and some types.  It also provides indentation that is
 
   ;; Font lock
   (set (make-local-variable 'font-lock-defaults)
-       '(go-mode-font-lock-keywords))
+       '(go--build-font-lock-keywords))
 
   ;; Indentation
   (set (make-local-variable 'indent-line-function) 'go-mode-indent-line)
