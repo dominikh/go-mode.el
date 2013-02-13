@@ -19,7 +19,7 @@
 (defconst go-identifier-regexp "[[:word:][:multibyte:]_]+")
 (defconst go-type-regexp "[[:word:][:multibyte:]_*]+")
 (defconst go-func-regexp (concat "\\<func\\>\\s *\\(" go-identifier-regexp "\\)"))
-(defconst go-func-meth-regexp (concat "\\<func\\>\\s *\\((\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
+(defconst go-func-meth-regexp (concat "\\<func\\>\\s *\\(?:(\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
 
 (defvar go-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -64,9 +64,8 @@ some syntax analysis.")
     `((,(regexp-opt go-mode-keywords 'words) . font-lock-keyword-face)
       (,(regexp-opt builtins 'words) . font-lock-builtin-face)
       (,(regexp-opt constants 'words) . font-lock-constant-face)
-      (,go-func-regexp 1 font-lock-function-name-face) ;; function (not method) name
-      (,(concat "\\(" go-identifier-regexp "\\)\\s *(") 1 font-lock-function-name-face) ;; function call/method name
-      (,(concat "(\\(" go-identifier-regexp "\\))\\s *(") 1 font-lock-function-name-face) ;; bracketed function call
+      (,go-func-regexp 1 font-lock-function-name-face) ;; function name
+      (,go-func-meth-regexp 1 font-lock-function-name-face) ;; method name
       ("\\<type\\>\\s *\\(\\S +\\)" 1 font-lock-type-face) ;; types
       (,(concat "\\<type\\>\\s *" go-identifier-regexp "\\s *" type-name) 1 font-lock-type-face) ;; types
       (,(concat "\\(?:[[:space:]]+\\|\\]\\)\\[\\([[:digit:]]+\\|\\.\\.\\.\\)?\\]" type-name) 2 font-lock-type-face) ;; Arrays/slices
