@@ -501,7 +501,6 @@ declaration."
       (message "No imports or package declaration found. Is this really a Go file?")
       'fail))))
 
-
 (defun go-play-buffer ()
   "Like `go-play-region', but acts on the entire buffer."
   (interactive)
@@ -532,7 +531,7 @@ link in the kill ring."
 buffer. Tries to look for a URL at point."
   (interactive (list (read-from-minibuffer "Playground URL: " (ffap-url-p (ffap-string-at-point 'url)))))
   (with-current-buffer (url-retrieve-synchronously (concat url ".go"))
-    (let ((buffer (generate-new-buffer (concat (car (reverse (split-string url "/"))) ".go"))))
+    (let ((buffer (generate-new-buffer (concat (car (last (split-string url "/"))) ".go"))))
       (goto-char (point-min))
       (re-search-forward "\n\n")
       (copy-to-buffer buffer (point) (point-max))
