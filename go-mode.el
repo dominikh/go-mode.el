@@ -592,7 +592,7 @@ uncommented, otherwise a new import will be added."
   (interactive
    (list
     current-prefix-arg
-    (completing-read "Package: " (go-packages))))
+    (replace-regexp-in-string "^[\"']\\|[\"']$" "" (completing-read "Package: " (go-packages)))))
   (save-excursion
     (let (as line import-start)
       (if arg
