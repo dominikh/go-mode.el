@@ -11,9 +11,9 @@
 ;;   and everywhere where type-name is being used
 
 (eval-when-compile
-  (require 'diff-mode)
   (require 'cl))
 
+(require 'diff-mode)
 (require 'ffap)
 (require 'find-lisp)
 
@@ -378,7 +378,6 @@ Replace the current buffer on success; display errors on failure."
     (insert-buffer-substring patchbuf)))
 
 (defun gofmt--apply-patch (filename srcbuf patchbuf)
-  (require 'diff-mode)
   ;; apply all the patch hunks
   (with-current-buffer patchbuf
     (goto-char (point-min))
