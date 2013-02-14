@@ -72,7 +72,6 @@ some syntax analysis.")
 
 
 (defun go--build-font-lock-keywords ()
-  (message "%s" "Builting keywords...")
   (append
    `((,(regexp-opt go-mode-keywords 'words) . font-lock-keyword-face)
      (,(regexp-opt go-builtins 'words) . font-lock-builtin-face)
