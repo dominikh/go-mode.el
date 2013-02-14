@@ -15,6 +15,7 @@
   (require 'cl))
 
 (require 'ffap)
+(require 'find-lisp)
 
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
 (defconst gofmt-stdin-tag "<standard input>")
@@ -616,21 +617,6 @@ uncommented, otherwise a new import will be added."
           ('single (insert "import " line "\n"))
           ('none (insert "\nimport (\n\t" line "\n)\n")))))))
 
-(defun go--directory-dirs (dir)
-  (if (file-directory-p dir)
-      (let ((dir (directory-file-name dir))
-            (dirs '())
-            (files (directory-files dir nil nil t)))
-        (dolist (file files)
-          (unless (member file '("." ".."))
-            (let ((file (concat dir "/" file)))
-              (when (file-directory-p file)
-                (setq dirs (append (cons file
-                                         (go--directory-dirs file))
-                                   dirs))))))
-        dirs)
-    '()))
-
 (defun go--flatten (lst)
   (if (atom lst)
       (list lst)
@@ -673,7 +659,7 @@ uncommented, otherwise a new import will be added."
                                 ))
                             (if (file-directory-p dir)
                                 (directory-files dir t "\\.a$"))))
-                  (go--directory-dirs pkgdir))))
+                  (find-lisp-find-files-internal pkgdir 'find-lisp-file-predicate-is-directory 'find-lisp-default-directory-predicate))))
       (go-root-and-paths)))) 'string<))
 
 (defun go-unused-imports-lines ()
