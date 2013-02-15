@@ -25,7 +25,7 @@
 (defconst go-func-meth-regexp (concat "\\<func\\>\\s *\\(?:(\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
 (defconst go-builtins '("append" "cap" "close" "complex" "copy" "delete" "imag" "len" "make" "new" "panic" "print" "println" "real" "recover"))
 (defconst go-constants '("nil" "true" "false" "iota"))
-(defconst go-type-name-regexp "\\(?:[*(]\\)*\\(?:\\w+\\.\\)?\\(\\w+\\)") ;; TODO replace this with something sane
+(defconst go-type-name-regexp (concat "\\(?:[*(]\\)*\\(?:" go-identifier-regexp "\\.\\)?\\(" go-identifier-regexp "\\)"))
 
 
 (defgroup go nil
@@ -80,27 +80,27 @@ some syntax analysis.")
      )
 
    (if go-fontify-function-calls
-       `((,(concat "\\(" go-identifier-regexp "\\)\\s *(") 1 font-lock-function-name-face) ;; function call/method name
-         (,(concat "(\\(" go-identifier-regexp "\\))\\s *(") 1 font-lock-function-name-face)) ;; bracketed function call
+       `((,(concat "\\(" go-identifier-regexp "\\)[[:space:]]*(") 1 font-lock-function-name-face) ;; function call/method name
+         (,(concat "(\\(" go-identifier-regexp "\\))[[:space:]]*(") 1 font-lock-function-name-face)) ;; bracketed function call
      `((,go-func-meth-regexp 1 font-lock-function-name-face))) ;; method name
 
    `(
-     ("\\<type\\>\\s *\\(\\S +\\)" 1 font-lock-type-face) ;; types
-     (,(concat "\\<type\\>\\s *" go-identifier-regexp "\\s *" go-type-name-regexp) 1 font-lock-type-face) ;; types
+     ("\\<type\\>[[:space:]]*\\([^[:space:]]+\\)" 1 font-lock-type-face) ;; types
+     (,(concat "\\<type\\>[[:space:]]*" go-identifier-regexp "[[:space:]]*" go-type-name-regexp) 1 font-lock-type-face) ;; types
      (,(concat "\\(?:[[:space:]]+\\|\\]\\)\\[\\([[:digit:]]+\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 2 font-lock-type-face) ;; Arrays/slices
      (,(concat "map\\[[^]]+\\]" go-type-name-regexp) 1 font-lock-type-face) ;; map value type
      (,(concat "\\(" go-identifier-regexp "\\)" "{") 1 font-lock-type-face)
      (,(concat "\\<map\\[" go-type-name-regexp) 1 font-lock-type-face) ;; map key type
-     (,(concat "\\<chan\\>\\s *\\(?:<-\\)?" go-type-name-regexp) 1 font-lock-type-face) ;; channel type
-     (,(concat "\\<\\(?:new\\|make\\)\\>\\(?:\\s \\|)\\)*(" go-type-name-regexp) 1 font-lock-type-face) ;; new/make type
+     (,(concat "\\<chan\\>[[:space:]]*\\(?:<-\\)?" go-type-name-regexp) 1 font-lock-type-face) ;; channel type
+     (,(concat "\\<\\(?:new\\|make\\)\\>\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp) 1 font-lock-type-face) ;; new/make type
      ;; TODO do we actually need this one or isn't it just a function call?
      (,(concat "\\.\\s *(" go-type-name-regexp) 1 font-lock-type-face) ;; Type conversion
-     (,(concat "\\<func\\>\\s +(" go-identifier-regexp "\\s +" go-type-name-regexp ")") 1 font-lock-type-face) ;; Method receiver
+     (,(concat "\\<func\\>[[:space:]]+(" go-identifier-regexp "[[:space:]]+" go-type-name-regexp ")") 1 font-lock-type-face) ;; Method receiver
      ;; Like the original go-mode this also marks compound literal
      ;; fields. There, it was marked as to fix, but I grew quite
      ;; accustomed to it, so it'll stay for now.
-     ("^\\s *\\(\\w+\\)\\s *:\\(\\S.\\|$\\)" 1 font-lock-constant-face) ;; Labels and compound literal fields
-     ("\\<\\(goto\\|break\\|continue\\)\\>\\s *\\(\\w+\\)" 2 font-lock-constant-face)))) ;; labels in goto/break/continue
+     (,(concat "^[[:space:]]*\\(" go-identifier-regexp "\\)[[:space:]]*:\\(\\S.\\|$\\)") 1 font-lock-constant-face) ;; Labels and compound literal fields
+     ("\\<\\(goto\\|break\\|continue\\)\\>[[:space:]]*\\(\\w+\\)" 2 font-lock-constant-face)))) ;; labels in goto/break/continue
 
 (defvar go-mode-map
   (let ((m (make-sparse-keymap)))
