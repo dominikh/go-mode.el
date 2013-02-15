@@ -285,6 +285,10 @@ functions, and some types.  It also provides indentation that is
 
   (set (make-local-variable 'beginning-of-defun-function) 'go-beginning-of-defun)
   (set (make-local-variable 'end-of-defun-function) 'go-end-of-defun)
+
+  (set (make-local-variable 'parse-sexp-lookup-properties) t)
+  (set (make-local-variable 'syntax-propertize-function) 'go-propertize-syntax)
+
   (set (make-local-variable 'go-dangling-cache) #s(hash-table test eql))
   (add-to-list 'before-change-functions (lambda (x y) (setq go-dangling-cache #s(hash-table test eql))))
 
@@ -540,6 +544,12 @@ buffer. Tries to look for a URL at point."
       (with-current-buffer buffer
         (go-mode)
         (switch-to-buffer buffer)))))
+
+(defun go-propertize-syntax (start end)
+  (save-excursion
+      (goto-char start)
+      (while (search-forward "\\" end t)
+        (put-text-property (1- (point)) (point) 'syntax-table (if (= (char-after) ?`) '(1) '(9))))))
 
 ;; ;; Commented until we actually make use of this function
 ;; (defun go--common-prefix (sequences)
