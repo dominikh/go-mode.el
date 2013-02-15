@@ -541,32 +541,6 @@ buffer. Tries to look for a URL at point."
         (go-mode)
         (switch-to-buffer buffer)))))
 
-;; "However, it should not call syntax-ppss-flush-cache; so, it is not allowed to call syntax-ppss on some position and later modify the buffer at an earlier position."
-;; ↑ let's hope this doesn't screw me over
-
-;; TODO do we have to deal with removing the text property again, too?
-;; and what happens when we edit a string? etc...
-;; FIXME make this work :D
-;; (set (make-local-variable 'syntax-propertize-function) 'go-propertize-syntax)
-(defun go-propertize-syntax (start end)
-  (save-excursion
-    (let (start-of-string end-of-string)
-      (goto-char start)
-      ;; TODO loop this
-      (skip-chars-forward "^`" end)
-      (if (go-in-string-p)
-          (progn
-            (setq end-of-string (point))
-            (go-goto-beginning-of-string-or-comment)
-            (if (looking-at "`")
-                (progn
-                  (setq start-of-string (point))
-                  ;; (syntax-code . matching-char)
-                  (skip-chars-forward "^\\" end-of-string) ;; TODO loop this
-                  (if (looking-at "\\")
-                      (message "%s" (point))
-                    (put-text-property (1- (point)) (point) 'syntax-table (string-to-syntax "."))))))))))
-
 ;; ;; Commented until we actually make use of this function
 ;; (defun go--common-prefix (sequences)
 ;;   ;; mismatch and reduce are cl
