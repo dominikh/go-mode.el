@@ -120,20 +120,20 @@ some syntax analysis.")
   (call-interactively (lookup-key (current-global-map) key))
   (indent-according-to-mode))
 
-(defun go-paren-level ()
-  (car (syntax-ppss)))
+(defmacro go-paren-level ()
+  `(car (syntax-ppss)))
 
-(defun go-in-string-or-comment-p ()
-  (nth 8 (syntax-ppss)))
+(defmacro go-in-string-or-comment-p ()
+  `(nth 8 (syntax-ppss)))
 
-(defun go-in-string-p ()
-  (nth 3 (syntax-ppss)))
+(defmacro go-in-string-p ()
+  `(nth 3 (syntax-ppss)))
 
-(defun go-in-comment-p ()
-  (nth 4 (syntax-ppss)))
+(defmacro go-in-comment-p ()
+  `(nth 4 (syntax-ppss)))
 
-(defun go-goto-beginning-of-string-or-comment ()
-  (goto-char (nth 8 (syntax-ppss))))
+(defmacro go-goto-beginning-of-string-or-comment ()
+  `(goto-char (nth 8 (syntax-ppss))))
 
 (defun go--backward-irrelevant (&optional stop-at-string)
   (let (pos (start-pos (point)))
