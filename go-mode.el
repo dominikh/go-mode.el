@@ -27,6 +27,7 @@
 (defconst go-constants '("nil" "true" "false" "iota"))
 (defconst go-type-name-regexp (concat "\\(?:[*(]\\)*\\(?:" go-identifier-regexp "\\.\\)?\\(" go-identifier-regexp "\\)"))
 
+(defvar go-dangling-cache)
 
 (defgroup go nil
   "Major mode for editing Go code"
@@ -156,10 +157,14 @@ some syntax analysis.")
     (/= start-pos (point))))
 
 (defun go-previous-line-has-dangling-op-p ()
-  (save-excursion
-    (beginning-of-line)
-    (go--backward-irrelevant t)
-    (looking-back go-dangling-operators-regexp)))
+  (let* ((cur-line (count-lines (point-min) (point)))
+        (val (gethash cur-line go-dangling-cache 'nope)))
+    (if (equal val 'nope)
+      (save-excursion
+        (beginning-of-line)
+        (go--backward-irrelevant t)
+        (puthash cur-line (looking-back go-dangling-operators-regexp) go-dangling-cache))
+      val)))
 
 (defun go-goto-opening-parenthesis (&optional char)
   (let ((start-nesting (go-paren-level)) group)
@@ -280,6 +285,8 @@ functions, and some types.  It also provides indentation that is
 
   (set (make-local-variable 'beginning-of-defun-function) 'go-beginning-of-defun)
   (set (make-local-variable 'end-of-defun-function) 'go-end-of-defun)
+  (set (make-local-variable 'go-dangling-cache) #s(hash-table test eql))
+  (add-to-list 'before-change-functions (lambda (x y) (setq go-dangling-cache #s(hash-table test eql))))
 
 
   (setq imenu-generic-expression
