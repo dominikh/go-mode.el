@@ -1,14 +1,8 @@
 ;;; go-mode.el --- Major mode for the Go programming language
 
-;; TODO:
-;; Features:
-;; - imports manipulations (add, remove, with sorting and grouping)
-;; Bugs:
-;; - Disable escapes in `` strings
-;; - Correct indentation for http://sprunge.us/iEaN
-;; - Fontify types in struct definitions
-;; - Fontify unicode in method receiver types, array/slice/map types
-;;   and everywhere where type-name is being used
+;; Copyright 2013 The Go Authors. All rights reserved.
+;; Use of this source code is governed by a BSD-style
+;; license that can be found in the LICENSE file.
 
 (eval-when-compile
   (require 'cl))
@@ -197,7 +191,7 @@ some syntax analysis.")
         (if (go-previous-line-has-dangling-op-p)
             (current-indentation)
           (+ (current-indentation) tab-width)))
-       ((progn  (zerop (go-paren-level)))
+       ((zerop (go-paren-level))
         0)
        ((progn (go-goto-opening-parenthesis) (< (go-paren-level) start-nesting))
         (if (go-previous-line-has-dangling-op-p)
@@ -266,9 +260,40 @@ some syntax analysis.")
 (define-derived-mode go-mode fundamental-mode "Go"
   "Major mode for editing Go source text.
 
-This provides basic syntax highlighting for keywords, built-ins,
-functions, and some types.  It also provides indentation that is
-\(almost) identical to gofmt."
+This mode provides (not just) basic editing capabilities for
+working with Go code. It offers almost complete syntax
+highlighting, indentation that is almost identical to gofmt,
+proper parsing of the buffer content to allow features such as
+navigation by function, manipulation of comments or detection of
+strings.
+
+Additionally to these core features, it offers various features to
+help with writing Go code. You can directly run buffer content
+through gofmt, read godoc documentation from within Emacs, modify
+and clean up the list of package imports or interact with the
+Playground (uploading and downloading pastes).
+
+The following extra functions are defined:
+
+- `gofmt'
+- `godoc'
+- `go-import-add'
+- `go-remove-unused-imports'
+- `go-goto-imports'
+- `go-play-buffer' and `go-play-region'
+- `go-download-play'
+
+If you want to automatically run `gofmt' before saving a file,
+add the following hook to your emacs configuration:
+
+\(add-hook 'before-save-hook 'gofmt-before-save)
+
+If you're looking for even more integration with Go, namely
+on-the-fly syntax checking, auto-completion and snippets, it is
+recommended to look at goflymake
+\(https://github.com/dougm/goflymake), gocode
+\(https://github.com/nsf/gocode) and yasnippet-go
+\(https://github.com/dominikh/yasnippet-go)"
 
   ;; Font lock
   (set (make-local-variable 'font-lock-defaults)
