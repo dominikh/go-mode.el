@@ -434,9 +434,13 @@ Replace the current buffer on success; display errors on failure."
     (display-buffer errbuf)
     (compilation-mode)))
 
+;;;###autoload
 (defun gofmt-before-save ()
   "Add this to .emacs to run gofmt on the current buffer when saving:
- (add-hook 'before-save-hook 'gofmt-before-save)"
+ (add-hook 'before-save-hook 'gofmt-before-save).
+
+Note that this will cause go-mode to get loaded the first time
+you save any file, kind of defeating the point of autoloading."
 
   (interactive)
   (when (eq major-mode 'go-mode) (gofmt)))
