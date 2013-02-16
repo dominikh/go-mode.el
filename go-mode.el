@@ -211,7 +211,7 @@ some syntax analysis.")
         (point (point))
         (beg (line-beginning-position)))
     (back-to-indentation)
-    (if (go-in-comment-p)
+    (if (go-in-string-or-comment-p)
         (goto-char point)
       (setq indent (go-indentation-at-point))
       (cond
