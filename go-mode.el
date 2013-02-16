@@ -214,12 +214,8 @@ some syntax analysis.")
     (if (go-in-string-or-comment-p)
         (goto-char point)
       (setq indent (go-indentation-at-point))
-      (cond
-       ((looking-at "case .+:\\|default:")
-        (setq indent (- indent tab-width)))
-       ((looking-at "[[:word:]]+:\\([[:space:]]*/.+\\)?$")
-        (setq indent 0)))
-
+      (if (looking-at "[[:word:]]+:\\([[:space:]]*/.+\\)?$\\|case .+:\\|default:")
+          (setq indent (- indent tab-width)))
       (setq shift-amt (- indent (current-column)))
       (if (zerop shift-amt)
           nil
