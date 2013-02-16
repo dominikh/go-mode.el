@@ -287,7 +287,8 @@ functions, and some types.  It also provides indentation that is
   (set (make-local-variable 'end-of-defun-function) 'go-end-of-defun)
 
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
-  (set (make-local-variable 'syntax-propertize-function) 'go-propertize-syntax)
+  (if (boundp 'syntax-propertize-function)
+      (set (make-local-variable 'syntax-propertize-function) 'go-propertize-syntax))
 
   (set (make-local-variable 'go-dangling-cache) #s(hash-table test eql))
   (add-to-list 'before-change-functions (lambda (x y) (setq go-dangling-cache #s(hash-table test eql))))
