@@ -152,12 +152,12 @@ some syntax analysis.")
 
 (defun go-previous-line-has-dangling-op-p ()
   (let* ((cur-line (count-lines (point-min) (point)))
-        (val (gethash cur-line go-dangling-cache 'nope)))
+         (val (gethash cur-line go-dangling-cache 'nope)))
     (if (equal val 'nope)
-      (save-excursion
-        (beginning-of-line)
-        (go--backward-irrelevant t)
-        (puthash cur-line (looking-back go-dangling-operators-regexp) go-dangling-cache))
+        (save-excursion
+          (beginning-of-line)
+          (go--backward-irrelevant t)
+          (puthash cur-line (looking-back go-dangling-operators-regexp) go-dangling-cache))
       val)))
 
 (defun go-goto-opening-parenthesis (&optional char)
@@ -379,8 +379,8 @@ Replace the current buffer on success; display errors on failure."
                         (insert ?\n)))
 
                   (if (zerop (shell-command-on-region (point-min) (point-max)
-                                                    (concat "gofmt" flag)
-                                                    patchbuf nil errbuf))
+                                                      (concat "gofmt" flag)
+                                                      patchbuf nil errbuf))
                       ;; gofmt succeeded: replace buffer or apply patch hunks.
                       (let ((old-point (point))
                             (old-mark (mark t)))
@@ -577,9 +577,9 @@ buffer. Tries to look for a URL at point."
 
 (defun go-propertize-syntax (start end)
   (save-excursion
-      (goto-char start)
-      (while (search-forward "\\" end t)
-        (put-text-property (1- (point)) (point) 'syntax-table (if (= (char-after) ?`) '(1) '(9))))))
+    (goto-char start)
+    (while (search-forward "\\" end t)
+      (put-text-property (1- (point)) (point) 'syntax-table (if (= (char-after) ?`) '(1) '(9))))))
 
 ;; ;; Commented until we actually make use of this function
 ;; (defun go--common-prefix (sequences)
