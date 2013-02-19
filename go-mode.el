@@ -631,26 +631,6 @@ uncommented, otherwise a new import will be added."
           ('single (insert "import " line "\n"))
           ('none (insert "\nimport (\n\t" line "\n)\n")))))))
 
-(defun go--flatten (lst)
-  (if (atom lst)
-      (list lst)
-    (let ((item (car lst))
-          (rest (cdr lst)))
-      (if (not (atom item))
-          (if rest
-              (append (go--flatten item) (go--flatten rest))
-            (let ((item-rest (cdr item)))
-              (if item-rest
-                  (append (go--flatten (car item))(go--flatten item-rest))
-                (go--flatten (car item)))))
-        (if rest
-            (if item
-                (append (list item) (go--flatten rest))
-              (go--flatten rest))
-          (if item
-              (list item)
-            nil))))))
-
 (defun go-root-and-paths ()
   (let* ((output (process-lines "go" "env" "GOROOT" "GOPATH"))
          (root (car output))
@@ -660,21 +640,20 @@ uncommented, otherwise a new import will be added."
 (defun go-packages ()
   (sort
    (delete-dups
-    (go--flatten
-     (mapcar
-      (lambda (topdir)
-        (let ((pkgdir (concat topdir "/pkg/")))
-          (mapcar (lambda (dir)
-                    (mapcar (lambda (file)
-                              (let ((sub (substring file (length pkgdir) -2)))
-                                (unless (or (string-prefix-p "obj/" sub) (string-prefix-p "tool/" sub))
-                                  (mapconcat 'identity (cdr (split-string sub "/")) "/")
-                                  )
-                                ))
-                            (if (file-directory-p dir)
-                                (directory-files dir t "\\.a$"))))
-                  (find-lisp-find-files-internal pkgdir 'find-lisp-file-predicate-is-directory 'find-lisp-default-directory-predicate))))
-      (go-root-and-paths)))) 'string<))
+    (mapcan
+     (lambda (topdir)
+       (let ((pkgdir (concat topdir "/pkg/")))
+         (mapcan (lambda (dir)
+                   (mapcar (lambda (file)
+                             (let ((sub (substring file (length pkgdir) -2)))
+                               (unless (or (string-prefix-p "obj/" sub) (string-prefix-p "tool/" sub))
+                                 (mapconcat 'identity (cdr (split-string sub "/")) "/")
+                                 )
+                               ))
+                           (if (file-directory-p dir)
+                               (directory-files dir t "\\.a$"))))
+                 (find-lisp-find-files-internal pkgdir 'find-lisp-file-predicate-is-directory 'find-lisp-default-directory-predicate))))
+     (go-root-and-paths))) 'string<))
 
 (defun go-unused-imports-lines ()
   (let (cmd)
