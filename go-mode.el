@@ -4,9 +4,7 @@
 ;; Use of this source code is governed by a BSD-style
 ;; license that can be found in the LICENSE file.
 
-(eval-when-compile
-  (require 'cl))
-
+(require 'cl)
 (require 'diff-mode)
 (require 'ffap)
 (require 'find-lisp)
