@@ -66,9 +66,9 @@ some syntax analysis.")
 
 (defun go--build-font-lock-keywords ()
   (append
-   `((,(regexp-opt go-mode-keywords 'words) . font-lock-keyword-face)
-     (,(regexp-opt go-builtins 'words) . font-lock-builtin-face)
-     (,(regexp-opt go-constants 'words) . font-lock-constant-face)
+   `((,(regexp-opt go-mode-keywords 'symbols) . font-lock-keyword-face)
+     (,(regexp-opt go-builtins 'symbols) . font-lock-builtin-face)
+     (,(regexp-opt go-constants 'symbols) . font-lock-constant-face)
      (,go-func-regexp 1 font-lock-function-name-face) ;; function (not method) name
      )
 
