@@ -693,7 +693,8 @@ will be commented, otherwise they will be removed completely."
           (beginning-of-line)
           (if arg
               (comment-region (line-beginning-position) (line-end-position))
-            (kill-line)))
+            (let ((kill-whole-line t))
+              (kill-line))))
         (message "Removed %d imports" (length lines)))
       (if flymake-state (flymake-mode-on)))))
 
