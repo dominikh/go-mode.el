@@ -615,7 +615,7 @@ uncommented, otherwise a new import will be added."
         (setq line (format "\"%s\"" import)))
 
       (goto-char (point-min))
-      (if (re-search-forward (concat "^// import " line "$") nil t)
+      (if (re-search-forward (concat "^[[:space:]]*//[[:space:]]*import " line "$") nil t)
           (uncomment-region (line-beginning-position) (line-end-position))
         (case (go-goto-imports)
           ('fail (message "Could not find a place to add import."))
@@ -623,7 +623,7 @@ uncommented, otherwise a new import will be added."
               (save-excursion
                 (re-search-backward "^import (")
                 (setq import-start (point)))
-            (if (re-search-backward (concat "^[[:space:]]+// " line "$")  import-start t)
+            (if (re-search-backward (concat "^[[:space:]]*//[[:space:]]*" line "$")  import-start t)
                 (uncomment-region (line-beginning-position) (line-end-position))
               (insert "\n\t" line)))
           ('single (insert "import " line "\n"))
