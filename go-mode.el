@@ -659,6 +659,12 @@ uncommented, otherwise a new import will be added."
   (let (cmd)
     (if (string-match "_test\.go$" buffer-file-truename)
         (setq cmd "go test -c")
+
+      ;; FIXME Technically, -o /dev/null fails in quite some cases (on
+      ;; Windows, when compiling from within GOPATH). Practically,
+      ;; however, it has the same end result: There won't be a
+      ;; compiled binary/archive, and we'll get our import errors when
+      ;; there are any.
       (setq cmd "go build -o /dev/null"))
     (reverse (remove nil
                      (mapcar
