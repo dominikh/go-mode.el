@@ -670,7 +670,7 @@ uncommented, otherwise a new import will be added."
                      (mapcar
                       (lambda (line)
                         (if (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\"$" line)
-                            (if (string= (file-truename (match-string 1 line)) buffer-file-truename)
+                            (if (string= (file-truename (match-string 1 line)) (file-truename buffer-file-name))
                                 (string-to-number (match-string 2 line)))))
                       (split-string (shell-command-to-string cmd) "\n"))))))
 
