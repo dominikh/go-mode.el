@@ -316,8 +316,8 @@ recommended that you look at goflymake
   (if (boundp 'syntax-propertize-function)
       (set (make-local-variable 'syntax-propertize-function) 'go-propertize-syntax))
 
-  (set (make-local-variable 'go-dangling-cache) #s(hash-table test eql))
-  (add-to-list 'before-change-functions (lambda (x y) (setq go-dangling-cache #s(hash-table test eql))))
+  (set (make-local-variable 'go-dangling-cache) (make-hash-table :test 'eql))
+  (add-hook 'before-change-functions (lambda (x y) (setq go-dangling-cache (make-hash-table :test 'eql))) t t)
 
 
   (setq imenu-generic-expression
