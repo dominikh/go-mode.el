@@ -151,15 +151,23 @@
         (go--backward-irrelevant stop-at-string))
     (/= start-pos (point))))
 
+(defun go--buffer-narrowed-p ()
+  "Return non-nil if the current buffer is narrowed."
+  (/= (buffer-size)
+      (- (point-max)
+         (point-min))))
+
 (defun go-previous-line-has-dangling-op-p ()
   (let* ((cur-line (line-number-at-pos))
          (val (gethash cur-line go-dangling-cache 'nope)))
-    (if (equal val 'nope)
+    (if (or (go--buffer-narrowed-p) (equal val 'nope))
         (save-excursion
           (beginning-of-line)
           (go--backward-irrelevant t)
-          (puthash cur-line (looking-back go-dangling-operators-regexp) go-dangling-cache))
-      val)))
+          (setq val (looking-back go-dangling-operators-regexp))
+          (if (not (go--buffer-narrowed-p))
+              (puthash cur-line val go-dangling-cache))))
+    val))
 
 (defun go-goto-opening-parenthesis (&optional char)
   (let ((start-nesting (go-paren-level)) group)
