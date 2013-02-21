@@ -132,6 +132,12 @@
   `(goto-char (nth 8 (syntax-ppss))))
 
 (defun go--backward-irrelevant (&optional stop-at-string)
+  "Skips backwards over any characters that are irrelevant for
+indentation and related tasks.
+
+It skips over whitespace, comments, cases and labels and, if
+STOP-AT-STRING is not true, over strings."
+
   (let (pos (start-pos (point)))
     (skip-chars-backward "\n[:blank:]")
     (if (and (save-excursion (beginning-of-line) (go-in-string-p)) (looking-back "`") (not stop-at-string))
@@ -158,6 +164,7 @@
          (point-min))))
 
 (defun go-previous-line-has-dangling-op-p ()
+  "Returns non-nil if the current line is a continuation line."
   (let* ((cur-line (line-number-at-pos))
          (val (gethash cur-line go-dangling-cache 'nope)))
     (if (or (go--buffer-narrowed-p) (equal val 'nope))
