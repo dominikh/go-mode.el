@@ -412,6 +412,7 @@ Replace the current buffer on success; display errors on failure."
                         (set-window-configuration currconf))
 
                     ;; gofmt failed: display the errors
+                    (message "Could not apply gofmt. Check errors for details")
                     (gofmt--process-errors filename errbuf))))))
 
           ;; Collapse any window opened on outbuf if shell-command-on-region
@@ -422,23 +423,27 @@ Replace the current buffer on success; display errors on failure."
 (defun gofmt--replace-buffer (srcbuf patchbuf)
   (with-current-buffer srcbuf
     (erase-buffer)
-    (insert-buffer-substring patchbuf)))
+    (insert-buffer-substring patchbuf))
+  (message "Applied gofmt"))
 
 (defun gofmt--apply-patch (filename srcbuf patchbuf)
   ;; apply all the patch hunks
-  (with-current-buffer patchbuf
-    (goto-char (point-min))
-    ;; The .* is for TMPDIR, but to avoid dealing with TMPDIR
-    ;; having a trailing / or not, it's easier to just search for .*
-    ;; especially as we're only replacing the first instance.
-    (if (re-search-forward "^--- \\(.*/gofmt[0-9]*\\)" nil t)
-        (replace-match filename nil nil nil 1))
-    (condition-case nil
-        (while t
-          (diff-hunk-next)
-          (diff-apply-hunk))
-      ;; When there's no more hunks, diff-hunk-next signals an error, ignore it
-      (error nil))))
+  (let (changed)
+    (with-current-buffer patchbuf
+      (goto-char (point-min))
+      ;; The .* is for TMPDIR, but to avoid dealing with TMPDIR
+      ;; having a trailing / or not, it's easier to just search for .*
+      ;; especially as we're only replacing the first instance.
+      (if (re-search-forward "^--- \\(.*/gofmt[0-9]*\\)" nil t)
+          (replace-match filename nil nil nil 1))
+      (condition-case nil
+          (while t
+            (diff-hunk-next)
+            (diff-apply-hunk)
+            (setq changed t))
+        ;; When there's no more hunks, diff-hunk-next signals an error, ignore it
+        (error nil)))
+    (if changed (message "Applied gofmt") (message "Buffer was already gofmted"))))
 
 (defun gofmt--process-errors (filename errbuf)
   ;; Convert the gofmt stderr to something understood by the compilation mode.
