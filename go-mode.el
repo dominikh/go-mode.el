@@ -15,7 +15,20 @@
 (defconst go-type-regexp "[[:word:][:multibyte:]_*]+")
 (defconst go-func-regexp (concat "\\<func\\>\\s *\\(" go-identifier-regexp "\\)"))
 (defconst go-func-meth-regexp (concat "\\<func\\>\\s *\\(?:(\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
-(defconst go-builtins '("append" "cap" "close" "complex" "copy" "delete" "imag" "len" "make" "new" "panic" "print" "println" "real" "recover"))
+(defconst go-builtins
+  '("append" "cap"   "close"   "complex" "copy"
+    "delete" "imag"  "len"     "make"    "new"
+    "panic"  "print" "println" "real"    "recover")
+  "All built-in functions in the Go language. Used for font locking.")
+
+(defconst go-mode-keywords
+  '("break"    "default"     "func"   "interface" "select"
+    "case"     "defer"       "go"     "map"       "struct"
+    "chan"     "else"        "goto"   "package"   "switch"
+    "const"    "fallthrough" "if"     "range"     "type"
+    "continue" "for"         "import" "return"    "var")
+  "All keywords in the Go language.  Used for font locking.")
+
 (defconst go-constants '("nil" "true" "false" "iota"))
 (defconst go-type-name-regexp (concat "\\(?:[*(]\\)*\\(?:" go-identifier-regexp "\\.\\)?\\(" go-identifier-regexp "\\)"))
 
@@ -54,23 +67,12 @@
     st)
   "Syntax table for Go mode.")
 
-(defvar go-mode-keywords
-  '("break"    "default"     "func"   "interface" "select"
-    "case"     "defer"       "go"     "map"       "struct"
-    "chan"     "else"        "goto"   "package"   "switch"
-    "const"    "fallthrough" "if"     "range"     "type"
-    "continue" "for"         "import" "return"    "var")
-  "All keywords in the Go language.  Used for font locking and
-some syntax analysis.")
-
-
 (defun go--build-font-lock-keywords ()
   (append
    `((,(regexp-opt go-mode-keywords 'symbols) . font-lock-keyword-face)
      (,(regexp-opt go-builtins 'symbols) . font-lock-builtin-face)
      (,(regexp-opt go-constants 'symbols) . font-lock-constant-face)
-     (,go-func-regexp 1 font-lock-function-name-face) ;; function (not method) name
-     )
+     (,go-func-regexp 1 font-lock-function-name-face)) ;; function (not method) name
 
    (if go-fontify-function-calls
        `((,(concat "\\(" go-identifier-regexp "\\)[[:space:]]*(") 1 font-lock-function-name-face) ;; function call/method name
@@ -260,12 +262,12 @@ some syntax analysis.")
 
 This mode provides (not just) basic editing capabilities for
 working with Go code. It offers almost complete syntax
-highlighting, indentation that is almost identical to gofmt,
+highlighting, indentation that is almost identical to gofmt and
 proper parsing of the buffer content to allow features such as
 navigation by function, manipulation of comments or detection of
 strings.
 
-Additionally to these core features, it offers various features to
+In addition to these core features, it offers various features to
 help with writing Go code. You can directly run buffer content
 through gofmt, read godoc documentation from within Emacs, modify
 and clean up the list of package imports or interact with the
@@ -288,7 +290,7 @@ add the following hook to your emacs configuration:
 
 If you're looking for even more integration with Go, namely
 on-the-fly syntax checking, auto-completion and snippets, it is
-recommended to look at goflymake
+recommended that you look at goflymake
 \(https://github.com/dougm/goflymake), gocode
 \(https://github.com/nsf/gocode) and yasnippet-go
 \(https://github.com/dominikh/yasnippet-go)"
@@ -520,15 +522,12 @@ declaration."
     (cond
      ((re-search-forward "^import ([^)]+)" nil t)
       (backward-char 2)
-      'block
-      )
+      'block)
      ((re-search-forward "\\(^import \\([^\"]+ \\)?\"[^\"]+\"\n?\\)+" nil t)
-      'single
-      )
+      'single)
      ((re-search-forward "^[[:space:]\n]*package .+?\n" nil t)
       (message "No imports found, moving point after package declaration")
-      'none
-      )
+      'none)
      (t
       (goto-char old-point)
       (message "No imports or package declaration found. Is this really a Go file?")
@@ -645,32 +644,29 @@ uncommented, otherwise a new import will be added."
                    (mapcar (lambda (file)
                              (let ((sub (substring file (length pkgdir) -2)))
                                (unless (or (string-prefix-p "obj/" sub) (string-prefix-p "tool/" sub))
-                                 (mapconcat 'identity (cdr (split-string sub "/")) "/")
-                                 )
-                               ))
+                                 (mapconcat 'identity (cdr (split-string sub "/")) "/"))))
                            (if (file-directory-p dir)
                                (directory-files dir t "\\.a$"))))
                  (find-lisp-find-files-internal pkgdir 'find-lisp-file-predicate-is-directory 'find-lisp-default-directory-predicate))))
-     (go-root-and-paths))) 'string<))
+     (go-root-and-paths)))
+   'string<))
 
 (defun go-unused-imports-lines ()
-  (let (cmd)
-    (if (string-match "_test\.go$" buffer-file-truename)
-        (setq cmd "go test -c")
-
-      ;; FIXME Technically, -o /dev/null fails in quite some cases (on
-      ;; Windows, when compiling from within GOPATH). Practically,
-      ;; however, it has the same end result: There won't be a
-      ;; compiled binary/archive, and we'll get our import errors when
-      ;; there are any.
-      (setq cmd "go build -o /dev/null"))
-    (reverse (remove nil
-                     (mapcar
-                      (lambda (line)
-                        (if (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\"$" line)
-                            (if (string= (file-truename (match-string 1 line)) (file-truename buffer-file-name))
-                                (string-to-number (match-string 2 line)))))
-                      (split-string (shell-command-to-string cmd) "\n"))))))
+  ;; FIXME Technically, -o /dev/null fails in quite some cases (on
+  ;; Windows, when compiling from within GOPATH). Practically,
+  ;; however, it has the same end result: There won't be a
+  ;; compiled binary/archive, and we'll get our import errors when
+  ;; there are any.
+  (reverse (remove nil
+                   (mapcar
+                    (lambda (line)
+                      (if (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\"$" line)
+                          (if (string= (file-truename (match-string 1 line)) (file-truename buffer-file-name))
+                              (string-to-number (match-string 2 line)))))
+                    (split-string (shell-command-to-string
+                                   (if (string-match "_test\.go$" buffer-file-truename)
+                                       "go test -c"
+                                     "go build -o /dev/null")) "\n")))))
 
 (defun go-remove-unused-imports (arg)
   "Removes all unused imports. If ARG is non-nil, unused imports
