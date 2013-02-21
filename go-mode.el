@@ -665,7 +665,8 @@ uncommented, otherwise a new import will be added."
                                  (mapconcat 'identity (cdr (split-string sub "/")) "/"))))
                            (if (file-directory-p dir)
                                (directory-files dir t "\\.a$"))))
-                 (find-lisp-find-files-internal pkgdir 'find-lisp-file-predicate-is-directory 'find-lisp-default-directory-predicate))))
+                 (if (file-directory-p pkgdir)
+                     (find-lisp-find-files-internal pkgdir 'find-lisp-file-predicate-is-directory 'find-lisp-default-directory-predicate)))))
      (go-root-and-paths)))
    'string<))
 
