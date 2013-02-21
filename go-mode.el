@@ -8,6 +8,7 @@
 (require 'diff-mode)
 (require 'ffap)
 (require 'find-lisp)
+(require 'url)
 
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
 (defconst gofmt-stdin-tag "<standard input>")
@@ -562,7 +563,9 @@ link in the kill ring."
   "Downloads a paste from the playground and inserts it in a Go
 buffer. Tries to look for a URL at point."
   (interactive (list (read-from-minibuffer "Playground URL: " (ffap-url-p (ffap-string-at-point 'url)))))
-  (with-current-buffer (url-retrieve-synchronously (concat url ".go"))
+  (with-current-buffer
+      (let ((url-request-method "GET") url-request-data url-request-extra-headers)
+        (url-retrieve-synchronously (concat url ".go")))
     (let ((buffer (generate-new-buffer (concat (car (last (split-string url "/"))) ".go"))))
       (goto-char (point-min))
       (re-search-forward "\n\n")
