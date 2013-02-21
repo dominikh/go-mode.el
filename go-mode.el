@@ -152,7 +152,7 @@
     (/= start-pos (point))))
 
 (defun go-previous-line-has-dangling-op-p ()
-  (let* ((cur-line (count-lines (point-min) (point)))
+  (let* ((cur-line (line-number-at-pos))
          (val (gethash cur-line go-dangling-cache 'nope)))
     (if (equal val 'nope)
         (save-excursion
