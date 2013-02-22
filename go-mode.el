@@ -177,13 +177,13 @@ STOP-AT-STRING is not true, over strings."
     val))
 
 (defun go-goto-opening-parenthesis (&optional char)
-  (let ((start-nesting (go-paren-level)) group)
-    (if char
-        (setq group (case char (?\] "^[") (?\} "^{") (?\) "^(")))
-      (setq group "^[{("))
+  (let ((start-nesting (go-paren-level)))
     (while (and (not (bobp))
                 (>= (go-paren-level) start-nesting))
-      (if (zerop (skip-chars-backward group))
+      (if (zerop (skip-chars-backward
+                  (if char
+                      (case char (?\] "^[") (?\} "^{") (?\) "^("))
+                    "^[{(")))
           (if (go-in-string-or-comment-p)
               (go-goto-beginning-of-string-or-comment)
             (backward-char))))))
