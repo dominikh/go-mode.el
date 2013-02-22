@@ -375,8 +375,8 @@ Replace the current buffer on success; display errors on failure."
               (coding-system-for-read 'utf-8)
               (coding-system-for-write 'utf-8))
           (with-current-buffer errbuf
-            (let ((inhibit-read-only t))
-              (erase-buffer)))
+            (setq buffer-read-only nil)
+            (erase-buffer))
           (with-current-buffer srcbuf
             (save-restriction
               (let (deactivate-mark)
