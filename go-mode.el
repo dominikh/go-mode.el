@@ -13,6 +13,7 @@
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
 (defconst gofmt-stdin-tag "<standard input>")
 (defconst go-identifier-regexp "[[:word:][:multibyte:]_]+")
+(defconst go-label-regexp go-identifier-regexp)
 (defconst go-type-regexp "[[:word:][:multibyte:]_*]+")
 (defconst go-func-regexp (concat "\\<func\\>\\s *\\(" go-identifier-regexp "\\)"))
 (defconst go-func-meth-regexp (concat "\\<func\\>\\s *\\(?:(\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
@@ -95,8 +96,8 @@
      ;; Like the original go-mode this also marks compound literal
      ;; fields. There, it was marked as to fix, but I grew quite
      ;; accustomed to it, so it'll stay for now.
-     (,(concat "^[[:space:]]*\\(" go-identifier-regexp "\\)[[:space:]]*:\\(\\S.\\|$\\)") 1 font-lock-constant-face) ;; Labels and compound literal fields
-     ("\\<\\(goto\\|break\\|continue\\)\\>[[:space:]]*\\(\\w+\\)" 2 font-lock-constant-face)))) ;; labels in goto/break/continue
+     (,(concat "^[[:space:]]*\\(" go-label-regexp "\\)[[:space:]]*:\\(\\S.\\|$\\)") 1 font-lock-constant-face) ;; Labels and compound literal fields
+     (,(concat "\\<\\(goto\\|break\\|continue\\)\\>[[:space:]]*\\(" go-label-regexp "\\)") 2 font-lock-constant-face)))) ;; labels in goto/break/continue
 
 (defvar go-mode-map
   (let ((m (make-sparse-keymap)))
@@ -150,7 +151,7 @@ STOP-AT-STRING is not true, over strings."
         (go-goto-beginning-of-string-or-comment))
     (setq pos (point))
     (beginning-of-line)
-    (if (or (looking-at "^[[:word:]]+:") (looking-at "^[[:space:]]*\\(case .+\\|default\\):"))
+    (if (or (looking-at (concat "^" go-label-regexp ":")) (looking-at "^[[:space:]]*\\(case .+\\|default\\):"))
         (end-of-line 0)
       (goto-char pos))
     (if (/= start-pos (point))
@@ -228,7 +229,7 @@ STOP-AT-STRING is not true, over strings."
     (if (go-in-string-or-comment-p)
         (goto-char point)
       (setq indent (go-indentation-at-point))
-      (if (looking-at "[[:word:]]+:\\([[:space:]]*/.+\\)?$\\|case .+:\\|default:")
+      (if (looking-at (concat go-label-regexp ":\\([[:space:]]*/.+\\)?$\\|case .+:\\|default:"))
           (decf indent tab-width))
       (setq shift-amt (- indent (current-column)))
       (if (zerop shift-amt)
