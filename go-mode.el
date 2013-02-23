@@ -476,10 +476,10 @@ you save any file, kind of defeating the point of autoloading."
          (symbol (if bounds
                      (buffer-substring-no-properties (car bounds)
                                                      (cdr bounds)))))
-    (read-string (if symbol
-                     (format "godoc (default %s): " symbol)
-                   "godoc: ")
-                 nil nil symbol)))
+    (completing-read (if symbol
+                         (format "godoc (default %s): " symbol)
+                       "godoc: ")
+                     (go-packages) nil nil nil nil symbol)))
 
 (defun godoc--get-buffer (query)
   "Get an empty buffer for a godoc query."
