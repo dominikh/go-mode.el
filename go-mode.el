@@ -9,12 +9,26 @@
 (require 'find-lisp)
 (require 'url)
 
+(defun go--xemacs-p ()
+  (string-match "XEmacs\\|Lucid" emacs-version))
+
+(defun go--regexp-enclose-in-symbol (s)
+  ;; XEmacs does not support \_<, GNU Emacs does. In GNU Emacs we make
+  ;; extensive use of \_< to support unicode in identifiers. Until we
+  ;; come up with a better solution for XEmacs, this solution will
+  ;; break fontification in XEmacs for identifiers such as "typeµ".
+  ;; XEmacs will consider "type" a keyword, GNU Emacs won't.
+
+  (if (go--xemacs-p)
+      (concat "\\<" s "\\>")
+    (concat "\\_<" s "\\_>")))
+
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
 (defconst go-identifier-regexp "[[:word:][:multibyte:]_]+")
 (defconst go-label-regexp go-identifier-regexp)
 (defconst go-type-regexp "[[:word:][:multibyte:]_*]+")
-(defconst go-func-regexp (concat "\\<func\\>\\s *\\(" go-identifier-regexp "\\)"))
-(defconst go-func-meth-regexp (concat "\\<func\\>\\s *\\(?:(\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
+(defconst go-func-regexp (concat (go--regexp-enclose-in-symbol "func") "\\s *\\(" go-identifier-regexp "\\)"))
+(defconst go-func-meth-regexp (concat (go--regexp-enclose-in-symbol "func") "\\s *\\(?:(\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
 (defconst go-builtins
   '("append" "cap"   "close"   "complex" "copy"
     "delete" "imag"  "len"     "make"    "new"
@@ -71,9 +85,9 @@
   ;; we cannot use 'symbols in regexp-opt because emacs <24 doesn't
   ;; understand that
   (append
-   `((,(concat "\\_<"(regexp-opt go-mode-keywords) "\\_>") . font-lock-keyword-face)
-     (,(concat "\\_<" (regexp-opt go-builtins) "\\_>") . font-lock-builtin-face)
-     (,(concat "\\_<" (regexp-opt go-constants) "\\_>") . font-lock-constant-face)
+   `((,(go--regexp-enclose-in-symbol (regexp-opt go-mode-keywords t)) . font-lock-keyword-face)
+     (,(go--regexp-enclose-in-symbol (regexp-opt go-builtins t)) . font-lock-builtin-face)
+     (,(go--regexp-enclose-in-symbol (regexp-opt go-constants t)) . font-lock-constant-face)
      (,go-func-regexp 1 font-lock-function-name-face)) ;; function (not method) name
 
    (if go-fontify-function-calls
@@ -82,22 +96,22 @@
      `((,go-func-meth-regexp 1 font-lock-function-name-face))) ;; method name
 
    `(
-     ("\\<type\\>[[:space:]]*\\([^[:space:]]+\\)" 1 font-lock-type-face) ;; types
-     (,(concat "\\<type\\>[[:space:]]*" go-identifier-regexp "[[:space:]]*" go-type-name-regexp) 1 font-lock-type-face) ;; types
+     (,(concat (go--regexp-enclose-in-symbol "type") "[[:space:]]*\\([^[:space:]]+\\)") 1 font-lock-type-face) ;; types
+     (,(concat (go--regexp-enclose-in-symbol "type") "[[:space:]]*" go-identifier-regexp "[[:space:]]*" go-type-name-regexp) 1 font-lock-type-face) ;; types
      (,(concat "\\(?:[[:space:]]+\\|\\]\\)\\[\\([[:digit:]]+\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 2 font-lock-type-face) ;; Arrays/slices
      (,(concat "map\\[[^]]+\\]" go-type-name-regexp) 1 font-lock-type-face) ;; map value type
      (,(concat "\\(" go-identifier-regexp "\\)" "{") 1 font-lock-type-face)
-     (,(concat "\\<map\\[" go-type-name-regexp) 1 font-lock-type-face) ;; map key type
-     (,(concat "\\<chan\\>[[:space:]]*\\(?:<-\\)?" go-type-name-regexp) 1 font-lock-type-face) ;; channel type
-     (,(concat "\\<\\(?:new\\|make\\)\\>\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp) 1 font-lock-type-face) ;; new/make type
+     (,(concat (go--regexp-enclose-in-symbol "map") "\\[" go-type-name-regexp) 1 font-lock-type-face) ;; map key type
+     (,(concat (go--regexp-enclose-in-symbol "chan") "[[:space:]]*\\(?:<-\\)?" go-type-name-regexp) 1 font-lock-type-face) ;; channel type
+     (,(concat (go--regexp-enclose-in-symbol "\\(?:new\\|make\\)") "\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp) 1 font-lock-type-face) ;; new/make type
      ;; TODO do we actually need this one or isn't it just a function call?
      (,(concat "\\.\\s *(" go-type-name-regexp) 1 font-lock-type-face) ;; Type conversion
-     (,(concat "\\<func\\>[[:space:]]+(" go-identifier-regexp "[[:space:]]+" go-type-name-regexp ")") 1 font-lock-type-face) ;; Method receiver
+     (,(concat (go--regexp-enclose-in-symbol "func") "[[:space:]]+(" go-identifier-regexp "[[:space:]]+" go-type-name-regexp ")") 1 font-lock-type-face) ;; Method receiver
      ;; Like the original go-mode this also marks compound literal
      ;; fields. There, it was marked as to fix, but I grew quite
      ;; accustomed to it, so it'll stay for now.
      (,(concat "^[[:space:]]*\\(" go-label-regexp "\\)[[:space:]]*:\\(\\S.\\|$\\)") 1 font-lock-constant-face) ;; Labels and compound literal fields
-     (,(concat "\\<\\(goto\\|break\\|continue\\)\\>[[:space:]]*\\(" go-label-regexp "\\)") 2 font-lock-constant-face)))) ;; labels in goto/break/continue
+     (,(concat (go--regexp-enclose-in-symbol "\\(goto\\|break\\|continue\\)") "[[:space:]]*\\(" go-label-regexp "\\)") 2 font-lock-constant-face)))) ;; labels in goto/break/continue
 
 (defvar go-mode-map
   (let ((m (make-sparse-keymap)))
