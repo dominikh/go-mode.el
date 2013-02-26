@@ -68,10 +68,12 @@
   "Syntax table for Go mode.")
 
 (defun go--build-font-lock-keywords ()
+  ;; we cannot use 'symbols in regexp-opt because emacs <24 doesn't
+  ;; understand that
   (append
-   `((,(regexp-opt go-mode-keywords 'symbols) . font-lock-keyword-face)
-     (,(regexp-opt go-builtins 'symbols) . font-lock-builtin-face)
-     (,(regexp-opt go-constants 'symbols) . font-lock-constant-face)
+   `((,(concat "\\_<"(regexp-opt go-mode-keywords) "\\_>") . font-lock-keyword-face)
+     (,(concat "\\_<" (regexp-opt go-builtins) "\\_>") . font-lock-builtin-face)
+     (,(concat "\\_<" (regexp-opt go-constants) "\\_>") . font-lock-constant-face)
      (,go-func-regexp 1 font-lock-function-name-face)) ;; function (not method) name
 
    (if go-fontify-function-calls
