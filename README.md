@@ -1,13 +1,12 @@
-This is a replacement for the Go mode that comes with the Go
-distribution. It fixes several issues and adds new features, such as
-movement by functions, like one is used to from other major modes in
-emacs.
+**Note: This go-mode.el has been merged upstream and is now part of
+  the Go distribution. New features and bugfixes will be made
+  available here first, but will be sent upstream as well.**
 
-To use this mode instead of the default one, add it to your load path
-and load it instead of the old one. It acts as a direct drop-in
-replacement. Please make sure, however, that you **load only this
-go-mode and not the old one first**. The old one installs some hooks
-that will interfere with this mode.
+This is a replacement for the old Go mode that came with the Go
+distribution <= v1.0.3. It fixes several issues and adds new features,
+such as movement by functions, like one is used to from other major
+modes in emacs.
+
 
 Fixes
 =====
