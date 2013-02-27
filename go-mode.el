@@ -423,9 +423,13 @@ recommended that you look at goflymake
       (erase-buffer))
 
     (write-region nil nil tmpfile)
-    (if (zerop (shell-command (concat "gofmt -w " (shell-quote-argument tmpfile)) nil errbuf))
+
+    ;; We're using errbuf for the mixed stdout and stderr output. This
+    ;; is not an issue because gofmt -w does not produce any stdout
+    ;; output in case of success.
+    (if (zerop (call-process "gofmt" nil errbuf nil "-w" tmpfile))
         (progn
-          (if (zerop (shell-command-on-region (point-min) (point-max) (concat "diff -n - " (shell-quote-argument tmpfile)) patchbuf))
+          (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
               (message "Buffer is already gofmted")
             (go--apply-rcs-patch patchbuf)
             (kill-buffer errbuf)
