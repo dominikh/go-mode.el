@@ -24,9 +24,9 @@
     (concat "\\_<" s "\\_>")))
 
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
-(defconst go-identifier-regexp "[[:word:][:multibyte:]_]+")
+(defconst go-identifier-regexp "[[:word:][:multibyte:]]+")
 (defconst go-label-regexp go-identifier-regexp)
-(defconst go-type-regexp "[[:word:][:multibyte:]_*]+")
+(defconst go-type-regexp "[[:word:][:multibyte:]*]+")
 (defconst go-func-regexp (concat (go--regexp-enclose-in-symbol "func") "\\s *\\(" go-identifier-regexp "\\)"))
 (defconst go-func-meth-regexp (concat (go--regexp-enclose-in-symbol "func") "\\s *\\(?:(\\s *" go-identifier-regexp "\\s +" go-type-regexp "\\s *)\\s *\\)?\\(" go-identifier-regexp "\\)("))
 (defconst go-builtins
@@ -76,7 +76,9 @@
     (modify-syntax-entry ?\' "\"" st)
     (modify-syntax-entry ?`  "\"" st)
     (modify-syntax-entry ?\\ "\\" st)
-    (modify-syntax-entry ?_  "_" st)
+    ;; It would be nicer to have _ as a symbol constituent, but that
+    ;; would trip up XEmacs, which does not support the \_< anchor
+    (modify-syntax-entry ?_  "w" st)
 
     st)
   "Syntax table for Go mode.")
