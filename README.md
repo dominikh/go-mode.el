@@ -24,6 +24,7 @@ Improvements
 - Fontifies type names in struct literals
 - Fontifies type names in maps, slices and arrays
 - Uses view-mode for the godoc buffer
+- Complete rewrite of gofmt, fixing several issues
 
 Features
 ========
