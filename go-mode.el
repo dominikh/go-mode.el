@@ -123,6 +123,8 @@
     (define-key m ":" 'go-mode-insert-and-indent)
     (define-key m "=" 'go-mode-insert-and-indent)
     (define-key m (kbd "C-c C-a") 'go-import-add)
+    (define-key m (kbd "C-c C-j") 'godef-jump)
+    (define-key m (kbd "C-c C-d") 'godef-describe)
     m)
   "Keymap used by Go mode to implement electric keys.")
 
@@ -717,5 +719,59 @@ will be commented, otherwise they will be removed completely."
             (kill-whole-line)))
         (message "Removed %d imports" (length lines)))
       (if flymake-state (flymake-mode-on)))))
+
+(defun godef--find-file-line-column (specifier)
+  "Given a file name in the format of `filename:line:column',
+visit FILENAME and go to line LINE and column COLUMN."
+  (let* ((components (split-string specifier ":"))
+         (line (string-to-number (nth 1 components)))
+         (column (string-to-number (nth 2 components))))
+    (with-current-buffer (find-file (car components))
+      (goto-char (point-min))
+      (forward-line (1- line))
+      (beginning-of-line)
+      (forward-char (1- column))
+      (if (buffer-modified-p)
+          (message "Buffer is modified, file position might not have been correct")))))
+
+(defun godef--call (point)
+  "Call godef, acquiring definition position and expression
+description at POINT."
+  (if (go--xemacs-p)
+      (error "godef does not reliably work in XEmacs, sorry"))
+  (if (not buffer-file-name)
+      (message "Cannot use godef on a buffer without a file name")
+    (let ((outbuf (get-buffer-create "*godef*")))
+      (with-current-buffer outbuf
+        (erase-buffer))
+      (call-process-region (point-min) (point-max) "godef" nil outbuf nil "-i" "-t" "-f" (file-truename buffer-file-name) "-o" (number-to-string (position-bytes (point))))
+      (with-current-buffer outbuf
+        (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n")))))
+
+(defun godef-describe (point)
+  "Describe the expression at POINT."
+  (interactive "d")
+  (condition-case nil
+      (let ((description (nth 1 (godef--call point))))
+        (if (string= "" description)
+            (message "No description found for expression at point")
+          (message "%s" description)))
+    (file-error (message "Could not run godef binary"))))
+
+(defun godef-jump (point)
+  "Jump to the definition of the expression at POINT."
+  (interactive "d")
+  (condition-case nil
+      (let ((file (car (godef--call point))))
+        (cond
+         ((string= "-" file)
+          (message "godef: expression is not defined anywhere"))
+         ((string= "godef: no identifier found" file)
+          (message "%s" file))
+         ((go--string-prefix-p "godef: no declaration found for " file)
+          (message "%s" file))
+         (t
+          (godef--find-file-line-column file))))
+    (file-error (message "Could not run godef binary"))))
 
 (provide 'go-mode)

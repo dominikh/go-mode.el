@@ -36,6 +36,8 @@ Features
 - A function for jumping to the file's imports (`go-goto-imports`)
 - A function for adding imports, including tab completion (`go-import-add`, bound to `C-c C-a`)
 - A function for removing or commenting unused imports (`go-remove-unused-imports`)
+- `godef-describe` and `godef-jump` (`C-c C-d` and `C-c C-j`) to
+  describe expressions and jump to their declarations.
 - Adds basic support for imenu (functions and variables)
 
 Other extensions
@@ -43,7 +45,8 @@ Other extensions
 For a richer experience, consider installing
 [goflymake](https://github.com/dougm/goflymake) for on-the-fly syntax
 checking and [gocode](https://github.com/nsf/gocode) for auto
-completion.
+completion. Some features require you to install godef via `go get
+code.google.com/p/rog-go/exp/cmd/godef`.
 
 Also, if you're using YASnippet, consider using the snippets from
 [yasnippet-go](https://github.com/dominikh/yasnippet-go).
