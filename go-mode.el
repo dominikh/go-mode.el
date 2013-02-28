@@ -655,6 +655,11 @@ uncommented, otherwise a new import will be added."
          (paths (split-string (car (cdr output)) ":")))
     (append (list root) paths)))
 
+(defun go--string-prefix-p (s1 s2 &optional ignore-case)
+  (eq t (compare-strings s1 nil nil
+                         s2 0 (length s1) ignore-case)))
+
+
 (defun go-packages ()
   (sort
    (delete-dups
@@ -664,7 +669,7 @@ uncommented, otherwise a new import will be added."
          (mapcan (lambda (dir)
                    (mapcar (lambda (file)
                              (let ((sub (substring file (length pkgdir) -2)))
-                               (unless (or (string-prefix-p "obj/" sub) (string-prefix-p "tool/" sub))
+                               (unless (or (go--string-prefix-p "obj/" sub) (go--string-prefix-p "tool/" sub))
                                  (mapconcat 'identity (cdr (split-string sub "/")) "/"))))
                            (if (file-directory-p dir)
                                (directory-files dir t "\\.a$"))))
