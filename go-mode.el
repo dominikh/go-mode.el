@@ -57,6 +57,11 @@
   :type 'boolean
   :group 'go)
 
+(defcustom go-mode-hook nil
+  "Hook called by `go-mode'."
+  :type 'hook
+  :group 'go)
+
 (defvar go-mode-syntax-table
   (let ((st (make-syntax-table)))
     (modify-syntax-entry ?+  "." st)
