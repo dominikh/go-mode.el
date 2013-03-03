@@ -3,10 +3,19 @@
   available here first, but will be sent upstream as well.**
 
 This is a replacement for the old Go mode that came with the Go
-distribution <= v1.0.3. It fixes several issues and adds new features,
+distribution &lt;= v1.0.3. It fixes several issues and adds new features,
 such as movement by functions, like one is used to from other major
 modes in emacs.
 
+Installation
+============
+
+Put this package in your emacs site-packages directory.<br />
+Add to your _.emacs_ file
+
+```elisp
+(require `go-mode-autoloads)
+```
 
 Fixes
 =====
