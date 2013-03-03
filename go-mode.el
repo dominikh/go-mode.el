@@ -47,6 +47,7 @@
 (defconst go-type-name-regexp (concat "\\(?:[*(]\\)*\\(?:" go-identifier-regexp "\\.\\)?\\(" go-identifier-regexp "\\)"))
 
 (defvar go-dangling-cache)
+(defvar go-godoc-history nil)
 
 (defgroup go nil
   "Major mode for editing Go code"
@@ -478,7 +479,7 @@ you save any file, kind of defeating the point of autoloading."
     (completing-read (if symbol
                          (format "godoc (default %s): " symbol)
                        "godoc: ")
-                     (go-packages) nil nil nil nil symbol)))
+                     (go-packages) nil nil nil 'go-godoc-history symbol)))
 
 (defun godoc--get-buffer (query)
   "Get an empty buffer for a godoc query."
