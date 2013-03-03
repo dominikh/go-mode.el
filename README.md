@@ -10,12 +10,31 @@ modes in emacs.
 Installation
 ============
 
-Put this package in your emacs site-packages directory.<br />
-Add to your _.emacs_ file
+### Using package.el
 
-```elisp
-(require `go-mode-autoloads)
-```
+*package.el* is a package manager module for Emacs. If you are not familiar with it I strongly
+recommend using it. On [EmacsWiki](http://emacswiki.org/emacs/ELPA) is an instruction how to
+us it.
+
+Download *go-mode.el* and:
+
+    M-x package-install-file go-mode.el
+
+Now you can delete downloaded *go-mode.el*. *Emacs Lisp Package Archive* will copy and
+byte-compile it to its archive and  automatic loads appropriate definitions.
+
+### Manually
+
+Download *go-mode.el* to your *site-lisp* directory, and:
+
+    M-x update-file-autoloads go-mode.el go-mode-autoloads.el
+    M-x byte-compile-file go-mode.el
+
+Add to your *.emacs* configuration file:
+
+    (require 'go-mode-autoloads)
+
+
 
 Fixes
 =====
