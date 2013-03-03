@@ -57,5 +57,9 @@ checking and [gocode](https://github.com/nsf/gocode) for auto
 completion. Some features require you to install godef via `go get
 code.google.com/p/rog-go/exp/cmd/godef`.
 
+Alternatively there is also [flymake-go](http://marmalade-repo.org/packages/flymake-go) package
+distributed with _package.el_. It uses _go fmt_ for syntax validation on the fly. It doesn't require
+building additional go modules.
+
 Also, if you're using YASnippet, consider using the snippets from
 [yasnippet-go](https://github.com/dominikh/yasnippet-go).
