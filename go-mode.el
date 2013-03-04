@@ -6,7 +6,6 @@
 
 (require 'cl)
 (require 'ffap)
-(require 'find-lisp)
 (require 'url)
 
 (defun go--xemacs-p ()
@@ -662,6 +661,21 @@ uncommented, otherwise a new import will be added."
   (eq t (compare-strings s1 nil nil
                          s2 0 (length s1) ignore-case)))
 
+(defun go--directory-dirs (dir)
+  (if (file-directory-p dir)
+      (let ((dir (directory-file-name dir))
+            (dirs '())
+            (files (directory-files dir nil nil t)))
+        (dolist (file files)
+          (unless (member file '("." ".."))
+            (let ((file (concat dir "/" file)))
+              (when (file-directory-p file)
+                (setq dirs (append (cons file
+                                         (go--directory-dirs file))
+                                   dirs))))))
+        dirs)
+    '()))
+
 
 (defun go-packages ()
   (sort
@@ -677,7 +691,7 @@ uncommented, otherwise a new import will be added."
                            (if (file-directory-p dir)
                                (directory-files dir t "\\.a$"))))
                  (if (file-directory-p pkgdir)
-                     (find-lisp-find-files-internal pkgdir 'find-lisp-file-predicate-is-directory 'find-lisp-default-directory-predicate)))))
+                     (go--directory-dirs pkgdir)))))
      (go-root-and-paths)))
    'string<))
 
