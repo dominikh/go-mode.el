@@ -38,9 +38,9 @@
   `(featurep 'xemacs))
 
 (defalias 'go--kill-whole-line
-  (if (fboundp
-       'kill-whole-line)
-      'kill-whole-line 'kill-entire-line))
+  (if (fboundp 'kill-whole-line)
+      'kill-whole-line
+    'kill-entire-line))
 
 ;; XEmacs unfortunately does not offer position-bytes. We can fall
 ;; back to just using (point), but it will be incorrect as soon as
