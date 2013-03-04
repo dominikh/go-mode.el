@@ -358,11 +358,20 @@ The following extra functions are defined:
 - `go-goto-imports'
 - `go-play-buffer' and `go-play-region'
 - `go-download-play'
+- `godef-describe' and `godef-jump'
 
 If you want to automatically run `gofmt' before saving a file,
 add the following hook to your emacs configuration:
 
 \(add-hook 'before-save-hook 'gofmt-before-save)
+
+If you want to use godef instead of etags (or similar), consider
+binding godef-jump to `M-.', which is the default key for
+find-tag:
+
+\(add-hook 'go-mode-hook (lambda ()
+                          (local-set-key (kbd \"M-.\") 'godef-jump)))
+
 
 If you're looking for even more integration with Go, namely
 on-the-fly syntax checking, auto-completion and snippets, it is
