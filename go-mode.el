@@ -745,7 +745,7 @@ uncommented, otherwise a new import will be added."
 (defun go-root-and-paths ()
   (let* ((output (split-string (shell-command-to-string "go env GOROOT GOPATH") "\n"))
          (root (car output))
-         (paths (split-string (car (cdr output)) ":")))
+         (paths (split-string (cadr output) ":")))
     (append (list root) paths)))
 
 (defun go--string-prefix-p (s1 s2 &optional ignore-case)
@@ -760,10 +760,10 @@ uncommented, otherwise a new import will be added."
         (dolist (file files)
           (unless (member file '("." ".."))
             (let ((file (concat dir "/" file)))
-              (when (file-directory-p file)
-                (setq dirs (append (cons file
-                                         (go--directory-dirs file))
-                                   dirs))))))
+              (if (file-directory-p file)
+                  (setq dirs (append (cons file
+                                           (go--directory-dirs file))
+                                     dirs))))))
         dirs)
     '()))
 
