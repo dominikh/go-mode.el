@@ -1,11 +1,10 @@
 Unless otherwise specified, all files and functions in this
 distribution are covered under the MIT license (see the file LICENSE.)
 
-The functions `gofmt`, `gofmt-replace-buffer`, `gofmt-apply-patch`,
-`gofmt-process-errors`, `gofmt-before-save`, `godoc-read-query`,
-`godoc-get-buffer`, `godoc-buffer-sentinel` and `godoc`, as defined in
-the file go-mode.el, are copyrighted free software by The Go Authors
-and licensed under the BSD license.
+The functions `godoc-read-query`, `godoc-get-buffer`,
+`godoc-buffer-sentinel` and `godoc`, as defined in the file
+go-mode.el, are copyrighted free software by The Go Authors and
+licensed under the BSD license.
 
     Copyright (c) 2012 The Go Authors. All rights reserved.
 
