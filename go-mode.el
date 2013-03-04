@@ -11,6 +11,15 @@
 (defmacro go--xemacs-p ()
   `(featurep 'xemacs))
 
+;; XEmacs added syntax-ppss in version 21.5.32. For older versions, we
+;; have to use parse-partial-sexp, which will be slightly slower due
+;; to the lack of caching.
+(if (fboundp 'syntax-ppss)
+    (defmacro go--syntax-ppss ()
+      `(syntax-ppss))
+  (defmacro go--syntax-ppss ()
+    `(parse-partial-sexp (point-min) (point))))
+
 (defun go--regexp-enclose-in-symbol (s)
   ;; XEmacs does not support \_<, GNU Emacs does. In GNU Emacs we make
   ;; extensive use of \_< to support unicode in identifiers. Until we
@@ -136,19 +145,19 @@
   (indent-according-to-mode))
 
 (defmacro go-paren-level ()
-  `(car (syntax-ppss)))
+  `(car (go--syntax-ppss)))
 
 (defmacro go-in-string-or-comment-p ()
-  `(nth 8 (syntax-ppss)))
+  `(nth 8 (go--syntax-ppss)))
 
 (defmacro go-in-string-p ()
-  `(nth 3 (syntax-ppss)))
+  `(nth 3 (go--syntax-ppss)))
 
 (defmacro go-in-comment-p ()
-  `(nth 4 (syntax-ppss)))
+  `(nth 4 (go--syntax-ppss)))
 
 (defmacro go-goto-beginning-of-string-or-comment ()
-  `(goto-char (nth 8 (syntax-ppss))))
+  `(goto-char (nth 8 (go--syntax-ppss))))
 
 (defun go--backward-irrelevant (&optional stop-at-string)
   "Skips backwards over any characters that are irrelevant for
