@@ -57,8 +57,8 @@ Contributing
 Because go-mode.el is also part of the Go distribution, there are
 essentially two ways to contribute changes:
 
-1) By sending a pull request on GitHub
-2) By submitting a CL to the Go project
+- By sending a pull request on GitHub
+- By submitting a CL to the Go project
 
 Because of copyright reasons, I will not accept any non-trivial
 contributions via pull requests. Please submit a CL instead. This will
