@@ -8,17 +8,50 @@
 (require 'ffap)
 (require 'url)
 
+;; XEmacs compatibility guidelines
+;; - Minimum required version of XEmacs: 21.5.32
+;;   - Feature that cannot be backported: POSIX character classes in
+;;     regular expressions
+;;   - Functions that could be backported but won't because 21.5.32
+;;     covers them: plenty.
+;;   - Features that are still partly broken:
+;;     - godef will not work correctly if multibyte characters are
+;;       being used
+;;     - Fontification will not handle unicode correctly
+;;
+;; - Do not use \_< and \_> regexp delimiters directly; use
+;;   go--regexp-enclose-in-symbol
+;;
+;; - The character `_` must not be a symbol constituent but a
+;;   character constituent
+;;
+;; - Do not use process-lines
+;;
+;; - Use go--old-completion-list-style when using a plain list as the
+;;   collection for completing-read
+;;
+;; - Use go--kill-whole-line instead of kill-whole-line (called
+;;   kill-entire-line in XEmacs)
+;;
+;; - Use go--position-bytes instead of position-bytes
 (defmacro go--xemacs-p ()
   `(featurep 'xemacs))
 
-;; XEmacs added syntax-ppss in version 21.5.32. For older versions, we
-;; have to use parse-partial-sexp, which will be slightly slower due
-;; to the lack of caching.
-(if (fboundp 'syntax-ppss)
-    (defmacro go--syntax-ppss ()
-      `(syntax-ppss))
-  (defmacro go--syntax-ppss ()
-    `(parse-partial-sexp (point-min) (point))))
+(defalias 'go--kill-whole-line
+  (if (fboundp
+       'kill-whole-line)
+      'kill-whole-line 'kill-entire-line))
+
+;; XEmacs unfortunately does not offer position-bytes. We can fall
+;; back to just using (point), but it will be incorrect as soon as
+;; multibyte characters are being used.
+(if (fboundp 'position-bytes)
+    (defalias 'go--position-bytes 'position-bytes)
+  (defun go--position-bytes (point) point))
+
+(defun go--old-completion-list-style (list)
+  (mapcar (lambda (x) (cons x nil)) list))
+
 
 (defun go--regexp-enclose-in-symbol (s)
   ;; XEmacs does not support \_<, GNU Emacs does. In GNU Emacs we make
@@ -145,19 +178,19 @@
   (indent-according-to-mode))
 
 (defmacro go-paren-level ()
-  `(car (go--syntax-ppss)))
+  `(car (syntax-ppss)))
 
 (defmacro go-in-string-or-comment-p ()
-  `(nth 8 (go--syntax-ppss)))
+  `(nth 8 (syntax-ppss)))
 
 (defmacro go-in-string-p ()
-  `(nth 3 (go--syntax-ppss)))
+  `(nth 3 (syntax-ppss)))
 
 (defmacro go-in-comment-p ()
-  `(nth 4 (go--syntax-ppss)))
+  `(nth 4 (syntax-ppss)))
 
 (defmacro go-goto-beginning-of-string-or-comment ()
-  `(goto-char (nth 8 (go--syntax-ppss))))
+  `(goto-char (nth 8 (syntax-ppss))))
 
 (defun go--backward-irrelevant (&optional stop-at-string)
   "Skips backwards over any characters that are irrelevant for
@@ -167,7 +200,7 @@ It skips over whitespace, comments, cases and labels and, if
 STOP-AT-STRING is not true, over strings."
 
   (let (pos (start-pos (point)))
-    (skip-chars-backward "\n[:blank:]")
+    (skip-chars-backward "\n\s\t")
     (if (and (save-excursion (beginning-of-line) (go-in-string-p)) (looking-back "`") (not stop-at-string))
         (backward-char))
     (if (and (go-in-string-p) (not stop-at-string))
@@ -415,7 +448,7 @@ recommended that you look at goflymake
                 (goto-char (point-min))
                 (forward-line (- from line-offset 1))
                 (incf line-offset len)
-                (kill-whole-line len)))
+                (go--kill-whole-line len)))
              (t
               (error "invalid rcs patch or internal error in go--apply-rcs-patch")))))))))
 
@@ -487,7 +520,7 @@ you save any file, kind of defeating the point of autoloading."
     (completing-read (if symbol
                          (format "godoc (default %s): " symbol)
                        "godoc: ")
-                     (go-packages) nil nil nil 'go-godoc-history symbol)))
+                     (go--old-completion-list-style (go-packages)) nil nil nil 'go-godoc-history symbol)))
 
 (defun godoc--get-buffer (query)
   "Get an empty buffer for a godoc query."
@@ -636,7 +669,7 @@ uncommented, otherwise a new import will be added."
   (interactive
    (list
     current-prefix-arg
-    (replace-regexp-in-string "^[\"']\\|[\"']$" "" (completing-read "Package: " (go-packages)))))
+    (replace-regexp-in-string "^[\"']\\|[\"']$" "" (completing-read "Package: " (go--old-completion-list-style (go-packages))))))
   (save-excursion
     (let (as line import-start)
       (if arg
@@ -740,7 +773,7 @@ will be commented, otherwise they will be removed completely."
           (beginning-of-line)
           (if arg
               (comment-region (line-beginning-position) (line-end-position))
-            (kill-whole-line)))
+            (go--kill-whole-line)))
         (message "Removed %d imports" (length lines)))
       (if flymake-state (flymake-mode-on)))))
 
@@ -762,13 +795,13 @@ visit FILENAME and go to line LINE and column COLUMN."
   "Call godef, acquiring definition position and expression
 description at POINT."
   (if (go--xemacs-p)
-      (error "godef does not reliably work in XEmacs, sorry"))
+      (message "godef does not reliably work in XEmacs, expect bad results"))
   (if (not buffer-file-name)
       (message "Cannot use godef on a buffer without a file name")
     (let ((outbuf (get-buffer-create "*godef*")))
       (with-current-buffer outbuf
         (erase-buffer))
-      (call-process-region (point-min) (point-max) "godef" nil outbuf nil "-i" "-t" "-f" (file-truename buffer-file-name) "-o" (number-to-string (position-bytes (point))))
+      (call-process-region (point-min) (point-max) "godef" nil outbuf nil "-i" "-t" "-f" (file-truename buffer-file-name) "-o" (number-to-string (go--position-bytes (point))))
       (with-current-buffer outbuf
         (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n")))))
 
