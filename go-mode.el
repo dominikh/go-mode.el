@@ -749,10 +749,13 @@ uncommented, otherwise a new import will be added."
     (append (list root) paths)))
 
 (defun go--string-prefix-p (s1 s2 &optional ignore-case)
+  "Return non-nil if S1 is a prefix of S2.
+If IGNORE-CASE is non-nil, the comparison is case-insensitive."
   (eq t (compare-strings s1 nil nil
                          s2 0 (length s1) ignore-case)))
 
 (defun go--directory-dirs (dir)
+  "Recursively return all subdirectories in DIR."
   (if (file-directory-p dir)
       (let ((dir (directory-file-name dir))
             (dirs '())
