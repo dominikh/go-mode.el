@@ -702,7 +702,7 @@ uncommented, otherwise a new import will be added."
           ('none (insert "\nimport (\n\t" line "\n)\n")))))))
 
 (defun go-root-and-paths ()
-  (let* ((output (process-lines "go" "env" "GOROOT" "GOPATH"))
+  (let* ((output (split-string (shell-command-to-string "go env GOROOT GOPATH") "\n"))
          (root (car output))
          (paths (split-string (car (cdr output)) ":")))
     (append (list root) paths)))
