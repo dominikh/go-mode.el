@@ -69,7 +69,7 @@
     (modify-syntax-entry ?=  "." st)
     (modify-syntax-entry ?<  "." st)
     (modify-syntax-entry ?>  "." st)
-    (modify-syntax-entry ?/  ". 124b" st)
+    (modify-syntax-entry ?/ (if (go--xemacs-p) ". 1456" ". 124b") st)
     (modify-syntax-entry ?*  ". 23" st)
     (modify-syntax-entry ?\n "> b" st)
     (modify-syntax-entry ?\" "\"" st)
