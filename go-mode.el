@@ -251,7 +251,7 @@ STOP-AT-STRING is not true, over strings."
 
 (defun go-indentation-at-point ()
   (save-excursion
-    (let (start-nesting (outindent 0))
+    (let (start-nesting)
       (back-to-indentation)
       (setq start-nesting (go-paren-level))
 
@@ -281,7 +281,6 @@ STOP-AT-STRING is not true, over strings."
   (interactive)
   (let (indent
         shift-amt
-        end
         (pos (- (point-max) (point)))
         (point (point))
         (beg (line-beginning-position)))
