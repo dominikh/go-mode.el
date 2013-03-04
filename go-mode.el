@@ -310,7 +310,7 @@ STOP-AT-STRING is not true, over strings."
       (forward-char))))
 
 ;;;###autoload
-(define-derived-mode go-mode fundamental-mode "Go"
+(define-derived-mode go-mode prog-mode "Go"
   "Major mode for editing Go source text.
 
 This mode provides (not just) basic editing capabilities for
