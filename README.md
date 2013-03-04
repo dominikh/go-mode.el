@@ -50,3 +50,22 @@ code.google.com/p/rog-go/exp/cmd/godef`.
 
 Also, if you're using YASnippet, consider using the snippets from
 [yasnippet-go](https://github.com/dominikh/yasnippet-go).
+
+Contributing
+============
+
+Because go-mode.el is also part of the Go distribution, there are
+essentially two ways to contribute changes:
+
+1) By sending a pull request on GitHub
+2) By submitting a CL to the Go project
+
+Because of copyright reasons, I will not accept any non-trivial
+contributions via pull requests. Please submit a CL instead. This will
+ensure that the changes go through a proper review process and that
+your name will be noted in the list of contributors and possibly
+authors. Instructions can be found at
+http://golang.org/doc/contribute.html.
+
+Trivial changes, and changes to files that are not part of the Go
+distribution (mainly this README), can be submitted via pull request.
