@@ -8,8 +8,8 @@
 (require 'ffap)
 (require 'url)
 
-(defun go--xemacs-p ()
-  (string-match "XEmacs\\|Lucid" emacs-version))
+(defmacro go--xemacs-p ()
+  `(featurep 'xemacs))
 
 (defun go--regexp-enclose-in-symbol (s)
   ;; XEmacs does not support \_<, GNU Emacs does. In GNU Emacs we make
