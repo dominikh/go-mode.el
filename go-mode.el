@@ -401,12 +401,17 @@ add the following hook to your emacs configuration:
 
 \(add-hook 'before-save-hook 'gofmt-before-save)
 
-If you want to use godef instead of etags (or similar), consider
-binding godef-jump to `M-.', which is the default key for
-find-tag:
+If you want to use `godef-jump' instead of etags (or similar),
+consider binding godef-jump to `M-.', which is the default key
+for `find-tag':
 
 \(add-hook 'go-mode-hook (lambda ()
                           (local-set-key (kbd \"M-.\") 'godef-jump)))
+
+Please note that godef is an external dependency. You can install
+it with
+
+go get code.google.com/p/rog-go/exp/cmd/godef
 
 
 If you're looking for even more integration with Go, namely
