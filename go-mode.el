@@ -523,12 +523,11 @@ recommended that you look at goflymake
     ;; is not an issue because gofmt -w does not produce any stdout
     ;; output in case of success.
     (if (zerop (call-process "gofmt" nil errbuf nil "-w" tmpfile))
-        (progn
-          (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
-              (message "Buffer is already gofmted")
-            (go--apply-rcs-patch patchbuf)
-            (kill-buffer errbuf)
-            (message "Applied gofmt")))
+        (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
+            (message "Buffer is already gofmted")
+          (go--apply-rcs-patch patchbuf)
+          (kill-buffer errbuf)
+          (message "Applied gofmt"))
       (message "Could not apply gofmt. Check errors for details")
       (gofmt--process-errors (buffer-file-name) tmpfile errbuf))
 
