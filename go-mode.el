@@ -4,6 +4,15 @@
 ;; Use of this source code is governed by a BSD-style
 ;; license that can be found in the LICENSE file.
 
+;; Author: The Go Authors
+;; Version: 4
+;; Keywords: languages go
+;; URL: http://tip.golang.org/misc/emacs/
+;;
+;; This file is not part of GNU Emacs.
+
+;;; Code:
+
 (require 'cl)
 (require 'ffap)
 (require 'url)
@@ -901,3 +910,5 @@ description at POINT."
     (file-error (message "Could not run godef binary"))))
 
 (provide 'go-mode)
+
+;;; go-mode.el ends here
