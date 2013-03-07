@@ -52,6 +52,8 @@
 (defun go--old-completion-list-style (list)
   (mapcar (lambda (x) (cons x nil)) list))
 
+(defalias 'go--prog-mode
+   (if (fboundp 'prog-mode) 'prog-mode 'fundamental-mode))
 
 (defun go--regexp-enclose-in-symbol (s)
   ;; XEmacs does not support \_<, GNU Emacs does. In GNU Emacs we make
@@ -374,7 +376,7 @@ current line will be returned."
       (forward-char))))
 
 ;;;###autoload
-(define-derived-mode go-mode fundamental-mode "Go"
+(define-derived-mode go-mode go--prog-mode "Go"
   "Major mode for editing Go source text.
 
 This mode provides (not just) basic editing capabilities for
