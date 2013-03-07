@@ -872,6 +872,7 @@ description at POINT."
          ((go--string-prefix-p "godef: no declaration found for " file)
           (message "%s" file))
          (t
+          (push-mark)
           (godef--find-file-line-column file))))
     (file-error (message "Could not run godef binary"))))
 
