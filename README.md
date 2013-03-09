@@ -3,9 +3,37 @@
   available here first, but will be sent upstream as well.**
 
 This is a replacement for the old Go mode that came with the Go
-distribution <= v1.0.3. It fixes several issues and adds new features,
+distribution &lt;= v1.0.3. It fixes several issues and adds new features,
 such as movement by functions, like one is used to from other major
 modes in emacs.
+
+Installation
+============
+
+### Using package.el
+
+*package.el* is a package manager module for Emacs. If you are not familiar with it I strongly
+recommend using it. On [EmacsWiki](http://emacswiki.org/emacs/ELPA) is an instruction how to
+us it.
+
+Download *go-mode.el* and:
+
+    M-x package-install-file go-mode.el
+
+Now you can delete downloaded *go-mode.el*. *Emacs Lisp Package Archive* will copy and
+byte-compile it to its archive and  automatic loads appropriate definitions.
+
+### Manually
+
+Download *go-mode.el* to your *site-lisp* directory, and:
+
+    M-x update-file-autoloads go-mode.el go-mode-autoloads.el
+    M-x byte-compile-file go-mode.el
+
+Add to your *.emacs* configuration file:
+
+    (require 'go-mode-autoloads)
+
 
 
 Fixes
@@ -47,6 +75,10 @@ For a richer experience, consider installing
 checking and [gocode](https://github.com/nsf/gocode) for auto
 completion. Some features require you to install godef via `go get
 code.google.com/p/rog-go/exp/cmd/godef`.
+
+Alternatively there is also [flymake-go](http://marmalade-repo.org/packages/flymake-go) package
+distributed with _package.el_. It uses _go fmt_ for syntax validation on the fly. It doesn't require
+building additional go modules.
 
 Also, if you're using YASnippet, consider using the snippets from
 [yasnippet-go](https://github.com/dominikh/yasnippet-go).

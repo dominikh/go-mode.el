@@ -4,6 +4,19 @@
 ;; Use of this source code is governed by a BSD-style
 ;; license that can be found in the LICENSE file.
 
+;;
+;; Author: Dominik Honnef
+;; Version: 2013.03.02
+;; Keywords: Go major-mode
+;; URL: https://github.com/dominikh/go-mode.el
+;;
+;; This file is not part of GNU Emacs.
+;;
+;; Usage:
+;;  check https://github.com/dominikh/go-mode.el/blob/master/README.md
+;;
+;;; Code:
+
 (require 'cl)
 (require 'ffap)
 (require 'url)
@@ -97,6 +110,11 @@
 (defcustom go-fontify-function-calls t
   "Fontify function and method calls if this is non-nil."
   :type 'boolean
+  :group 'go)
+
+(defcustom go-mode-hook nil
+  "Hook called by `go-mode'."
+  :type 'hook
   :group 'go)
 
 (defvar go-mode-syntax-table
@@ -369,7 +387,7 @@ current line will be returned."
       (forward-char))))
 
 ;;;###autoload
-(define-derived-mode go-mode fundamental-mode "Go"
+(define-derived-mode go-mode prog-mode "Go"
   "Major mode for editing Go source text.
 
 This mode provides (not just) basic editing capabilities for
@@ -885,3 +903,5 @@ description at POINT."
     (file-error (message "Could not run godef binary"))))
 
 (provide 'go-mode)
+
+;;; go-mode.el ends here
