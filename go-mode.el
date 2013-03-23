@@ -61,8 +61,14 @@
 (defun go--old-completion-list-style (list)
   (mapcar (lambda (x) (cons x nil)) list))
 
-(defalias 'go--prog-mode
-   (if (fboundp 'prog-mode) 'prog-mode 'fundamental-mode))
+;; GNU Emacs 24 has prog-mode, older GNU Emacs and XEmacs do not.
+;; Ideally we'd use defalias instead, but that breaks in XEmacs.
+;;
+;; TODO: If XEmacs decides to add prog-mode, change this to use
+;; defalias to alias prog-mode or fundamental-mode to go--prog-mode
+;; and use that in define-derived-mode.
+(if (not (fboundp 'prog-mode))
+    (define-derived-mode prog-mode fundamental-mode "" ""))
 
 (defun go--regexp-enclose-in-symbol (s)
   ;; XEmacs does not support \_<, GNU Emacs does. In GNU Emacs we make
@@ -385,7 +391,7 @@ current line will be returned."
       (forward-char))))
 
 ;;;###autoload
-(define-derived-mode go-mode go--prog-mode "Go"
+(define-derived-mode go-mode prog-mode "Go"
   "Major mode for editing Go source text.
 
 This mode provides (not just) basic editing capabilities for
