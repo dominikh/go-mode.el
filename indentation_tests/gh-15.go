@@ -1,7 +1,7 @@
 package gh15
 
 func somewhatLongFunctionName(
-	arg1 package1.RatherLongTypeName, arg2 package2.AnotherLongTypeName) {
+	arg1 package1.RatherLongTypeName, arg3 struct{}) {
 	return
 }
 
