@@ -209,6 +209,7 @@
     (define-key m "=" 'go-mode-insert-and-indent)
     (define-key m (kbd "C-c C-a") 'go-import-add)
     (define-key m (kbd "C-c C-j") 'godef-jump)
+    (define-key m (kbd "C-x 4 C-c C-j") 'godef-jump-other-window)
     (define-key m (kbd "C-c C-d") 'godef-describe)
     m)
   "Keymap used by Go mode to implement electric keys.")
@@ -873,13 +874,13 @@ will be commented, otherwise they will be removed completely."
         (message "Removed %d imports" (length lines)))
       (if flymake-state (flymake-mode-on)))))
 
-(defun godef--find-file-line-column (specifier)
+(defun godef--find-file-line-column (specifier other-window)
   "Given a file name in the format of `filename:line:column',
 visit FILENAME and go to line LINE and column COLUMN."
   (let* ((components (split-string specifier ":"))
          (line (string-to-number (nth 1 components)))
          (column (string-to-number (nth 2 components))))
-    (with-current-buffer (find-file (car components))
+    (with-current-buffer (funcall (if other-window 'find-file-other-window 'find-file) (car components))
       (goto-char (point-min))
       (forward-line (1- line))
       (beginning-of-line)
@@ -911,7 +912,7 @@ description at POINT."
           (message "%s" description)))
     (file-error (message "Could not run godef binary"))))
 
-(defun godef-jump (point)
+(defun godef-jump (point &optional other-window)
   "Jump to the definition of the expression at POINT."
   (interactive "d")
   (condition-case nil
@@ -925,8 +926,12 @@ description at POINT."
           (message "%s" file))
          (t
           (push-mark)
-          (godef--find-file-line-column file))))
+          (godef--find-file-line-column file other-window))))
     (file-error (message "Could not run godef binary"))))
+
+(defun godef-jump-other-window (point)
+  (interactive "d")
+  (godef-jump point t))
 
 (provide 'go-mode)
 
