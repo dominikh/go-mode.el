@@ -14,6 +14,7 @@
 ;;; Code:
 
 (require 'cl)
+(require 'etags)
 (require 'ffap)
 (require 'url)
 
@@ -926,6 +927,7 @@ description at POINT."
           (message "%s" file))
          (t
           (push-mark)
+          (ring-insert find-tag-marker-ring (point-marker))
           (godef--find-file-line-column file other-window))))
     (file-error (message "Could not run godef binary"))))
 
