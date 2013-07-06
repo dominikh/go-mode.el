@@ -95,7 +95,11 @@
       (concat "\\<" s "\\>")
     (concat "\\_<" s "\\_>")))
 
-(defalias 'go-goto-opening-parenthesis 'backward-up-list)
+(defun go-goto-opening-parenthesis (&optional ARG)
+  (condition-case nil
+      (backward-up-list ARG)
+    (error nil)))
+
 
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
 (defconst go-identifier-regexp "[[:word:][:multibyte:]]+")
