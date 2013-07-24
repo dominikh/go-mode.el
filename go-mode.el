@@ -96,9 +96,16 @@
       (concat "\\<" s "\\>")
     (concat "\\_<" s "\\_>")))
 
+;; Move up one level of parentheses. The optional argument ARG has no
+;; function.
 (defun go-goto-opening-parenthesis (&optional ARG)
+  ;; The old implementation of go-goto-opening-parenthesis had an
+  ;; optional argument to speed up the function. It didn't change the
+  ;; function's outcome.
+
+  ;; Silently fail if there's no matching opening parenthesis.
   (condition-case nil
-      (backward-up-list ARG)
+      (backward-up-list)
     (error nil)))
 
 
