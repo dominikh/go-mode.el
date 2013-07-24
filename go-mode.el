@@ -16,6 +16,7 @@
 (require 'cl)
 (require 'etags)
 (require 'ffap)
+(require 'ring)
 (require 'url)
 
 ;; XEmacs compatibility guidelines
