@@ -571,8 +571,7 @@ buffer."
                     (insert text)))))
              ((equal action "d")
               (with-current-buffer target-buffer
-                (goto-char (point-min))
-                (forward-line (- from line-offset 1))
+                (go--goto-line (- from line-offset))
                 (incf line-offset len)
                 (go--delete-whole-line len)))
              (t
@@ -889,8 +888,7 @@ will be commented, otherwise they will be removed completely."
           (message "Cannot operate on unsaved buffer")
         (setq lines (go-unused-imports-lines))
         (dolist (import lines)
-          (goto-char (point-min))
-          (forward-line (1- import))
+          (go--goto-line import)
           (beginning-of-line)
           (if arg
               (comment-region (line-beginning-position) (line-end-position))
@@ -907,8 +905,7 @@ visit FILENAME and go to line LINE and column COLUMN."
           (line (string-to-number (match-string 2 specifier)))
           (column (string-to-number (match-string 3 specifier))))
       (with-current-buffer (funcall (if other-window 'find-file-other-window 'find-file) filename)
-        (goto-char (point-min))
-        (forward-line (1- line))
+        (go--goto-line line)
         (beginning-of-line)
         (forward-char (1- column))
         (if (buffer-modified-p)
@@ -983,8 +980,7 @@ coverage information gathered via go test -coverprofile=INPUT."
 
     (with-temp-buffer
       (insert-file-contents input)
-      (goto-char (point-min))
-      (forward-line) ;; Skip over mode
+      (go--goto-line 2) ;; Skip over mode
       (while (not (eobp))
         (let* ((parts (split-string (buffer-substring (point-at-bol) (point-at-eol)) ":"))
                (file (car parts))
