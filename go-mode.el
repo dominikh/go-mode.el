@@ -5,7 +5,7 @@
 ;; license that can be found in the LICENSE file.
 
 ;; Author: The Go Authors
-;; Version: 9
+;; Version: 10
 ;; Keywords: languages go
 ;; URL: http://tip.golang.org/misc/emacs/
 ;;
