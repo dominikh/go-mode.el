@@ -973,7 +973,7 @@ description at POINT."
 (defun go-coverage (input)
   "Open a clone of the current buffer and overlay it with
 coverage information gathered via go test -coverprofile=INPUT."
-  (interactive "f")
+  (interactive "fCoverage file: ")
   (let ((ranges '())
         (file-name (file-name-nondirectory (buffer-file-name)))
         (gocov-buffer-name (concat (buffer-name) "<gocov>")))
