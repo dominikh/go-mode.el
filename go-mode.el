@@ -750,15 +750,6 @@ buffer. Tries to look for a URL at point."
     (while (search-forward "\\" end t)
       (put-text-property (1- (point)) (point) 'syntax-table (if (= (char-after) ?`) '(1) '(9))))))
 
-;; ;; Commented until we actually make use of this function
-;; (defun go--common-prefix (sequences)
-;;   ;; mismatch and reduce are cl
-;;   (assert sequences)
-;;   (flet ((common-prefix (s1 s2)
-;;                         (let ((diff-pos (mismatch s1 s2)))
-;;                           (if diff-pos (subseq s1 0 diff-pos) s1))))
-;;     (reduce #'common-prefix sequences)))
-
 (defun go-import-add (arg import)
   "Add a new import to the list of imports.
 
