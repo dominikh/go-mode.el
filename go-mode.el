@@ -164,12 +164,12 @@
 
 (defface go-coverage-covered
   '((t (:foreground "#2cd495")))
-  "Coverage color of untracked code."
+  "Coverage color of covered code."
   :group 'go-cover)
 
 (defface go-coverage-uncovered
   '((t (:foreground "#c00000")))
-  "Coverage color of untracked code."
+  "Coverage color of uncovered code."
   :group 'go-cover)
 
 
