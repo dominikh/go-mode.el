@@ -965,9 +965,10 @@ description at POINT."
   (forward-line (1- line)))
 
 (defun go--line-column-to-point (line column)
-  (go--goto-line line)
-  (forward-char (1- column))
-  (point))
+  (save-excursion
+    (go--goto-line line)
+    (forward-char (1- column))
+    (point)))
 
 (defstruct go--covered
   start-line start-column end-line end-column covered)
