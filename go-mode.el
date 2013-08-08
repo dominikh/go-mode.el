@@ -144,6 +144,10 @@
   "Major mode for editing Go code"
   :group 'languages)
 
+(defgroup go-cover nil
+  "Options specific to `cover`"
+  :group 'go)
+
 (defcustom go-fontify-function-calls t
   "Fontify function and method calls if this is non-nil."
   :type 'boolean
@@ -153,6 +157,22 @@
   "Hook called by `go-mode'."
   :type 'hook
   :group 'go)
+
+(defface go-coverage-untracked
+  '((t (:foreground "#505050")))
+  "Coverage color of untracked code."
+  :group 'go-cover)
+
+(defface go-coverage-covered
+  '((t (:foreground "#2cd495")))
+  "Coverage color of untracked code."
+  :group 'go-cover)
+
+(defface go-coverage-uncovered
+  '((t (:foreground "#c00000")))
+  "Coverage color of untracked code."
+  :group 'go-cover)
+
 
 (defvar go-mode-syntax-table
   (let ((st (make-syntax-table)))
@@ -440,6 +460,7 @@ The following extra functions are defined:
 - `go-play-buffer' and `go-play-region'
 - `go-download-play'
 - `godef-describe' and `godef-jump'
+- `go-coverage'
 
 If you want to automatically run `gofmt' before saving a file,
 add the following hook to your emacs configuration:
@@ -939,6 +960,74 @@ description at POINT."
 (defun godef-jump-other-window (point)
   (interactive "d")
   (godef-jump point t))
+
+(defun go--goto-line (line)
+  (goto-char (point-min))
+  (forward-line (1- line)))
+
+(defun go--line-column-to-point (line column)
+  (go--goto-line line)
+  (forward-char (1- column))
+  (point))
+
+(defstruct go--covered
+  start-line start-column end-line end-column covered)
+
+(defun go-coverage (input)
+  "Open a clone of the current buffer and overlay it with
+coverage information gathered via go test -coverprofile=INPUT."
+  (interactive "f")
+  (let ((ranges '())
+        (file-name (file-name-nondirectory (buffer-file-name)))
+        (gocov-buffer-name (concat (buffer-name) "<gocov>")))
+
+    (with-temp-buffer
+      (insert-file-contents input)
+      (goto-char (point-min))
+      (forward-line) ;; Skip over mode
+      (while (not (eobp))
+        (let* ((parts (split-string (buffer-substring (point-at-bol) (point-at-eol)) ":"))
+               (file (car parts))
+               (rest (split-string (nth 1 parts) "[., ]")))
+
+          (destructuring-bind
+              (start-line start-column end-line end-column num count)
+              (mapcar 'string-to-number rest)
+
+            (if (and (string= (file-name-nondirectory file) file-name))
+                (push
+                 (make-go--covered
+                  :start-line start-line
+                  :start-column start-column
+                  :end-line end-line
+                  :end-column end-column
+                  :covered (/= count 0))
+                 ranges)))
+
+          (forward-line))))
+
+    (with-current-buffer (or
+                          (get-buffer gocov-buffer-name)
+                          (clone-indirect-buffer gocov-buffer-name nil))
+      (save-excursion
+        (overlay-put
+         (make-overlay
+          (point-min)
+          (point-max))
+         'face 'go-coverage-untracked)
+
+        (dolist (range ranges)
+          (overlay-put
+           (make-overlay
+            (go--line-column-to-point
+             (go--covered-start-line range)
+             (go--covered-start-column range))
+            (go--line-column-to-point
+             (go--covered-end-line range)
+             (go--covered-end-column range)))
+           'face (if (go--covered-covered range) 'go-coverage-covered 'go-coverage-uncovered))))
+
+      (display-buffer (current-buffer) 'display-buffer-reuse-window))))
 
 (provide 'go-mode)
 
