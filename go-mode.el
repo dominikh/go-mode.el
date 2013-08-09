@@ -1071,17 +1071,17 @@ coverage information gathered via go test -coverprofile=INPUT."
                         (t
                          (/ (log count) divisor))))
                  (n (1+ (floor (* norm 9))))
-                 (face (concat "go-coverage-" (number-to-string n))))
+                 (face (concat "go-coverage-" (number-to-string n)))
+                 (ov (make-overlay
+                      (go--line-column-to-point
+                       (go--covered-start-line range)
+                       (go--covered-start-column range))
+                      (go--line-column-to-point
+                       (go--covered-end-line range)
+                       (go--covered-end-column range)))))
 
-            (overlay-put
-             (make-overlay
-              (go--line-column-to-point
-               (go--covered-start-line range)
-               (go--covered-start-column range))
-              (go--line-column-to-point
-               (go--covered-end-line range)
-               (go--covered-end-column range)))
-             'face face))))
+            (overlay-put ov 'face face)
+            (overlay-put ov 'help-echo (format "Count: %d" count)))))
 
       (display-buffer (current-buffer) 'display-buffer-reuse-window))))
 
