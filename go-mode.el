@@ -1022,6 +1022,39 @@ current coverage buffer or by prompting for it."
       go--coverage-origin-buffer
     (current-buffer)))
 
+(defun go--coverage-make-overlay (range divisor)
+  "Create a coverage overlay for a range of coverd/uncovered code."
+  (let* ((count (go--covered-count range))
+         (norm (cond
+                ((= count 0)
+                 -0.1)
+                ((= max-count 1)
+                 0.8)
+                (t
+                 (/ (log count) divisor))))
+         (n (1+ (floor (* norm 9))))
+         (face (concat "go-coverage-" (number-to-string n)))
+         (ov (make-overlay
+              (go--line-column-to-point
+               (go--covered-start-line range)
+               (go--covered-start-column range))
+              (go--line-column-to-point
+               (go--covered-end-line range)
+               (go--covered-end-column range)))))
+
+    (overlay-put ov 'face face)
+    (overlay-put ov 'help-echo (format "Count: %d" count))))
+
+(defun go--coverage-clear-overlays ()
+  "Remove existing overlays and put a single untracked overlay
+over the entire buffer."
+  (remove-overlays)
+  (overlay-put
+   (make-overlay
+    (point-min)
+    (point-max))
+   'face 'go-coverage-untracked))
+
 (defun go-coverage (&optional coverage-file)
   "Open a clone of the current buffer and overlay it with
 coverage information gathered via go test -coverprofile=COVERAGE-FILE.
@@ -1076,34 +1109,10 @@ for."
       (set (make-local-variable 'go--coverage-current-file-name) coverage-file)
 
       (save-excursion
-        (remove-overlays)
-        (overlay-put
-         (make-overlay
-          (point-min)
-          (point-max))
-         'face 'go-coverage-untracked)
-
+        (go--coverage-clear-overlays)
         (dolist (range ranges)
-          (let* ((count (go--covered-count range))
-                 (norm (cond
-                        ((= count 0)
-                         -0.1)
-                        ((= max-count 1)
-                         0.8)
-                        (t
-                         (/ (log count) divisor))))
-                 (n (1+ (floor (* norm 9))))
-                 (face (concat "go-coverage-" (number-to-string n)))
-                 (ov (make-overlay
-                      (go--line-column-to-point
-                       (go--covered-start-line range)
-                       (go--covered-start-column range))
-                      (go--line-column-to-point
-                       (go--covered-end-line range)
-                       (go--covered-end-column range)))))
+          (go--coverage-make-overlay range divisor)))
 
-            (overlay-put ov 'face face)
-            (overlay-put ov 'help-echo (format "Count: %d" count)))))
       (if (not (eq cur-buffer (current-buffer)))
           (display-buffer (current-buffer) 'display-buffer-reuse-window)))))
 
