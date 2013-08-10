@@ -2,6 +2,8 @@
   the Go distribution. New features and bugfixes will be made
   available here first, but will be sent upstream as well.**
 
+<a href='http://www.pledgie.com/campaigns/21377'><img alt='Click here to lend your support to: go-mode.el and make a donation at www.pledgie.com !' src='http://www.pledgie.com/campaigns/21377.png?skin_name=chrome' border='0' /></a>
+
 This is a replacement for the old Go mode that came with the Go
 distribution <= v1.0.3. It fixes several issues and adds new features,
 such as movement by functions, like one is used to from other major
