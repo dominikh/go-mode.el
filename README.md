@@ -43,6 +43,7 @@ Features
   you to install godef via `go get
   code.google.com/p/rog-go/exp/cmd/godef`.
 - Adds basic support for imenu (functions and variables)
+- Built-in support for displaying code coverage as calculated by go test (`go-coverage`)
 
 Other extensions
 ================
