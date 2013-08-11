@@ -954,9 +954,9 @@ visit FILENAME and go to line LINE and column COLUMN."
   "Call godef, acquiring definition position and expression
 description at POINT."
   (if (go--xemacs-p)
-      (message "godef does not reliably work in XEmacs, expect bad results"))
+      (error "godef does not reliably work in XEmacs, expect bad results"))
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
-      (message "Cannot use godef on a buffer without a file name")
+      (error "Cannot use godef on a buffer without a file name")
     (let ((outbuf (get-buffer-create "*godef*")))
       (with-current-buffer outbuf
         (erase-buffer))
