@@ -1083,19 +1083,18 @@ for."
               (start-line start-column end-line end-column num count)
               (mapcar 'string-to-number rest)
 
-            (if (> count max-count)
-                (setq max-count count))
-
-            (if (and (string= (file-name-nondirectory file) file-name))
-                (push
-                 (make-go--covered
-                  :start-line start-line
-                  :start-column start-column
-                  :end-line end-line
-                  :end-column end-column
-                  :covered (/= count 0)
-                  :count count)
-                 ranges)))
+            (when (and (string= (file-name-nondirectory file) file-name))
+              (if (> count max-count)
+                  (setq max-count count))
+              (push
+               (make-go--covered
+                :start-line start-line
+                :start-column start-column
+                :end-line end-line
+                :end-column end-column
+                :covered (/= count 0)
+                :count count)
+               ranges)))
 
           (forward-line)))
 
