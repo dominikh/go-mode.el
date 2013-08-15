@@ -1055,22 +1055,11 @@ over the entire buffer."
     (point-max))
    'face 'go-coverage-untracked))
 
-(defun go-coverage (&optional coverage-file)
-  "Open a clone of the current buffer and overlay it with
-coverage information gathered via go test -coverprofile=COVERAGE-FILE.
-
-If COVERAGE-FILE is nil, it will either be infered from the
-current buffer if it's already a coverage buffer, or be prompted
-for."
-  (interactive)
-  (setq coverage-file (or coverage-file (go--coverage-file)))
-  (let* ((ranges '())
-         (cur-buffer (current-buffer))
-         (origin-buffer (go--coverage-origin-buffer))
-         (file-name (file-name-nondirectory (buffer-file-name origin-buffer)))
-         (gocov-buffer-name (concat (buffer-name origin-buffer) "<gocov>"))
-         (max-count 0)
-         divisor)
+(defun go--coverage-parse-file (coverage-file file-name)
+  "Parse COVERAGE-FILE and extract coverage information and
+divisor for FILE-NAME."
+  (let ((ranges '())
+        (max-count 0))
     (with-temp-buffer
       (insert-file-contents coverage-file)
       (go--goto-line 2) ;; Skip over mode
@@ -1098,9 +1087,23 @@ for."
 
           (forward-line)))
 
-      (if (> max-count 0)
-          (setq divisor (log max-count))))
+      (list ranges (if (> max-count 0) (log max-count) 0)))))
 
+(defun go-coverage (&optional coverage-file)
+  "Open a clone of the current buffer and overlay it with
+coverage information gathered via go test -coverprofile=COVERAGE-FILE.
+
+If COVERAGE-FILE is nil, it will either be infered from the
+current buffer if it's already a coverage buffer, or be prompted
+for."
+  (interactive)
+  (let* ((cur-buffer (current-buffer))
+         (origin-buffer (go--coverage-origin-buffer))
+         (gocov-buffer-name (concat (buffer-name origin-buffer) "<gocov>"))
+         (coverage-file (or coverage-file (go--coverage-file)))
+         (ranges-and-divisor (go--coverage-parse-file
+                              coverage-file
+                              (file-name-nondirectory (buffer-file-name origin-buffer)))))
     (with-current-buffer (or
                           (get-buffer gocov-buffer-name)
                           (make-indirect-buffer origin-buffer gocov-buffer-name t))
@@ -1109,8 +1112,8 @@ for."
 
       (save-excursion
         (go--coverage-clear-overlays)
-        (dolist (range ranges)
-          (go--coverage-make-overlay range divisor)))
+        (dolist (range (car ranges-and-divisor))
+          (go--coverage-make-overlay range (cadr ranges-and-divisor))))
 
       (if (not (eq cur-buffer (current-buffer)))
           (display-buffer (current-buffer) 'display-buffer-reuse-window)))))
