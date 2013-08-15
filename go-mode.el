@@ -1028,7 +1028,7 @@ current coverage buffer or by prompting for it."
          (norm (cond
                 ((= count 0)
                  -0.1)
-                ((= max-count 1)
+                ((= divisor 0)
                  0.8)
                 (t
                  (/ (log count) divisor))))
