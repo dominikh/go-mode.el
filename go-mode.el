@@ -1022,25 +1022,32 @@ current coverage buffer or by prompting for it."
       go--coverage-origin-buffer
     (current-buffer)))
 
-(defun go--coverage-make-overlay (range divisor)
-  "Create a coverage overlay for a range of coverd/uncovered code."
+(defun go--coverage-face (count divisor)
+  "Return the intensity face for COUNT when using DIVISOR
+to scale it to a range [0,10].
+
+DIVISOR scales the absolute cover count to values from 0 to 10.
+For DIVISOR = 0 the count will always translate to 8."
   (let* ((count (go--covered-count range))
          (norm (cond
                 ((= count 0)
-                 -0.1)
+                 -0.1) ;; Uncovered code, set to -0.1 so n becomes 0.
                 ((= divisor 0)
-                 0.8)
+                 0.8) ;; covermode=set, set to 0.8 so n becomes 8.
                 (t
                  (/ (log count) divisor))))
-         (n (1+ (floor (* norm 9))))
-         (face (concat "go-coverage-" (number-to-string n)))
-         (ov (make-overlay
-              (go--line-column-to-point
-               (go--covered-start-line range)
-               (go--covered-start-column range))
-              (go--line-column-to-point
-               (go--covered-end-line range)
-               (go--covered-end-column range)))))
+         (n (1+ (floor (* norm 9))))) ;; Convert normalized count [0,1] to intensity [0,10]
+    (concat "go-coverage-" (number-to-string n))))
+
+(defun go--coverage-make-overlay (range divisor)
+  "Create a coverage overlay for a RANGE of covered/uncovered
+code. Uses DIVISOR to scale absolute counts to a [0,10] scale."
+  (let* ((count (go--covered-count range))
+         (face (go--coverage-face count divisor))
+         (ov (make-overlay (go--line-column-to-point (go--covered-start-line range)
+                                                     (go--covered-start-column range))
+                           (go--line-column-to-point (go--covered-end-line range)
+                                                     (go--covered-end-column range)))))
 
     (overlay-put ov 'face face)
     (overlay-put ov 'help-echo (format "Count: %d" count))))
@@ -1049,16 +1056,14 @@ current coverage buffer or by prompting for it."
   "Remove existing overlays and put a single untracked overlay
 over the entire buffer."
   (remove-overlays)
-  (overlay-put
-   (make-overlay
-    (point-min)
-    (point-max))
-   'face 'go-coverage-untracked))
+  (overlay-put (make-overlay (point-min) (point-max))
+               'face
+               'go-coverage-untracked))
 
 (defun go--coverage-parse-file (coverage-file file-name)
   "Parse COVERAGE-FILE and extract coverage information and
 divisor for FILE-NAME."
-  (let ((ranges '())
+  (let (ranges
         (max-count 0))
     (with-temp-buffer
       (insert-file-contents coverage-file)
@@ -1070,20 +1075,18 @@ divisor for FILE-NAME."
 
           (destructuring-bind
               (start-line start-column end-line end-column num count)
-              (mapcar 'string-to-number rest)
+              (mapcar #'string-to-number rest)
 
             (when (and (string= (file-name-nondirectory file) file-name))
               (if (> count max-count)
                   (setq max-count count))
-              (push
-               (make-go--covered
-                :start-line start-line
-                :start-column start-column
-                :end-line end-line
-                :end-column end-column
-                :covered (/= count 0)
-                :count count)
-               ranges)))
+              (push (make-go--covered :start-line start-line
+                                      :start-column start-column
+                                      :end-line end-line
+                                      :end-column end-column
+                                      :covered (/= count 0)
+                                      :count count)
+                    ranges)))
 
           (forward-line)))
 
@@ -1104,9 +1107,8 @@ for."
          (ranges-and-divisor (go--coverage-parse-file
                               coverage-file
                               (file-name-nondirectory (buffer-file-name origin-buffer)))))
-    (with-current-buffer (or
-                          (get-buffer gocov-buffer-name)
-                          (make-indirect-buffer origin-buffer gocov-buffer-name t))
+    (with-current-buffer (or (get-buffer gocov-buffer-name)
+                             (make-indirect-buffer origin-buffer gocov-buffer-name t))
       (set (make-local-variable 'go--coverage-origin-buffer) origin-buffer)
       (set (make-local-variable 'go--coverage-current-file-name) coverage-file)
 
