@@ -962,7 +962,18 @@ description at POINT."
     (let ((outbuf (get-buffer-create "*godef*")))
       (with-current-buffer outbuf
         (erase-buffer))
-      (call-process-region (point-min) (point-max) "godef" nil outbuf nil "-i" "-t" "-f" (file-truename (buffer-file-name (go--coverage-origin-buffer))) "-o" (number-to-string (go--position-bytes (point))))
+      (call-process-region (point-min)
+                           (point-max)
+                           "godef"
+                           nil
+                           outbuf
+                           nil
+                           "-i"
+                           "-t"
+                           "-f"
+                           (file-truename (buffer-file-name (go--coverage-origin-buffer)))
+                           "-o"
+                           (number-to-string (go--position-bytes (point))))
       (with-current-buffer outbuf
         (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n")))))
 
