@@ -1120,7 +1120,7 @@ for."
                               coverage-file
                               (file-name-nondirectory (buffer-file-name origin-buffer))))
          (cov-mtime (nth 5 (file-attributes coverage-file)))
-         (cur-mtime (nth 5 (file-attributes (buffer-file-name cur-buffer)))))
+         (cur-mtime (nth 5 (file-attributes (buffer-file-name origin-buffer)))))
 
     (if (< (float-time cov-mtime) (float-time cur-mtime))
         (message "Coverage file is older than the origin file.")
