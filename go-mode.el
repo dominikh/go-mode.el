@@ -1123,7 +1123,7 @@ for."
          (cur-mtime (nth 5 (file-attributes (buffer-file-name origin-buffer)))))
 
     (if (< (float-time cov-mtime) (float-time cur-mtime))
-        (message "Coverage file is older than the origin file."))
+        (message "Coverage file is older than the source file."))
 
     (with-current-buffer (or (get-buffer gocov-buffer-name)
                              (make-indirect-buffer origin-buffer gocov-buffer-name t))
