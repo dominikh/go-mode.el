@@ -1125,9 +1125,8 @@ for."
     (if (< (float-time cov-mtime) (float-time cur-mtime))
         (message "Coverage file is older than the origin file."))
 
-    (with-current-buffer (or
-                          (get-buffer gocov-buffer-name)
-                          (make-indirect-buffer origin-buffer gocov-buffer-name t))
+    (with-current-buffer (or (get-buffer gocov-buffer-name)
+                             (make-indirect-buffer origin-buffer gocov-buffer-name t))
       (set (make-local-variable 'go--coverage-origin-buffer) origin-buffer)
       (set (make-local-variable 'go--coverage-current-file-name) coverage-file)
 
