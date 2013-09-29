@@ -1115,7 +1115,7 @@ divisor for FILE-NAME."
   "Open a clone of the current buffer and overlay it with
 coverage information gathered via go test -coverprofile=COVERAGE-FILE.
 
-If COVERAGE-FILE is nil, it will either be infered from the
+If COVERAGE-FILE is nil, it will either be inferred from the
 current buffer if it's already a coverage buffer, or be prompted
 for."
   (interactive)
