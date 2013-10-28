@@ -958,7 +958,8 @@ will be commented, otherwise they will be removed completely."
   "Given a file name in the format of `filename:line:column',
 visit FILENAME and go to line LINE and column COLUMN."
   (if (not (string-match "\\(.+\\):\\([0-9]+\\):\\([0-9]+\\)" specifier))
-      (error "Unexpected godef output: %s" specifier)
+      ;; We've only been given a directory name
+      (funcall (if other-window 'find-file-other-window 'find-file) specifier)
     (let ((filename (match-string 1 specifier))
           (line (string-to-number (match-string 2 specifier)))
           (column (string-to-number (match-string 3 specifier))))
@@ -1015,6 +1016,8 @@ description at POINT."
          ((string= "godef: no identifier found" file)
           (message "%s" file))
          ((go--string-prefix-p "godef: no declaration found for " file)
+          (message "%s" file))
+         ((go--string-prefix-p "error finding import path for " file)
           (message "%s" file))
          (t
           (push-mark)
