@@ -65,8 +65,11 @@
          (kill-new (s) ()))
     (go--kill-whole-line arg)))
 
-
-(declare-function go--position-bytes "go-mode" (point))
+;; declare-function is an empty macro that only byte-compile cares
+;; about. Wrap in always false if to satisfy Emacsen without that
+;; macro.
+(if nil
+    (declare-function go--position-bytes "go-mode" (point)))
 ;; XEmacs unfortunately does not offer position-bytes. We can fall
 ;; back to just using (point), but it will be incorrect as soon as
 ;; multibyte characters are being used.
