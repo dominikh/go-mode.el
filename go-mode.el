@@ -181,12 +181,7 @@ from https://github.com/bradfitz/goimports."
 (defcustom go-other-file-alist
   '(("_test\\.go\\'" (".go"))
     ("\\.go\\'" ("_test.go")))
-  "Alist of extensions to find given the current file's extension.
-
-This list should contain the most used extensions before the others,
-since the search algorithm searches sequentially through each directory
-specified in `ff-search-directories'.  If a file is not found, a new one
-is created with the first matching extension (`.go' yields `_test.go')."
+  "See the documentation of `ff-other-file-alist', for details."
   :type '(repeat (list regexp (choice (repeat string) function)))
   :group 'go)
 
