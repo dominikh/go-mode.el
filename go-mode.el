@@ -1042,6 +1042,29 @@ description at POINT."
       (with-current-buffer outbuf
         (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n")))))
 
+(defun godef--successful-p (output)
+  (cond
+   ((string= "-" output)
+    nil)
+   ((string= "godef: no identifier found" output)
+    nil)
+   ((go--string-prefix-p "godef: no declaration found for " output)
+    nil)
+   ((go--string-prefix-p "error finding import path for " output)
+    nil)
+   (t
+    t)))
+
+(defun godef--error (output)
+  (cond
+   ((godef--successful-p output)
+    nil)
+   ((string= "-" output)
+    "godef: expression is not defined anywhere")
+   (t
+    output
+    )))
+
 (defun godef-describe (point)
   "Describe the expression at POINT."
   (interactive "d")
@@ -1057,19 +1080,11 @@ description at POINT."
   (interactive "d")
   (condition-case nil
       (let ((file (car (godef--call point))))
-        (cond
-         ((string= "-" file)
-          (message "godef: expression is not defined anywhere"))
-         ((string= "godef: no identifier found" file)
-          (message "%s" file))
-         ((go--string-prefix-p "godef: no declaration found for " file)
-          (message "%s" file))
-         ((go--string-prefix-p "error finding import path for " file)
-          (message "%s" file))
-         (t
+        (if (not (godef--successful-p file))
+            (message "%s" (godef--error file))
           (push-mark)
           (ring-insert find-tag-marker-ring (point-marker))
-          (godef--find-file-line-column file other-window))))
+          (godef--find-file-line-column file other-window)))
     (file-error (message "Could not run godef binary"))))
 
 (defun godef-jump-other-window (point)
