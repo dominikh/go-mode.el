@@ -774,6 +774,23 @@ you save any file, kind of defeating the point of autoloading."
      'godoc--buffer-sentinel)
     nil))
 
+(defun godoc-at-point (point)
+  (interactive "d")
+  (condition-case nil
+      (let* ((output (godef--call point))
+             (file (car output))
+             (name-parts (split-string (cadr output) " "))
+             (first (car name-parts)))
+        (if (not (godef--successful-p file))
+            (message "%s" (godef--error file))
+          (godoc (format "%s %s"
+                         (mapconcat #'identity (butlast (split-string file "/") 1) "/")
+                         (if (or (string= first "type") (string= first "const"))
+                             (cadr name-parts)
+                           (car name-parts))))))
+    (file-error (message "Could not run godef binary"))))
+
+
 (defun go-goto-imports ()
   "Move point to the block of imports.
 
