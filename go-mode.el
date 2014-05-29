@@ -1055,7 +1055,7 @@ available in the buffer `*godef describe*'"
         (if (not description)
             (message "No description found for expression at point")
           (display-message-or-buffer
-	   (format "%s" (mapconcat #'identity description "\n"))
+	   (mapconcat #'identity description "\n")
 	   "*godef describe*")))
     (file-error (message "Could not run godef binary"))))
 
