@@ -60,29 +60,18 @@
        (save-excursion (end-of-visible-line) (bobp)))
       (signal 'beginning-of-buffer nil))
 
-  (let (start-point
-        end-point)
-    (cond ((zerop arg)
-           (forward-visible-line 0)
-           (setq start-point (point))
-
-           (end-of-visible-line)
-           (setq end-point (point)))
-          ((< arg 0)
-           (end-of-visible-line)
-           (setq start-point (point))
-
-           (forward-visible-line (1+ arg))
-           (unless (bobp)
-             (backward-char))
-           (setq end-point (point)))
-          (t
-           (forward-visible-line 0)
-           (setq start-point (point))
-
-           (forward-visible-line arg)
-           (setq end-point (point))))
-    (delete-region start-point end-point)))
+  (cond ((zerop arg)
+         (delete-region (progn (forward-visible-line 0) (point))
+                        (progn (end-of-visible-line) (point))))
+        ((< arg 0)
+         (delete-region (progn (end-of-visible-line) (point))
+                        (progn (forward-visible-line (1+ arg))
+                               (unless (bobp)
+                                 (backward-char))
+                               (point))))
+        (t
+         (delete-region (progn (forward-visible-line 0) (point))
+                        (progn (forward-visible-line arg) (point))))))
 
 ;; declare-function is an empty macro that only byte-compile cares
 ;; about. Wrap in always false if to satisfy Emacsen without that
