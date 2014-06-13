@@ -42,29 +42,47 @@
 ;; - Use go--old-completion-list-style when using a plain list as the
 ;;   collection for completing-read
 ;;
-;; - Use go--kill-whole-line instead of kill-whole-line (called
-;;   kill-entire-line in XEmacs)
-;;
 ;; - Use go--position-bytes instead of position-bytes
 (defmacro go--xemacs-p ()
   `(featurep 'xemacs))
 
-(defalias 'go--kill-whole-line
-  (if (fboundp 'kill-whole-line)
-      #'kill-whole-line
-    #'kill-entire-line))
-
 ;; Delete the current line without putting it in the kill-ring.
 (defun go--delete-whole-line (&optional arg)
-  ;; Emacs uses both kill-region and kill-new, Xemacs only uses
-  ;; kill-region. In both cases we turn them into operations that do
-  ;; not modify the kill ring. This solution does depend on the
-  ;; implementation of kill-line, but it's the only viable solution
-  ;; that does not require to write kill-line from scratch.
-  (flet ((kill-region (beg end)
-                      (delete-region beg end))
-         (kill-new (s) ()))
-    (go--kill-whole-line arg)))
+  (setq arg (or arg 1))
+  (if (and
+       (> arg 0)
+       (eobp)
+       (save-excursion (forward-visible-line 0) (eobp)))
+      (signal 'end-of-buffer nil))
+  (if (and
+       (< arg 0)
+       (bobp)
+       (save-excursion (end-of-visible-line) (bobp)))
+      (signal 'beginning-of-buffer nil))
+
+  (let (start-point
+        end-point)
+    (cond ((zerop arg)
+           (forward-visible-line 0)
+           (setq start-point (point))
+
+           (end-of-visible-line)
+           (setq end-point (point)))
+          ((< arg 0)
+           (end-of-visible-line)
+           (setq start-point (point))
+
+           (forward-visible-line (1+ arg))
+           (unless (bobp)
+             (backward-char))
+           (setq end-point (point)))
+          (t
+           (forward-visible-line 0)
+           (setq start-point (point))
+
+           (forward-visible-line arg)
+           (setq end-point (point))))
+    (delete-region start-point end-point)))
 
 ;; declare-function is an empty macro that only byte-compile cares
 ;; about. Wrap in always false if to satisfy Emacsen without that
