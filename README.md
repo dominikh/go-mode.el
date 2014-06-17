@@ -1,67 +1,102 @@
-**Note: This go-mode.el has been merged upstream and is now part of
-  the Go distribution. New features and bugfixes will be made
-  available here first, but will be sent upstream as well.**
+<strong>Note: All contributions to go-mode that do not affect the README should follow the guidelines at http://golang.org/doc/contribute.html</strong>
+
+This is go-mode as it ships with Go since Go 1.1. It's a replacement
+for and full rewrite of the old go-mode that shipped with Go 1.0.3 and
+before.
+
+From the point of view of its primary developer, this is the main
+repository. Strictly speaking, however, go-mode is part of the Go
+distribution (and therein refered to as misc/emacs), and the canonical
+location is at
+http://code.google.com/p/go/source/browse#hg%2Fmisc%2Femacs –
+Nevertheless, new developments, if they are not 3rd party
+contributions, will be made available here first.
+
+# Features
+
+In addition to normal features, such as fontification and indentation,
+and close integration with familiar Emacs functionality (for example
+syntax-based navigation like `beginning-of-defun`), go-mode comes with
+the following extra features to provide an improved experience:
+
+- Integration with `gofmt` by providing a command of the same name,
+  and `gofmt-before-save`, which can be used in a hook to format Go
+  buffers before saving them.
+  - Setting the `gofmt-command` variable also allows using
+    `goimports`.
+- Integration with `godoc` via the functions `godoc` and
+  `godoc-at-point`.
+- Integration with the Playground
+  - `go-play-buffer` and `go-play-region` to send code to the
+    Playground
+  - `go-download-play` to download a Playground entry into a new
+    buffer
+- Managing imports
+  - A function for jumping to the file's imports (`go-goto-imports`)
+  - A function for adding imports, including tab completion
+    (`go-import-add`, bound to `C-c C-a`)
+  - A function for removing or commenting unused imports
+    (`go-remove-unused-imports`)
+- Integration with godef
+  - `godef-describe` (`C-c C-d`) to describe expressions
+  - `godef-jump` (`C-c C-j`) and `godef-jump-other-window` (`C-x 4 C-c
+    C-j`) to jump to declarations
+  - This requires you to install godef via `go get
+  code.google.com/p/rog-go/exp/cmd/godef`.
+- Basic support for imenu (functions and variables)
+- Built-in support for displaying code coverage as calculated by `go
+  test` (`go-coverage`)
+
+# Other extensions
+
+There are several third party extensions that can enhance the Go
+experience in Emacs.
+
+## Syntax/error checking
+
+There are two ways of using flymake with Go:
+
+1. [goflymake](https://github.com/dougm/goflymake), which internally
+uses `go build` to capture all errors that a regular compilation would
+also produce
+2. [flymake-go](http://marmalade-repo.org/packages/flymake-go) for a
+more lightweight solution that only uses `gofmt` and as such is only
+able to catch syntax errors. Unlike goflymake, however, it does not
+require an additional executable.
+
+Additionally, there is
+[flycheck](https://github.com/flycheck/flycheck), a modern replacement
+for flymake, which comes with built-in support for Go. In addition to
+using `go build` or `gofmt`, it also has support for `go vet`,
+`golint` and `errcheck`.
+
+## eldoc
+
+https://github.com/syohex/emacs-go-eldoc provides eldoc functionality
+for go-mode.
+
+## Snippets
+
+I maintain a set of YASnippet snippets for go-mode at
+https://github.com/dominikh/yasnippet-go
+
+## Integration with errcheck
+
+https://github.com/dominikh/go-errcheck.el provides integration with
+[errcheck](https://github.com/kisielk/errcheck).
+
+# Donations
+
+I am accepting donations for go-mode, but it has to be said that even though
+I am its primary developer, there are several third party
+contributions with varying complexity. Also, go-mode is part of the
+official Go distribution. Donations would be towards me, Dominik
+Honnef, and not go-mode as a whole.
 
 <a href='http://www.pledgie.com/campaigns/21377'><img alt='Click here to lend your support to: go-mode.el and make a donation at www.pledgie.com !' src='http://www.pledgie.com/campaigns/21377.png?skin_name=chrome' border='0' /></a>
 
-This is a replacement for the old Go mode that came with the Go
-distribution <= v1.0.3. It fixes several issues and adds new features,
-such as movement by functions, like one is used to from other major
-modes in emacs.
 
-
-Fixes
-=====
-- Uses a proper syntax table, so that emacs and other packages know
-  about strings and comments (e.g. expand-region needs this)
-- Fixes various indentation/font locking problems caused by the lack
-  of proper syntax table
-- Fixes gofmt issue with buffers that do not end with a newline
-- Does not fontify anonymous functions as if they were methods
-
-Improvements
-============
-- Fontifies `(foo)(bar)` function calls
-- Fontifies identifiers with unicode characters in them
-- Fontifies type names in struct literals
-- Fontifies type names in maps, slices and arrays
-- Uses view-mode for the godoc buffer
-- Complete rewrite of gofmt, fixing several issues
-
-Features
-========
-- Support for `C-M-a` (`beginning-of-defun`), `C-M-e` (`end-of-defun`)
-  and all functions that make use of defun navigation, such as `C-M-h`
-  (`mark-defun`), `C-x n d` (`narrow-to-defun`) and more.
-- Two functions for sending code to the Playground (`go-play-buffer` and `go-play-region`)
-- A function for downloading code from the Playground into a Go buffer (`go-download-play`)
-- A function for jumping to the file's imports (`go-goto-imports`)
-- A function for adding imports, including tab completion (`go-import-add`, bound to `C-c C-a`)
-- A function for removing or commenting unused imports (`go-remove-unused-imports`)
-- `godef-describe` and `godef-jump` (`C-c C-d` and `C-c C-j`) to
-  describe expressions and jump to their declarations. This requires
-  you to install godef via `go get
-  code.google.com/p/rog-go/exp/cmd/godef`.
-- Adds basic support for imenu (functions and variables)
-- Built-in support for displaying code coverage as calculated by go test (`go-coverage`)
-
-Other extensions
-================
-For a richer experience, consider installing
-[goflymake](https://github.com/dougm/goflymake) for on-the-fly syntax
-checking and [gocode](https://github.com/nsf/gocode) for auto
-completion.
-
-Alternatively there is also
-[flymake-go](http://marmalade-repo.org/packages/flymake-go), which
-uses _gofmt_ to check for syntax errors and doesn't require installing
-any additional binaries. It **only** catches syntactic errors though.
-
-Also, if you're using YASnippet, consider using the snippets from
-[yasnippet-go](https://github.com/dominikh/yasnippet-go).
-
-Contributing
-============
+# Contributing
 
 Because go-mode.el is also part of the Go distribution, there are
 essentially two ways to contribute changes:
@@ -76,5 +111,6 @@ your name will be noted in the list of contributors and possibly
 authors. Instructions can be found at
 http://golang.org/doc/contribute.html.
 
-Trivial changes, and changes to files that are not part of the Go
-distribution (mainly this README), can be submitted via pull request.
+Only changes to files that are not part of the Go distribution (mainly
+this README), can be submitted via pull request.
+
