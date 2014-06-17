@@ -800,7 +800,7 @@ to display more documentation than desired."
         (if (not (godef--successful-p file))
             (message "%s" (godef--error file))
           (godoc (format "%s %s"
-                         (mapconcat #'identity (butlast (split-string file "/") 1) "/")
+                         (file-name-directory file)
                          (if (or (string= first "type") (string= first "const"))
                              (cadr name-parts)
                            (car name-parts))))))
