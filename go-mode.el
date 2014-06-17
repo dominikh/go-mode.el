@@ -48,18 +48,17 @@
 
 ;; Delete the current line without putting it in the kill-ring.
 (defun go--delete-whole-line (&optional arg)
+  ;; Derived from `kill-whole-line'.
+  ;; ARG is defined as for that function.
   (setq arg (or arg 1))
-  (if (and
-       (> arg 0)
-       (eobp)
-       (save-excursion (forward-visible-line 0) (eobp)))
+  (if (and (> arg 0)
+           (eobp)
+           (save-excursion (forward-visible-line 0) (eobp)))
       (signal 'end-of-buffer nil))
-  (if (and
-       (< arg 0)
-       (bobp)
-       (save-excursion (end-of-visible-line) (bobp)))
+  (if (and (< arg 0)
+           (bobp)
+           (save-excursion (end-of-visible-line) (bobp)))
       (signal 'beginning-of-buffer nil))
-
   (cond ((zerop arg)
          (delete-region (progn (forward-visible-line 0) (point))
                         (progn (end-of-visible-line) (point))))
