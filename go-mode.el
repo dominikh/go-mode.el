@@ -1086,8 +1086,7 @@ description at POINT."
    ((string= "-" output)
     "godef: expression is not defined anywhere")
    (t
-    output
-    )))
+    output)))
 
 (defun godef-describe (point)
   "Describe the expression at POINT."
