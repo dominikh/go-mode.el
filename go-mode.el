@@ -1075,17 +1075,10 @@ description at POINT."
         (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n")))))
 
 (defun godef--successful-p (output)
-  (cond
-   ((string= "-" output)
-    nil)
-   ((string= "godef: no identifier found" output)
-    nil)
-   ((go--string-prefix-p "godef: no declaration found for " output)
-    nil)
-   ((go--string-prefix-p "error finding import path for " output)
-    nil)
-   (t
-    t)))
+  (not (or (string= "-" output)
+           (string= "godef: no identifier found" output)
+           (go--string-prefix-p "godef: no declaration found for " output)
+           (go--string-prefix-p "error finding import path for " output))))
 
 (defun godef--error (output)
   (cond
