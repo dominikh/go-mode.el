@@ -772,7 +772,7 @@ you save any file, kind of defeating the point of autoloading."
 
 ;;;###autoload
 (defun godoc (query)
-  "Show go documentation for a query, much like M-x man."
+  "Show Go documentation for a query, much like M-x man."
   (interactive (list (godoc--read-query)))
   (unless (string= query "")
     (set-process-sentinel
@@ -782,6 +782,15 @@ you save any file, kind of defeating the point of autoloading."
     nil))
 
 (defun godoc-at-point (point)
+  "Show Go documentation for the identifier at POINT.
+
+`godoc-at-point' requires godef to work.
+
+Due to a limitation in godoc, it is not possible to differentiate
+between functions and methods, which may cause `godoc-at-point'
+to display more documentation than desired."
+  ;; TODO(dominikh): Support executing godoc-at-point on a package
+  ;; name.
   (interactive "d")
   (condition-case nil
       (let* ((output (godef--call point))
@@ -796,7 +805,6 @@ you save any file, kind of defeating the point of autoloading."
                              (cadr name-parts)
                            (car name-parts))))))
     (file-error (message "Could not run godef binary"))))
-
 
 (defun go-goto-imports ()
   "Move point to the block of imports.
