@@ -949,7 +949,7 @@ uncommented, otherwise a new import will be added."
   (let* ((output (split-string (shell-command-to-string (concat go-command " env GOROOT GOPATH"))
                                "\n"))
          (root (car output))
-         (paths (split-string (cadr output) ":")))
+         (paths (split-string (cadr output) path-separator)))
     (append (list root) paths)))
 
 (defun go--string-prefix-p (s1 s2 &optional ignore-case)
