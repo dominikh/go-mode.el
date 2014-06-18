@@ -70,6 +70,11 @@ for flymake, which comes with built-in support for Go. In addition to
 using `go build` or `gofmt`, it also has support for `go vet`,
 `golint` and `errcheck`.
 
+## Auto completion
+
+For auto completion, take a look at
+[gocode](https://github.com/nsf/gocode).
+
 ## eldoc
 
 https://github.com/syohex/emacs-go-eldoc provides eldoc functionality
