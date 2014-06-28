@@ -1,16 +1,10 @@
-<strong>Note: All contributions to go-mode that do not affect the README should follow the guidelines at http://golang.org/doc/contribute.html</strong>
+This is go-mode, the Emacs mode for editing Go code.
 
-This is go-mode as it ships with Go since Go 1.1. It's a replacement
-for and full rewrite of the old go-mode that shipped with Go 1.0.3 and
-before.
+It is a complete rewrite of the go-mode that shipped with Go 1.0.3 and
+before, and was part of Go 1.1 until Go 1.3. Beginning with Go 1.4,
+editor integration will not be part of the Go distribution anymore,
+making this repository the canonical place for go-mode.
 
-From the point of view of its primary developer, this is the main
-repository. Strictly speaking, however, go-mode is part of the Go
-distribution (and therein refered to as misc/emacs), and the canonical
-location is at
-http://code.google.com/p/go/source/browse#hg%2Fmisc%2Femacs –
-Nevertheless, new developments, if they are not 3rd party
-contributions, will be made available here first.
 
 # Features
 
@@ -92,30 +86,9 @@ https://github.com/dominikh/go-errcheck.el provides integration with
 
 # Donations
 
-I am accepting donations for go-mode, but it has to be said that even though
-I am its primary developer, there are several third party
-contributions with varying complexity. Also, go-mode is part of the
-official Go distribution. Donations would be towards me, Dominik
-Honnef, and not go-mode as a whole.
+I am accepting donations for go-mode, but it has to be said that even
+though I am its primary developer, there are several third party
+contributions with varying complexity. Donations would be towards me,
+Dominik Honnef, and not go-mode as a whole.
 
 <a href='http://www.pledgie.com/campaigns/21377'><img alt='Click here to lend your support to: go-mode.el and make a donation at www.pledgie.com !' src='http://www.pledgie.com/campaigns/21377.png?skin_name=chrome' border='0' /></a>
-
-
-# Contributing
-
-Because go-mode.el is also part of the Go distribution, there are
-essentially two ways to contribute changes:
-
-- By sending a pull request on GitHub
-- By submitting a CL to the Go project
-
-Because of copyright reasons, I will not accept any non-trivial
-contributions via pull requests. Please submit a CL instead. This will
-ensure that the changes go through a proper review process and that
-your name will be noted in the list of contributors and possibly
-authors. Instructions can be found at
-http://golang.org/doc/contribute.html.
-
-Only changes to files that are not part of the Go distribution (mainly
-this README), can be submitted via pull request.
-

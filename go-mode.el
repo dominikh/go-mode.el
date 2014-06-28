@@ -1,13 +1,13 @@
 ;;; go-mode.el --- Major mode for the Go programming language
 
-;; Copyright 2013 The Go Authors. All rights reserved.
+;; Copyright 2013 The go-mode Authors. All rights reserved.
 ;; Use of this source code is governed by a BSD-style
 ;; license that can be found in the LICENSE file.
 
-;; Author: The Go Authors
+;; Author: The go-mode Authors
 ;; Version: 10
 ;; Keywords: languages go
-;; URL: http://tip.golang.org/misc/emacs/
+;; URL: https://github.com/dominikh/go-mode.el
 ;;
 ;; This file is not part of GNU Emacs.
 
