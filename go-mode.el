@@ -688,31 +688,32 @@ buffer."
         (errbuf (get-buffer-create "*Gofmt Errors*"))
         (coding-system-for-read 'utf-8)
         (coding-system-for-write 'utf-8))
+    (save-restriction
+      (widen)
+      (with-current-buffer errbuf
+        (setq buffer-read-only nil)
+        (erase-buffer))
+      (with-current-buffer patchbuf
+        (erase-buffer))
 
-    (with-current-buffer errbuf
-      (setq buffer-read-only nil)
-      (erase-buffer))
-    (with-current-buffer patchbuf
-      (erase-buffer))
+      (write-region nil nil tmpfile)
 
-    (write-region nil nil tmpfile)
+      ;; We're using errbuf for the mixed stdout and stderr output. This
+      ;; is not an issue because gofmt -w does not produce any stdout
+      ;; output in case of success.
+      (if (zerop (call-process gofmt-command nil errbuf nil "-w" tmpfile))
+          (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
+              (progn
+                (kill-buffer errbuf)
+                (message "Buffer is already gofmted"))
+            (go--apply-rcs-patch patchbuf)
+            (kill-buffer errbuf)
+            (message "Applied gofmt"))
+        (message "Could not apply gofmt. Check errors for details")
+        (gofmt--process-errors (buffer-file-name) tmpfile errbuf))
 
-    ;; We're using errbuf for the mixed stdout and stderr output. This
-    ;; is not an issue because gofmt -w does not produce any stdout
-    ;; output in case of success.
-    (if (zerop (call-process gofmt-command nil errbuf nil "-w" tmpfile))
-        (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
-            (progn
-              (kill-buffer errbuf)
-              (message "Buffer is already gofmted"))
-          (go--apply-rcs-patch patchbuf)
-          (kill-buffer errbuf)
-          (message "Applied gofmt"))
-      (message "Could not apply gofmt. Check errors for details")
-      (gofmt--process-errors (buffer-file-name) tmpfile errbuf))
-
-    (kill-buffer patchbuf)
-    (delete-file tmpfile)))
+      (kill-buffer patchbuf)
+      (delete-file tmpfile))))
 
 
 (defun gofmt--process-errors (filename tmpfile errbuf)
