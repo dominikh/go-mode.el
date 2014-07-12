@@ -191,6 +191,11 @@ from https://github.com/bradfitz/goimports."
   :type 'string
   :group 'go)
 
+(defcustom gofmt-show-errors t
+  "Show errors from 'gofmt' cmomand in new buffer if this is non-nil."
+  :type 'boolean
+  :group 'go)
+
 (defcustom go-other-file-alist
   '(("_test\\.go\\'" (".go"))
     ("\\.go\\'" ("_test.go")))
@@ -947,7 +952,8 @@ buffer."
     (while (search-forward-regexp (concat "^\\(" (regexp-quote tmpfile) "\\):") nil t)
       (replace-match (file-name-nondirectory filename) t t nil 1))
     (compilation-mode)
-    (display-buffer errbuf)))
+    (when gofmt-show-errors
+      (display-buffer errbuf))))
 
 ;;;###autoload
 (defun gofmt-before-save ()
