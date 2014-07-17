@@ -191,6 +191,20 @@ from https://github.com/bradfitz/goimports."
   :type 'string
   :group 'go)
 
+
+(defcustom gofmt-show-errors 'buffer
+  "Where to display gofmt error output. It can either be
+displayed in its own buffer, in the echo area, or not at all.
+
+Please note that Emacs outputs to the echo area when writing
+files and will overwrite gofmt's echo output if used from inside
+a before-save-hook."
+  :type '(choice
+          (const :tag "Own buffer" buffer)
+          (const :tag "Echo area" echo)
+          (const :tag "None" nil))
+  :group 'go)
+
 (defcustom go-other-file-alist
   '(("_test\\.go\\'" (".go"))
     ("\\.go\\'" ("_test.go")))
@@ -907,15 +921,16 @@ buffer."
   (interactive)
   (let ((tmpfile (make-temp-file "gofmt" nil ".go"))
         (patchbuf (get-buffer-create "*Gofmt patch*"))
-        (errbuf (get-buffer-create "*Gofmt Errors*"))
+        (errbuf (if gofmt-show-errors (get-buffer-create "*Gofmt Errors*")))
         (coding-system-for-read 'utf-8)
         (coding-system-for-write 'utf-8))
 
     (save-restriction
       (widen)
-      (with-current-buffer errbuf
-        (setq buffer-read-only nil)
-        (erase-buffer))
+      (if errbuf
+          (with-current-buffer errbuf
+            (setq buffer-read-only nil)
+            (erase-buffer)))
       (with-current-buffer patchbuf
         (erase-buffer))
 
@@ -925,29 +940,32 @@ buffer."
       ;; is not an issue because gofmt -w does not produce any stdout
       ;; output in case of success.
       (if (zerop (call-process gofmt-command nil errbuf nil "-w" tmpfile))
-          (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
-              (progn
-                (kill-buffer errbuf)
-                (message "Buffer is already gofmted"))
-            (go--apply-rcs-patch patchbuf)
-            (kill-buffer errbuf)
-            (message "Applied gofmt"))
-        (message "Could not apply gofmt. Check errors for details")
-        (gofmt--process-errors (buffer-file-name) tmpfile errbuf))
+          (progn
+            (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
+                (message "Buffer is already gofmted")
+              (go--apply-rcs-patch patchbuf)
+              (message "Applied gofmt"))
+            (if errbuf (kill-buffer errbuf)))
+        (message "Could not apply gofmt")
+        (if errbuf (gofmt--process-errors (buffer-file-name) tmpfile errbuf)))
 
       (kill-buffer patchbuf)
       (delete-file tmpfile))))
 
 
 (defun gofmt--process-errors (filename tmpfile errbuf)
-  ;; Convert the gofmt stderr to something understood by the compilation mode.
   (with-current-buffer errbuf
-    (goto-char (point-min))
-    (insert "gofmt errors:\n")
-    (while (search-forward-regexp (concat "^\\(" (regexp-quote tmpfile) "\\):") nil t)
-      (replace-match (file-name-nondirectory filename) t t nil 1))
-    (compilation-mode)
-    (display-buffer errbuf)))
+    (if (eq gofmt-show-errors 'echo)
+        (progn
+          (message "%s" (buffer-string))
+          (kill-buffer errbuf))
+      ;; Convert the gofmt stderr to something understood by the compilation mode.
+      (goto-char (point-min))
+      (insert "gofmt errors:\n")
+      (while (search-forward-regexp (concat "^\\(" (regexp-quote tmpfile) "\\):") nil t)
+        (replace-match (file-name-nondirectory filename) t t nil 1))
+      (compilation-mode)
+      (display-buffer errbuf))))
 
 ;;;###autoload
 (defun gofmt-before-save ()
