@@ -850,7 +850,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 
   (setq imenu-generic-expression
         '(("type" "^type *\\([^ \t\n\r\f]*\\)" 1)
-          ("func" "^func *\\(.*\\) {" 1)))
+          ("func" "^func *\\(.*[(,]\n?.*\\) {" 1)))
   (imenu-add-to-menubar "Index")
 
   ;; Go style
