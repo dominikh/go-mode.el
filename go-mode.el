@@ -191,7 +191,6 @@ from https://github.com/bradfitz/goimports."
   :type 'string
   :group 'go)
 
-
 (defcustom gofmt-show-errors 'buffer
   "Where to display gofmt error output. It can either be
 displayed in its own buffer, in the echo area, or not at all.
@@ -211,6 +210,12 @@ a before-save-hook."
   "See the documentation of `ff-other-file-alist' for details."
   :type '(repeat (list regexp (choice (repeat string) function)))
   :group 'go)
+
+(defcustom go-coverage-display-buffer-func 'display-buffer-reuse-window
+  "How go-coverage should display the coverage buffer. See
+`display-buffer' for a list of possible functions."
+  :type 'function
+  :group 'go-cover)
 
 (defface go-coverage-untracked
   '((t (:foreground "#505050")))
@@ -1481,7 +1486,7 @@ for."
           (go--coverage-make-overlay range (cadr ranges-and-divisor))))
 
       (if (not (eq cur-buffer (current-buffer)))
-          (display-buffer (current-buffer) #'display-buffer-reuse-window)))))
+          (display-buffer (current-buffer) `(,go-coverage-display-buffer-func))))))
 
 (provide 'go-mode)
 
