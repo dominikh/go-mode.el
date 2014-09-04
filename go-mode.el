@@ -548,8 +548,17 @@ current line will be returned."
     ;; It can happen that we're not placed before a function by emacs
     (if (not (looking-at "func"))
         (go-beginning-of-defun -1))
-    (skip-chars-forward "^{")
-    (forward-char)
+    ;; Find the { that starts the function, i.e., the next { that isn't
+    ;; preceded by struct or interface, or a comment or struct tag.  BUG:
+    ;; breaks if there's a comment between the struct/interface keyword and
+    ;; bracket, like this:
+    ;;
+    ;;     struct /* why? */ { 
+    (while (progn
+      (skip-chars-forward "^{")
+      (forward-char)
+      (or (go-in-string-or-comment-p)
+          (looking-back "\\(struct\\|interface\\)\\s-*{"))))
     (setq orig-level (go-paren-level))
     (while (>= (go-paren-level) orig-level)
       (skip-chars-forward "^}")
