@@ -548,7 +548,13 @@ current line will be returned."
     ;; It can happen that we're not placed before a function by emacs
     (if (not (looking-at "func"))
         (go-beginning-of-defun -1))
-    (skip-chars-forward "^{")
+    ;; Find the { that starts the function. This is the next { that (1) ends
+    ;; the line (ignoring whitespace and comments) (2) isn't a struct
+    ;; definition. (Small bug: We're not ignoring /**/-style comments (not
+    ;; sure how to easily do this?).)
+    (while (progn
+      (re-search-forward "{\\s-*\\(//.*\\)?$")
+      (looking-back "struct\\s-*{")))
     (forward-char)
     (setq orig-level (go-paren-level))
     (while (>= (go-paren-level) orig-level)
