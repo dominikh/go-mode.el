@@ -548,14 +548,13 @@ current line will be returned."
     ;; It can happen that we're not placed before a function by emacs
     (if (not (looking-at "func"))
         (go-beginning-of-defun -1))
-    ;; Find the { that starts the function. This is the next { that (1) ends
-    ;; the line (ignoring whitespace and comments) (2) isn't a struct
-    ;; definition. (Small bug: We're not ignoring /**/-style comments (not
-    ;; sure how to easily do this?).)
+    ;; Find the { that starts the function, i.e., the next { that isn't
+    ;; preceded by struct or interface. Bugs: we can be defeated by
+    ;; mean-spirited comments (but that seems unlikely to occur in practice).
     (while (progn
-      (re-search-forward "{\\s-*\\(//.*\\)?$")
-      (looking-back "struct\\s-*{")))
-    (forward-char)
+      (skip-chars-forward "^{")
+      (forward-char)
+      (looking-back "\\(struct\\|interface\\)\\s-*{")))
     (setq orig-level (go-paren-level))
     (while (>= (go-paren-level) orig-level)
       (skip-chars-forward "^}")
