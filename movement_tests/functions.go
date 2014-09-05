@@ -1,6 +1,6 @@
 // This file can be used to manually test that go-beginning-of-def and
 // go-end-of-defun are correct by entering into each function and mark-defun
-// (C-M-h)
+// (C-M-h).
 package main
 
 type typea int
@@ -35,19 +35,25 @@ type typeb struct {
 	a, b, c int
 }
 
-// Function with a pathological comment that breaks go-end-of-defun.
-func comment(a chan struct /* why? */ {
+// comment1 breaks end-of-defun by splitting "struct" from "{". (This also
+// apparently breaks gofmt, is why this is formatted so weird.)
+func comment1(a chan struct /* why? */ {
 
 }) {
 	close(a)
 }
 
-// Another function with a comment that breaks go-end-of-defun.
-func anotherComment(a struct {
-	b int // this b is sad :{
+func comment2(a struct {
+	b int // b is sad :{
 	c int
 }) {
 	a.b += a.c
 	a.c += a.b
 	return
+}
+
+func structWithTag(a chan struct {
+	v int `{`
+}) {
+	close(a)
 }

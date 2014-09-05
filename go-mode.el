@@ -549,12 +549,16 @@ current line will be returned."
     (if (not (looking-at "func"))
         (go-beginning-of-defun -1))
     ;; Find the { that starts the function, i.e., the next { that isn't
-    ;; preceded by struct or interface. Bugs: we can be defeated by
-    ;; mean-spirited comments (but that seems unlikely to occur in practice).
+    ;; preceded by struct or interface, or a comment or struct tag.  BUG:
+    ;; breaks if there's a comment between the struct/interface keyword and
+    ;; bracket, like this:
+    ;;
+    ;;     struct /* why? */ { 
     (while (progn
       (skip-chars-forward "^{")
       (forward-char)
-      (looking-back "\\(struct\\|interface\\)\\s-*{")))
+      (or (go-in-string-or-comment-p)
+          (looking-back "\\(struct\\|interface\\)\\s-*{"))))
     (setq orig-level (go-paren-level))
     (while (>= (go-paren-level) orig-level)
       (skip-chars-forward "^}")
