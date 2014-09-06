@@ -523,6 +523,8 @@ current line will be returned."
           (goto-char (- (point-max) pos))))))
 
 (defun go-beginning-of-defun (&optional count)
+  (unless (bolp)
+    (end-of-line))
   (setq count (or count 1))
   (let (first failure)
     (dotimes (i (abs count))
