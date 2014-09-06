@@ -524,9 +524,9 @@ current line will be returned."
 
 (defun go-beginning-of-defun (&optional count)
   (setq count (or count 1))
-  (let ((first t)
-        failure)
+  (let (first failure)
     (dotimes (i (abs count))
+      (setq first t)
       (while (and (not failure)
                   (or first (go-in-string-or-comment-p)))
         (if (>= count 0)
