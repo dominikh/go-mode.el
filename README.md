@@ -41,6 +41,22 @@ the following extra features to provide an improved experience:
 - Built-in support for displaying code coverage as calculated by `go
   test` (`go-coverage`)
 
+# Installation
+
+Put go-mode.el into a directory of your choice and add an instruction in the 
+Emacs init file to load it 
+
+     (add-to-list 'load-path "/place/where/you/put/it/")
+
+From within Emacs, run M-x update-file-autoloads, point it at the
+go-mode.el file and tell it to generate a go-mode-load.el file.
+
+To the Emacs init file add
+
+     (require 'go-mode-load)
+
+Restart Emacs.
+
 # Other extensions
 
 There are several third party extensions that can enhance the Go
