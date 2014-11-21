@@ -1314,7 +1314,9 @@ description at POINT."
       (error "godef does not reliably work in XEmacs, expect bad results"))
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
       (error "Cannot use godef on a buffer without a file name")
-    (let ((outbuf (get-buffer-create "*godef*")))
+    (let ((outbuf (get-buffer-create "*godef*"))
+          (coding-system-for-read 'utf-8)
+          (coding-system-for-write 'utf-8))
       (with-current-buffer outbuf
         (erase-buffer))
       (call-process-region (point-min)
