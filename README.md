@@ -51,6 +51,9 @@ manager, and the
 [MELPA repository](http://melpa.org/#/getting-started), which provides
 an up-to-date version of go-mode.
 
+If you're not familiar with ELPA yet, consider reading
+[this guide](http://ergoemacs.org/emacs/emacs_package_system.html).
+
 ## Manual
 
 To install go-mode manually, place `go-mode.el` and
