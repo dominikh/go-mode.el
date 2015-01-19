@@ -293,7 +293,7 @@ For mode=set, all covered lines will have this weight."
     (modify-syntax-entry ?\\ "\\" st)
     ;; It would be nicer to have _ as a symbol constituent, but that
     ;; would trip up XEmacs, which does not support the \_< anchor
-    (modify-syntax-entry ?_  "w" st)
+    (modify-syntax-entry ?_  (if (go--xemacs-p) "w" "_") st)
 
     st)
   "Syntax table for Go mode.")
