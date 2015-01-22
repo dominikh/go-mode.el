@@ -204,6 +204,11 @@ a before-save-hook."
           (const :tag "None" nil))
   :group 'go)
 
+(defcustom godef-command "godef"
+  "The 'godef' command."
+  :type 'string
+  :group 'go)
+
 (defcustom go-other-file-alist
   '(("_test\\.go\\'" (".go"))
     ("\\.go\\'" ("_test.go")))
@@ -1321,7 +1326,7 @@ description at POINT."
         (erase-buffer))
       (call-process-region (point-min)
                            (point-max)
-                           "godef"
+                           godef-command
                            nil
                            outbuf
                            nil
