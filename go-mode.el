@@ -966,7 +966,7 @@ buffer."
                 (message "Buffer is already gofmted")
               (go--apply-rcs-patch patchbuf)
               (message "Applied gofmt"))
-            (if errbuf (kill-buffer errbuf)))
+            (if errbuf (gofmt--kill-error-buffer errbuf)))
         (message "Could not apply gofmt")
         (if errbuf (gofmt--process-errors (buffer-file-name) tmpfile errbuf)))
 
@@ -979,7 +979,7 @@ buffer."
     (if (eq gofmt-show-errors 'echo)
         (progn
           (message "%s" (buffer-string))
-          (kill-buffer errbuf))
+          (gofmt--kill-error-buffer errbuf))
       ;; Convert the gofmt stderr to something understood by the compilation mode.
       (goto-char (point-min))
       (insert "gofmt errors:\n")
@@ -987,6 +987,12 @@ buffer."
         (replace-match (file-name-nondirectory filename) t t nil 1))
       (compilation-mode)
       (display-buffer errbuf))))
+
+(defun gofmt--kill-error-buffer (errbuf)
+  (let ((win (get-buffer-window errbuf)))
+    (if win
+        (quit-window t win)
+      (kill-buffer errbuf))))
 
 ;;;###autoload
 (defun gofmt-before-save ()
