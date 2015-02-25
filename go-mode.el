@@ -161,11 +161,12 @@ won't."
 (defvar go--coverage-current-file-name)
 
 (defgroup go nil
-  "Major mode for editing Go code"
+  "Major mode for editing Go code."
+  :link '(url-link "https://github.com/dominikh/go-mode.el")
   :group 'languages)
 
 (defgroup go-cover nil
-  "Options specific to `cover`"
+  "Options specific to `cover`."
   :group 'go)
 
 (defcustom go-fontify-function-calls t
