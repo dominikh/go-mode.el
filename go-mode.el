@@ -46,10 +46,10 @@
 (defmacro go--xemacs-p ()
   `(featurep 'xemacs))
 
-;; Delete the current line without putting it in the kill-ring.
 (defun go--delete-whole-line (&optional arg)
-  ;; Derived from `kill-whole-line'.
-  ;; ARG is defined as for that function.
+  "Delete the current line without putting it in the `kill-ring'.
+Derived from function `kill-whole-line'.  ARG is defined as for that
+function."
   (setq arg (or arg 1))
   (if (and (> arg 0)
            (eobp)
@@ -98,20 +98,21 @@
       (setq bidi-paragraph-direction 'left-to-right)))
 
 (defun go--regexp-enclose-in-symbol (s)
-  ;; XEmacs does not support \_<, GNU Emacs does. In GNU Emacs we make
-  ;; extensive use of \_< to support unicode in identifiers. Until we
-  ;; come up with a better solution for XEmacs, this solution will
-  ;; break fontification in XEmacs for identifiers such as "typeµ".
-  ;; XEmacs will consider "type" a keyword, GNU Emacs won't.
-
+  "Enclose S as regexp symbol.
+XEmacs does not support \\_<, GNU Emacs does.  In GNU Emacs we
+make extensive use of \\_< to support unicode in identifiers.
+Until we come up with a better solution for XEmacs, this solution
+will break fontification in XEmacs for identifiers such as
+\"typeµ\".  XEmacs will consider \"type\" a keyword, GNU Emacs
+won't."
   (if (go--xemacs-p)
       (concat "\\<" s "\\>")
     (concat "\\_<" s "\\_>")))
 
-;; Move up one level of parentheses.
-(defun go-goto-opening-parenthesis (&optional legacy-unused)
+(defun go-goto-opening-parenthesis (&optional _legacy-unused)
+  "Move up one level of parentheses."
   ;; The old implementation of go-goto-opening-parenthesis had an
-  ;; optional argument to speed up the function. It didn't change the
+  ;; optional argument to speed up the function.  It didn't change the
   ;; function's outcome.
 
   ;; Silently fail if there's no matching opening parenthesis.
@@ -138,7 +139,7 @@
   '("append" "cap"   "close"   "complex" "copy"
     "delete" "imag"  "len"     "make"    "new"
     "panic"  "print" "println" "real"    "recover")
-  "All built-in functions in the Go language. Used for font locking.")
+  "All built-in functions in the Go language.  Used for font locking.")
 
 (defconst go-mode-keywords
   '("break"    "default"     "func"   "interface" "select"
@@ -178,26 +179,28 @@
   :group 'go)
 
 (defcustom go-command "go"
-  "The 'go' command.  Some users have multiple Go development
-trees and invoke the 'go' tool via a wrapper that sets GOROOT and
-GOPATH based on the current directory.  Such users should
-customize this variable to point to the wrapper script."
+  "The 'go' command.
+Some users have multiple Go development trees and invoke the 'go'
+tool via a wrapper that sets GOROOT and GOPATH based on the
+current directory.  Such users should customize this variable to
+point to the wrapper script."
   :type 'string
   :group 'go)
 
 (defcustom gofmt-command "gofmt"
-  "The 'gofmt' command.  Some users may replace this with 'goimports'
+  "The 'gofmt' command.
+Some users may replace this with 'goimports'
 from https://github.com/bradfitz/goimports."
   :type 'string
   :group 'go)
 
 (defcustom gofmt-show-errors 'buffer
-  "Where to display gofmt error output. It can either be
-displayed in its own buffer, in the echo area, or not at all.
+  "Where to display gofmt error output.
+It can either be displayed in its own buffer, in the echo area, or not at all.
 
 Please note that Emacs outputs to the echo area when writing
 files and will overwrite gofmt's echo output if used from inside
-a before-save-hook."
+a `before-save-hook'."
   :type '(choice
           (const :tag "Own buffer" buffer)
           (const :tag "Echo area" echo)
@@ -217,8 +220,8 @@ a before-save-hook."
   :group 'go)
 
 (defcustom go-coverage-display-buffer-func 'display-buffer-reuse-window
-  "How go-coverage should display the coverage buffer. See
-`display-buffer' for a list of possible functions."
+  "How `go-coverage' should display the coverage buffer.
+See `display-buffer' for a list of possible functions."
   :type 'function
   :group 'go-cover)
 
@@ -383,7 +386,7 @@ For mode=set, all covered lines will have this weight."
   `(goto-char (nth 8 (syntax-ppss))))
 
 (defun go--backward-irrelevant (&optional stop-at-string)
-  "Skips backwards over any characters that are irrelevant for
+  "Skip backwards over any characters that are irrelevant for
 indentation and related tasks.
 
 It skips over whitespace, comments, cases and labels and, if
@@ -415,8 +418,8 @@ STOP-AT-STRING is not true, over strings."
          (point-min))))
 
 (defun go--match-raw-string-literal (end)
-  "Search for a raw string literal. Set point to the end of the
-occurence found on success. Returns nil on failure."
+  "Search for a raw string literal.
+Set point to the end of the occurence found on success.  Return nil on failure."
   (unless (go-in-string-or-comment-p)
     (when (search-forward "`" end t)
       (goto-char (match-beginning 0))
@@ -428,7 +431,7 @@ occurence found on success. Returns nil on failure."
           t)))))
 
 (defun go-previous-line-has-dangling-op-p ()
-  "Returns non-nil if the current line is a continuation line."
+  "Return non-nil if the current line is a continuation line."
   (let* ((cur-line (line-number-at-pos))
          (val (gethash cur-line go-dangling-cache 'nope)))
     (if (or (go--buffer-narrowed-p) (equal val 'nope))
@@ -467,7 +470,7 @@ curly brace we are checking. If they match, we return non-nil."
 
 If point is on an opening curly brace and said curly brace
 belongs to a function declaration, the indentation of the func
-keyword will be returned. Otherwise the indentation of the
+keyword will be returned.  Otherwise the indentation of the
 current line will be returned."
   (save-excursion
     (if (go--at-function-definition)
@@ -580,8 +583,7 @@ line or end-of-buffer position instead of the position of the closing
 parenthesis.
 
 If the starting parenthesis is not found, it returns (POSITION
-POSITION).
-"
+POSITION)."
   (save-excursion
     (let (beg end)
       (goto-char position)
@@ -601,7 +603,7 @@ POSITION).
 
 (defun go--search-next-comma (end)
   "Search forward from point for a comma whose nesting level is
-the same as point. If it reaches the end of line or a closing
+the same as point.  If it reaches the end of line or a closing
 parenthesis before a comma, it stops at it."
   (let ((orig-level (go-paren-level)))
     (while (and (< (point) end)
@@ -619,7 +621,7 @@ parenthesis before a comma, it stops at it."
 (defun go--match-func (end)
   "Search for identifiers used as type names from a function
 parameter list, and set the identifier positions as the results
-of last search. Return t if search succeeded."
+of last search.  Return t if search succeeded."
   (when (re-search-forward (go--regexp-enclose-in-symbol "func") end t)
     (let ((regions (go--match-func-type-names end)))
       (if (null regions)
@@ -651,7 +653,7 @@ of last search. Return t if search succeeded."
       (nconc regions (go--match-function-result end))))))
 
 (defun go--parameter-list-type (end)
-  "Return 'present if the parameter list has names, or 'absent if
+  "Return `present' if the parameter list has names, or `absent' if
 not, assuming point is at the beginning of a parameter list, just
 after '('."
   (save-excursion
@@ -706,12 +708,12 @@ after '('."
   (go--match-parameters-common "" end))
 
 (defun go--filter-match-data (regions end)
-  "Remove points from regions if they are beyond end. Regions are
-a list whose size is multiple of 2. Element 2n is beginning of a
+  "Remove points from REGIONS if they are beyond END.
+REGIONS are a list whose size is multiple of 2.  Element 2n is beginning of a
 region and 2n+1 is end of it.
 
 This function is used to make sure we don't override end point
-that font-lock-mode gave to us."
+that `font-lock-mode' gave to us."
   (when regions
     (let* ((vec (vconcat regions))
            (i 0)
@@ -737,9 +739,9 @@ that font-lock-mode gave to us."
   `(,(car regions) ,@(last regions) ,@regions))
 
 (defun go--match-parameter-list (end)
-  "Returns a list of identifier positions that are used as type
+  "Return a list of identifier positions that are used as type
 names in a function parameter list, assuming point is at the
-beginning of a parameter list. Returns nil if the text after
+beginning of a parameter list.  Return nil if the text after
 point does not look like a parameter list.
 
 Set point to end of closing parenthesis on success.
@@ -771,7 +773,7 @@ list has names, and then handle it accordingly."
           (t nil))))
 
 (defun go--match-function-result (end)
-  "Returns a list of identifier positions that are used as type
+  "Return a list of identifier positions that are used as type
 names in a function result, assuming point is at the beginning of
 a result.
 
@@ -894,8 +896,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 (add-to-list 'auto-mode-alist (cons "\\.go\\'" 'go-mode))
 
 (defun go--apply-rcs-patch (patch-buffer)
-  "Apply an RCS-formatted diff from PATCH-BUFFER to the current
-buffer."
+  "Apply an RCS-formatted diff from PATCH-BUFFER to the current buffer."
   (let ((target-buffer (current-buffer))
         ;; Relative offset between buffer line numbers and line numbers
         ;; in patch.
@@ -937,8 +938,7 @@ buffer."
               (error "invalid rcs patch or internal error in go--apply-rcs-patch")))))))))
 
 (defun gofmt ()
-  "Formats the current buffer according to the gofmt tool."
-
+  "Format the current buffer according to the gofmt tool."
   (interactive)
   (let ((tmpfile (make-temp-file "gofmt" nil ".go"))
         (patchbuf (get-buffer-create "*Gofmt patch*"))
@@ -1041,7 +1041,7 @@ you save any file, kind of defeating the point of autoloading."
 
 ;;;###autoload
 (defun godoc (query)
-  "Show Go documentation for a query, much like M-x man."
+  "Show Go documentation for QUERY, much like M-x man."
   (interactive (list (godoc--read-query)))
   (unless (string= query "")
     (set-process-sentinel
@@ -1150,8 +1150,8 @@ link in the kill ring."
 
 ;;;###autoload
 (defun go-download-play (url)
-  "Downloads a paste from the playground and inserts it in a Go
-buffer. Tries to look for a URL at point."
+  "Download a paste from the playground and insert it in a Go buffer.
+Tries to look for a URL at point."
   (interactive (list (read-from-minibuffer "Playground URL: " (ffap-url-p (ffap-string-at-point 'url)))))
   (with-current-buffer
       (let ((url-request-method "GET") url-request-data url-request-extra-headers)
@@ -1172,10 +1172,10 @@ buffer. Tries to look for a URL at point."
       (put-text-property (1- (point)) (point) 'syntax-table (if (= (char-after) ?`) '(1) '(9))))))
 
 (defun go-import-add (arg import)
-  "Add a new import to the list of imports.
+  "Add a new IMPORT to the list of imports.
 
-When called with a prefix argument asks for an alternative name
-to import the package as.
+When called with a prefix ARG asks for an alternative name to
+import the package as.
 
 If no list exists yet, one will be created if possible.
 
@@ -1281,8 +1281,9 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
                                              " build -o /dev/null"))) "\n")))))
 
 (defun go-remove-unused-imports (arg)
-  "Removes all unused imports. If ARG is non-nil, unused imports
-will be commented, otherwise they will be removed completely."
+  "Remove all unused imports.
+If ARG is non-nil, unused imports will be commented, otherwise
+they will be removed completely."
   (interactive "P")
   (save-excursion
     (let ((cur-buffer (current-buffer)) flymake-state lines)
@@ -1427,8 +1428,8 @@ For DIVISOR = 0 the count will always translate to 8."
     (concat "go-coverage-" (number-to-string n))))
 
 (defun go--coverage-make-overlay (range divisor)
-  "Create a coverage overlay for a RANGE of covered/uncovered
-code. Uses DIVISOR to scale absolute counts to a [0,10] scale."
+  "Create a coverage overlay for a RANGE of covered/uncovered code.
+Use DIVISOR to scale absolute counts to a [0,10] scale."
   (let* ((count (go--covered-count range))
          (face (go--coverage-face count divisor))
          (ov (make-overlay (go--line-column-to-point (go--covered-start-line range)
