@@ -220,6 +220,21 @@ a `before-save-hook'."
   :type '(repeat (list regexp (choice (repeat string) function)))
   :group 'go)
 
+(defun go--kill-new-message (url)
+  "Make URL the latest kill and print a message."
+  (kill-new url)
+  (message "%s" url))
+
+(defcustom go-play-browse-function 'go--kill-new-message
+  "Function to call with the Playground URL.
+See `go-play-region' for more details."
+  :type '(choice
+          (const :tag "Nothing" nil)
+          (const :tag "Kill + Message" go--kill-new-message)
+          (const :tag "Browse URL" browse-url)
+          (function :tag "Call function"))
+  :group 'go)
+
 (defcustom go-coverage-display-buffer-func 'display-buffer-reuse-window
   "How `go-coverage' should display the coverage buffer.
 See `display-buffer' for a list of possible functions."
@@ -1149,8 +1164,9 @@ declaration."
   (go-play-region (point-min) (point-max)))
 
 (defun go-play-region (start end)
-  "Send the region to the Playground and stores the resulting
-link in the kill ring."
+  "Send the region to the Playground.
+If non-nil `go-play-browse-function' is called with the
+Playground URL."
   (interactive "r")
   (let* ((url-request-method "POST")
          (url-request-extra-headers
@@ -1167,8 +1183,10 @@ link in the kill ring."
                            (signal 'go-play-error (cdr arg)))
                           (t
                            (re-search-forward "\n\n")
-                           (kill-new (format "http://play.golang.org/p/%s" (buffer-substring (point) (point-max))))
-                           (message "http://play.golang.org/p/%s" (buffer-substring (point) (point-max)))))))))))
+                           (let ((url (format "http://play.golang.org/p/%s"
+                                              (buffer-substring (point) (point-max)))))
+                             (when go-play-browse-function
+                               (funcall go-play-browse-function url)))))))))))
 
 ;;;###autoload
 (defun go-download-play (url)
