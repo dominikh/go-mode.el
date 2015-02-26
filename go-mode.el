@@ -130,7 +130,7 @@ won't."
 (defconst go-func-regexp (concat (go--regexp-enclose-in-symbol "func") "\\s *\\(" go-identifier-regexp "\\)"))
 (defconst go-func-meth-regexp (concat
                                (go--regexp-enclose-in-symbol "func") "\\s *\\(?:(\\s *"
-                               "\\(" go-identifier-regexp "\\s +\\)?" go-type-regexp
+                               "\\(?:\\(" go-identifier-regexp "\\)\\s +\\)?" go-type-regexp
                                "\\s *)\\s *\\)?\\("
                                go-identifier-regexp
                                "\\)("))
@@ -575,6 +575,18 @@ current line will be returned."
       (skip-chars-forward "^}")
       (forward-char))))
 
+(defun go--add-log-current-defun ()
+  "Return the name of the current defun.
+This is to be used as `add-log-current-defun-function'."
+  ;; TODO this should also deal with types and maybe import.
+  (save-excursion
+    (beginning-of-defun)
+    (cond
+     ((looking-at go-func-regexp)
+      (match-string 1))
+     ((looking-at go-func-meth-regexp)
+      (concat (match-string 1) "." (match-string 2))))))
+
 (defun go--find-enclosing-parentheses (position)
   "Return points of outermost '(' and ')' surrounding POSITION if
 such parentheses exist.
@@ -858,6 +870,8 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 
   (set (make-local-variable 'beginning-of-defun-function) #'go-beginning-of-defun)
   (set (make-local-variable 'end-of-defun-function) #'go-end-of-defun)
+
+  (set (make-local-variable 'add-log-current-defun-function) #'go--add-log-current-defun)
 
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (if (boundp 'syntax-propertize-function)
