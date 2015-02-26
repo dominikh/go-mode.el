@@ -364,6 +364,27 @@ For mode=set, all covered lines will have this weight."
     m)
   "Keymap used by Go mode to implement electric keys.")
 
+(easy-menu-define go-mode-menu go-mode-map
+  "Menu for Go mode."
+  '("Go"
+    ["Describe Expression"   godef-describe t]
+    ["Jump to Definition"    godef-jump t]
+    "---"
+    ["Add Import"            go-import-add t]
+    ["Remove Unused Imports" go-remove-unused-imports t]
+    ["Go to Imports"         go-goto-imports t]
+    "---"
+    ("Playground"
+     ["Send Buffer"          go-play-buffer t]
+     ["Send Region"          go-play-region t]
+     ["Download"             go-download-play t])
+    "---"
+    ["Coverage"              go-coverage t]
+    ["Gofmt"                 gofmt t]
+    ["Godoc"                 godoc t]
+    "---"
+    ["Customize Mode"        (customize-group 'go) t]))
+
 (defun go-mode-insert-and-indent (key)
   "Invoke the global binding of KEY, then reindent the line."
 
