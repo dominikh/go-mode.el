@@ -122,11 +122,11 @@ won't."
 
 
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
-(defconst go-identifier-regexp "[[:word:][:multibyte:]]+")
-(defconst go-type-name-no-prefix-regexp "\\(?:[[:word:][:multibyte:]]+\\.\\)?[[:word:][:multibyte:]]+")
+(defconst go-identifier-regexp "[\\s_[:word:][:multibyte:]]+")
+(defconst go-type-name-no-prefix-regexp "\\(?:[\\s_[:word:][:multibyte:]]+\\.\\)?[\\s_[:word:][:multibyte:]]+")
 (defconst go-qualified-identifier-regexp (concat go-identifier-regexp "\\." go-identifier-regexp))
 (defconst go-label-regexp go-identifier-regexp)
-(defconst go-type-regexp "[[:word:][:multibyte:]*]+")
+(defconst go-type-regexp "[\\s_[:word:][:multibyte:]*]+")
 (defconst go-func-regexp (concat (go--regexp-enclose-in-symbol "func") "\\s *\\(" go-identifier-regexp "\\)"))
 (defconst go-func-meth-regexp (concat
                                (go--regexp-enclose-in-symbol "func") "\\s *\\(?:(\\s *"
@@ -317,7 +317,7 @@ For mode=set, all covered lines will have this weight."
     (modify-syntax-entry ?\\ "\\" st)
     ;; It would be nicer to have _ as a symbol constituent, but that
     ;; would trip up XEmacs, which does not support the \_< anchor
-    (modify-syntax-entry ?_  "w" st)
+    (modify-syntax-entry ?_  (if (go--xemacs-p) "w" "_") st)
 
     st)
   "Syntax table for Go mode.")
@@ -336,14 +336,14 @@ For mode=set, all covered lines will have this weight."
 
    (if go-fontify-function-calls
        `((,(concat "\\(" go-identifier-regexp "\\)[[:space:]]*(") 1 font-lock-function-name-face) ;; function call/method name
-         (,(concat "[^[:word:][:multibyte:]](\\(" go-identifier-regexp "\\))[[:space:]]*(") 1 font-lock-function-name-face)) ;; bracketed function call
+         (,(concat "[^\\s_[:word:][:multibyte:]](\\(" go-identifier-regexp "\\))[[:space:]]*(") 1 font-lock-function-name-face)) ;; bracketed function call
      `((,go-func-meth-regexp 2 font-lock-function-name-face))) ;; method name
 
    `(
      ("\\(`[^`]*`\\)" 1 font-lock-multiline) ;; raw string literal, needed for font-lock-syntactic-keywords
      (,(concat (go--regexp-enclose-in-symbol "type") "[[:space:]]+\\([^[:space:]]+\\)") 1 font-lock-type-face) ;; types
      (,(concat (go--regexp-enclose-in-symbol "type") "[[:space:]]+" go-identifier-regexp "[[:space:]]*" go-type-name-regexp) 1 font-lock-type-face) ;; types
-     (,(concat "[^[:word:][:multibyte:]]\\[\\([[:digit:]]+\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 2 font-lock-type-face) ;; Arrays/slices
+     (,(concat "[^\\s_[:word:][:multibyte:]]\\[\\([[:digit:]]+\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 2 font-lock-type-face) ;; Arrays/slices
      (,(concat "\\(" go-type-name-regexp "\\)" "{") 1 font-lock-type-face)
      (,(concat (go--regexp-enclose-in-symbol "map") "\\[[^]]+\\]" go-type-name-regexp) 1 font-lock-type-face) ;; map value type
      (,(concat (go--regexp-enclose-in-symbol "map") "\\[" go-type-name-regexp) 1 font-lock-type-face) ;; map key type
