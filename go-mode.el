@@ -1311,9 +1311,11 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
   (reverse (remove nil
                    (mapcar
                     (lambda (line)
-                      (if (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\".*$" line)
-                          (if (string= (file-truename (match-string 1 line)) (file-truename buffer-file-name))
-                              (string-to-number (match-string 2 line)))))
+                      (when (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\".*$" line)
+                        (let ((error-file-name (match-string 1 line))
+                              (error-line-num (match-string 2 line)))
+                          (if (string= (file-truename error-file-name) (file-truename buffer-file-name))
+                              (string-to-number error-line-num)))))
                     (split-string (shell-command-to-string
                                    (concat go-command
                                            (if (string-match "_test\.go$" buffer-file-truename)
