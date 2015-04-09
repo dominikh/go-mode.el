@@ -1359,7 +1359,8 @@ visit FILENAME and go to line LINE and column COLUMN."
         (beginning-of-line)
         (forward-char (1- column))
         (if (buffer-modified-p)
-            (message "Buffer is modified, file position might not have been correct"))))))
+            (message "Buffer is modified, file position might not have been correct"))
+        (current-buffer)))))
 
 (defun godef--call (point)
   "Call godef, acquiring definition position and expression
