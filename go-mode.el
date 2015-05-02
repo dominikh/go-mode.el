@@ -322,6 +322,13 @@ For mode=set, all covered lines will have this weight."
     st)
   "Syntax table for Go mode.")
 
+(defvar godoc-mode-syntax-table
+  (let ((st (make-syntax-table go-mode-syntax-table)))
+    ;; make single quote (apostrophe) as a word for documentation.
+    (modify-syntax-entry ?\' "w" st)
+    st)
+  "Syntax table for Godoc mode.")
+
 (defun go--build-font-lock-keywords ()
   ;; we cannot use 'symbols in regexp-opt because GNU Emacs <24
   ;; doesn't understand that
@@ -1069,12 +1076,17 @@ you save any file, kind of defeating the point of autoloading."
   (with-current-buffer (process-buffer proc)
     (cond ((string= event "finished\n")  ;; Successful exit.
            (goto-char (point-min))
-           (view-mode 1)
+           (godoc-mode)
            (display-buffer (current-buffer) t))
           ((/= (process-exit-status proc) 0)  ;; Error exit.
            (let ((output (buffer-string)))
              (kill-buffer (current-buffer))
              (message (concat "godoc: " output)))))))
+
+(define-derived-mode godoc-mode special-mode "Godoc"
+  "Major mode for showing Go documentation."
+  (set (make-local-variable 'font-lock-defaults)
+       '(go--build-font-lock-keywords)))
 
 ;;;###autoload
 (defun godoc (query)
