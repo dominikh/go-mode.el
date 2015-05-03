@@ -1077,7 +1077,8 @@ you save any file, kind of defeating the point of autoloading."
              (message (concat "godoc: " output)))))))
 
 (define-derived-mode godoc-mode special-mode "Godoc"
-  "Major mode for showing Go documentation.")
+  "Major mode for showing Go documentation."
+  (view-mode-enter))
 
 ;;;###autoload
 (defun godoc (query)
