@@ -764,8 +764,7 @@ that `font-lock-mode' gave to us."
             ((zerop i)
              nil)
             (t
-             (setcdr (nth i regions) nil)
-             regions)))))
+             (butlast regions (- (length regions) i)))))))
 
 (defun go--make-match-data (regions)
   (let ((deficit (- (* 2 go--font-lock-func-param-num-groups)
