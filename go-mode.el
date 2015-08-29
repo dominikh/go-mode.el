@@ -897,7 +897,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (if (boundp 'syntax-propertize-function)
       (set (make-local-variable 'syntax-propertize-function) #'go-propertize-syntax)
-    (set (make-local-variable 'font-lock-syntactic-keywords)
+    (set (make-local-variable 'syntax-propertize-function)
          go--font-lock-syntactic-keywords)
     (set (make-local-variable 'font-lock-multiline) t))
 
