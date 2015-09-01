@@ -213,6 +213,11 @@ a `before-save-hook'."
   :type 'string
   :group 'go)
 
+(defcustom go-native-paths t
+  "Convert paths passed to go commands to the format they expects. Under Emacs Cygwin build this converts Unix paths to their Windows form. Set this to nil when using custom wrappers that converts paths on their own."
+  :type 'boolean
+  :group 'go)
+
 (defcustom go-other-file-alist
   '(("_test\\.go\\'" (".go"))
     ("\\.go\\'" ("_test.go")))
@@ -600,7 +605,7 @@ current line will be returned."
     ;; breaks if there's a comment between the struct/interface keyword and
     ;; bracket, like this:
     ;;
-    ;;     struct /* why? */ { 
+    ;;     struct /* why? */ {
     (while (progn
       (skip-chars-forward "^{")
       (forward-char)
@@ -973,6 +978,11 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
              (t
               (error "invalid rcs patch or internal error in go--apply-rcs-patch")))))))))
 
+(defun go--convert-path (file)
+  (if (and go-native-paths (fboundp 'cygwin-convert-file-name-to-windows))
+      (cygwin-convert-file-name-to-windows file)
+    file))
+
 (defun gofmt ()
   "Format the current buffer according to the gofmt tool."
   (interactive)
@@ -996,7 +1006,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
       ;; We're using errbuf for the mixed stdout and stderr output. This
       ;; is not an issue because gofmt -w does not produce any stdout
       ;; output in case of success.
-      (if (zerop (call-process gofmt-command nil errbuf nil "-w" tmpfile))
+      (if (zerop (call-process gofmt-command nil errbuf nil "-w" (go--convert-path tmpfile)))
           (progn
             (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
                 (message "Buffer is already gofmted")
@@ -1385,7 +1395,7 @@ description at POINT."
                            "-i"
                            "-t"
                            "-f"
-                           (file-truename (buffer-file-name (go--coverage-origin-buffer)))
+                           (go--convert-path (file-truename (buffer-file-name (go--coverage-origin-buffer))))
                            "-o"
                            (number-to-string (go--position-bytes point)))
       (with-current-buffer outbuf
