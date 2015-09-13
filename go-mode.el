@@ -1091,29 +1091,27 @@ you save any file, kind of defeating the point of autoloading."
     nil))
 
 (defun godoc-at-point (point)
-  "Show Go documentation for the identifier at POINT.
-
-`godoc-at-point' requires godef to work.
-
-Due to a limitation in godoc, it is not possible to differentiate
-between functions and methods, which may cause `godoc-at-point'
-to display more documentation than desired."
-  ;; TODO(dominikh): Support executing godoc-at-point on a package
-  ;; name.
+  "Show Go documentation for the identifier at POINT."
   (interactive "d")
-  (condition-case nil
-      (let* ((output (godef--call point))
-             (file (car output))
-             (name-parts (split-string (cadr output) " "))
-             (first (car name-parts)))
-        (if (not (godef--successful-p file))
-            (message "%s" (godef--error file))
-          (godoc (format "%s %s"
-                         (file-name-directory file)
-                         (if (or (string= first "type") (string= first "const"))
-                             (cadr name-parts)
-                           (car name-parts))))))
-    (file-error (message "Could not run godef binary"))))
+  (let ((ident-regexp "[[:word:][:multibyte:].]")
+    (beg point)
+    (end point)
+    (query))
+  (save-excursion
+    (while (looking-at ident-regexp)
+      (setq beg (point))
+      (forward-char -1)))
+  (save-excursion
+    (while (looking-at ident-regexp)
+      (forward-char 1))
+    (setq end (point)))
+  (if (= beg end)
+      (message "no identifier found")
+    (setq query (buffer-substring beg end))
+    (set-process-sentinel
+     (start-process-shell-command "godoc" (godoc--get-buffer query)
+                                  (concat "go doc " query))
+     'godoc--buffer-sentinel))))
 
 (defun go-goto-imports ()
   "Move point to the block of imports.
