@@ -982,29 +982,30 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
         (coding-system-for-read 'utf-8)
         (coding-system-for-write 'utf-8))
 
-    (save-restriction
-      (widen)
-      (if errbuf
-          (with-current-buffer errbuf
-            (setq buffer-read-only nil)
-            (erase-buffer)))
-      (with-current-buffer patchbuf
-        (erase-buffer))
+    (unwind-protect
+        (save-restriction
+          (widen)
+          (if errbuf
+              (with-current-buffer errbuf
+                (setq buffer-read-only nil)
+                (erase-buffer)))
+          (with-current-buffer patchbuf
+            (erase-buffer))
 
-      (write-region nil nil tmpfile)
+          (write-region nil nil tmpfile)
 
-      ;; We're using errbuf for the mixed stdout and stderr output. This
-      ;; is not an issue because gofmt -w does not produce any stdout
-      ;; output in case of success.
-      (if (zerop (call-process gofmt-command nil errbuf nil "-w" tmpfile))
-          (progn
-            (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
-                (message "Buffer is already gofmted")
-              (go--apply-rcs-patch patchbuf)
-              (message "Applied gofmt"))
-            (if errbuf (gofmt--kill-error-buffer errbuf)))
-        (message "Could not apply gofmt")
-        (if errbuf (gofmt--process-errors (buffer-file-name) tmpfile errbuf)))
+          ;; We're using errbuf for the mixed stdout and stderr output. This
+          ;; is not an issue because gofmt -w does not produce any stdout
+          ;; output in case of success.
+          (if (zerop (call-process gofmt-command nil errbuf nil "-w" tmpfile))
+              (progn
+                (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
+                    (message "Buffer is already gofmted")
+                  (go--apply-rcs-patch patchbuf)
+                  (message "Applied gofmt"))
+                (if errbuf (gofmt--kill-error-buffer errbuf)))
+            (message "Could not apply gofmt")
+            (if errbuf (gofmt--process-errors (buffer-file-name) tmpfile errbuf))))
 
       (kill-buffer patchbuf)
       (delete-file tmpfile))))
