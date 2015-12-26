@@ -1322,7 +1322,7 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
                               (string-to-number error-line-num)))))
                     (split-string (shell-command-to-string
                                    (concat go-command
-                                           (if (string-match "_test\.go$" buffer-file-truename)
+                                           (if (string-match "_test\\.go$" buffer-file-truename)
                                                " test -c"
                                              " build -o /dev/null"))) "\n")))))
 
