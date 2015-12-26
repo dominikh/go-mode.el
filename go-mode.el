@@ -1324,7 +1324,8 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
                                    (concat go-command
                                            (if (string-match "_test\\.go$" buffer-file-truename)
                                                " test -c"
-                                             " build -o /dev/null"))) "\n")))))
+                                             " build -o /dev/null")
+                                           " -gcflags=-e")) "\n")))))
 
 (defun go-remove-unused-imports (arg)
   "Remove all unused imports.
