@@ -36,7 +36,7 @@ the following extra features to provide an improved experience:
   - `godef-jump` (`C-c C-j`) and `godef-jump-other-window` (`C-x 4 C-c
     C-j`) to jump to declarations
   - This requires you to install godef via `go get
-  github.com/rogpeppe/godef`.
+  github.com/tw4452852/godef`.
 - Basic support for imenu (functions and variables)
 - Built-in support for displaying code coverage as calculated by `go
   test` (`go-coverage`)
