@@ -845,7 +845,13 @@ The following extra functions are defined:
 - `godoc'
 - `go-import-add'
 - `go-remove-unused-imports'
+- `go-goto-arguments'
+- `go-goto-docstring'
+- `go-goto-function'
+- `go-goto-function-name'
 - `go-goto-imports'
+- `go-goto-return-value'
+- `go-goto-type-signature'
 - `go-play-buffer' and `go-play-region'
 - `go-download-play'
 - `godef-describe' and `godef-jump'
@@ -1561,6 +1567,129 @@ for."
 
       (if (not (eq cur-buffer (current-buffer)))
           (display-buffer (current-buffer) `(,go-coverage-display-buffer-func))))))
+
+(define-prefix-command 'go-goto-map)
+(define-key go-mode-map (kbd "C-c C-g") 'go-goto-map)
+
+(defun go-goto-function ()
+  "Go to the function defintion above point.
+
+If we are on a docstring, follow the docstring down.
+If no function is found, assume that we are at the top of a file
+and search forward instead."
+  (interactive)
+
+  (beginning-of-line)
+  (cond
+   ((looking-at "^//")
+    ;; In case we are looking at the docstring, move on forward until we are not anymore
+    (while (looking-at "^//")
+      (forward-line 1)))
+   ((not (looking-at "^func"))
+    ;; If we are not looking at the beginning of a function line, do a regexp search backwards
+    (re-search-backward "\\<func\\>" nil t)
+
+    (when (not (looking-at "func"))
+      (re-search-forward "\\<func\\>" nil t)
+      (backward-word)))))
+
+(defun go-goto-function-name ()
+  "Go to the name of the current function.
+
+If the function is a test, place point after 'Test'.
+If the function is anonymous, place point on the 'func' keyword."
+  (interactive)
+  (when (not (looking-at "func"))
+    (go-goto-function))
+  ;; If we are looking at func( we are on an anonymous function and
+  ;; nothing else should be done.
+  (when (not (looking-at "func("))
+    (let ((words 1)
+          (chars 1))
+      (when (looking-at "func (")
+        (setq words 3
+              chars 2))
+      (forward-word words)
+      (forward-char chars)
+      (when (looking-at "Test")
+        (forward-char 4)))))
+
+(define-key go-goto-map (kbd "f") 'go-goto-function-name)
+
+(defun go-goto-arguments ()
+  "Go to the return value declaration of the current function."
+  (interactive)
+  (go-goto-function-name)
+  (forward-word 1)
+  (forward-char 1))
+
+(define-key go-goto-map (kbd "a") 'go-goto-arguments)
+
+(defun go-goto-return-value ()
+  "Go to the return value declaration of the current function.
+
+If there is none, make space for one to be added."
+  (interactive)
+  (go-goto-arguments)
+  (re-search-forward ")" nil t)
+  (forward-char 1)
+
+  ;; Opening parenthesis, enter it
+  (when (looking-at "(")
+    (forward-char 1))
+  ;; First item is a pointer, move past the pointer
+  (when (looking-at "*")
+    (forward-char 1))
+  ;; No return arguments, add space for adding
+  (when (looking-at "{")
+    (insert " ")
+    (backward-char 1)))
+
+(define-key go-goto-map (kbd "r") 'go-goto-return-value)
+
+;; Since this is already defined, just add the key to it.
+(define-key go-goto-map (kbd "i") 'go-goto-imports)
+
+(defun go-goto-type-signature ()
+  "Go to the type signature of the current function.
+
+If there is none, add parenthesis to add one."
+  (interactive)
+  (go-goto-function)
+  (forward-char 5)
+  (when (not (looking-at "("))
+    (save-excursion
+      (insert "() ")))
+  (forward-char 1))
+
+(define-key go-goto-map (kbd "t") 'go-goto-type-signature)
+
+(defun go-goto-docstring ()
+  "Go to the top of the docstring of the current function.
+
+If there is none, add one."
+  (interactive)
+  (go-goto-function)
+  (forward-line -1)
+  (beginning-of-line)
+  (while (looking-at "^//")
+    (forward-line -1))
+  (next-line 1)
+  (beginning-of-line)
+  (if (not (looking-at "^func"))
+      (forward-char 3)
+    ;; If we are still at the function signature, we should add a new docstring.
+    (forward-line -1)
+    (newline)
+    (insert (format "// %s " (go--get-function-name)))))
+
+(define-key go-goto-map (kbd "d") 'go-goto-docstring)
+
+(defun go--get-function-name ()
+  "Return the current function name as a string"
+  (save-excursion
+    (go-goto-function-name)
+    (symbol-name (symbol-at-point))))
 
 (provide 'go-mode)
 
