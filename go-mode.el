@@ -1612,7 +1612,7 @@ If the function is anonymous, place point on the 'func' keyword."
         (forward-char 4)))))
 
 (defun go-goto-arguments ()
-  "Go to the return value declaration of the current function."
+  "Go to the arguments of the current function."
   (interactive)
   (go-goto-function-name)
   (forward-word 1)
