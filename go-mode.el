@@ -1630,9 +1630,6 @@ If there is none, make space for one to be added."
   ;; Opening parenthesis, enter it
   (when (looking-at "(")
     (forward-char 1))
-  ;; First item is a pointer, move past the pointer
-  (when (looking-at "*")
-    (forward-char 1))
   ;; No return arguments, add space for adding
   (when (looking-at "{")
     (insert " ")
