@@ -1568,9 +1568,6 @@ for."
       (if (not (eq cur-buffer (current-buffer)))
           (display-buffer (current-buffer) `(,go-coverage-display-buffer-func))))))
 
-(define-prefix-command 'go-goto-map)
-(define-key go-mode-map (kbd "C-c C-g") 'go-goto-map)
-
 (defun go-goto-function ()
   "Go to the function defintion above point.
 
@@ -1614,16 +1611,12 @@ If the function is anonymous, place point on the 'func' keyword."
       (when (looking-at "Test")
         (forward-char 4)))))
 
-(define-key go-goto-map (kbd "f") 'go-goto-function-name)
-
 (defun go-goto-arguments ()
   "Go to the return value declaration of the current function."
   (interactive)
   (go-goto-function-name)
   (forward-word 1)
   (forward-char 1))
-
-(define-key go-goto-map (kbd "a") 'go-goto-arguments)
 
 (defun go-goto-return-value ()
   "Go to the return value declaration of the current function.
@@ -1645,11 +1638,6 @@ If there is none, make space for one to be added."
     (insert " ")
     (backward-char 1)))
 
-(define-key go-goto-map (kbd "r") 'go-goto-return-value)
-
-;; Since this is already defined, just add the key to it.
-(define-key go-goto-map (kbd "i") 'go-goto-imports)
-
 (defun go-goto-type-signature ()
   "Go to the type signature of the current function.
 
@@ -1661,8 +1649,6 @@ If there is none, add parenthesis to add one."
     (save-excursion
       (insert "() ")))
   (forward-char 1))
-
-(define-key go-goto-map (kbd "t") 'go-goto-type-signature)
 
 (defun go-goto-docstring ()
   "Go to the top of the docstring of the current function.
@@ -1683,13 +1669,21 @@ If there is none, add one."
     (newline)
     (insert (format "// %s " (go--get-function-name)))))
 
-(define-key go-goto-map (kbd "d") 'go-goto-docstring)
-
 (defun go--get-function-name ()
   "Return the current function name as a string"
   (save-excursion
     (go-goto-function-name)
     (symbol-name (symbol-at-point))))
+
+(define-prefix-command 'go-goto-map)
+(define-key go-mode-map (kbd "C-c C-g") 'go-goto-map)
+
+(define-key go-goto-map (kbd "a") 'go-goto-arguments)
+(define-key go-goto-map (kbd "d") 'go-goto-docstring)
+(define-key go-goto-map (kbd "f") 'go-goto-function-name)
+(define-key go-goto-map (kbd "i") 'go-goto-imports)
+(define-key go-goto-map (kbd "r") 'go-goto-return-value)
+(define-key go-goto-map (kbd "t") 'go-goto-type-signature)
 
 (provide 'go-mode)
 
