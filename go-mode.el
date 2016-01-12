@@ -851,7 +851,7 @@ The following extra functions are defined:
 - `go-goto-function-name'
 - `go-goto-imports'
 - `go-goto-return-value'
-- `go-goto-type-signature'
+- `go-goto-method-receiver'
 - `go-play-buffer' and `go-play-region'
 - `go-download-play'
 - `godef-describe' and `godef-jump'
@@ -1636,8 +1636,8 @@ If there is none, make space for one to be added."
     (insert " ")
     (backward-char 1)))
 
-(defun go-goto-type-signature ()
-  "Go to the type signature of the current function.
+(defun go-goto-method-receiver ()
+  "Go to the receiver of the current method.
 
 If there is none, add parenthesis to add one."
   (interactive)
@@ -1680,8 +1680,8 @@ If there is none, add one."
 (define-key go-goto-map (kbd "d") 'go-goto-docstring)
 (define-key go-goto-map (kbd "f") 'go-goto-function-name)
 (define-key go-goto-map (kbd "i") 'go-goto-imports)
+(define-key go-goto-map (kbd "m") 'go-goto-method-receiver)
 (define-key go-goto-map (kbd "r") 'go-goto-return-value)
-(define-key go-goto-map (kbd "t") 'go-goto-type-signature)
 
 (provide 'go-mode)
 
