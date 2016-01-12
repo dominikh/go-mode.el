@@ -1624,8 +1624,9 @@ If the function is anonymous, place point on the 'func' keyword."
 If there is none, make space for one to be added."
   (interactive)
   (go-goto-arguments)
-  (re-search-forward ")" nil t)
-  (forward-char 1)
+  (backward-char)
+  (forward-list)
+  (forward-char)
 
   ;; Opening parenthesis, enter it
   (when (looking-at "(")
