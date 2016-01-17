@@ -1695,6 +1695,10 @@ If there is none, make space for one to be added."
 
 If there is none, add parenthesis to add one."
   (interactive)
+
+  (when (go--in-anonymous-funcion-p)
+    (error "Anonymous functions cannot have method receivers"))
+
   (go-goto-function)
   (forward-char 5)
   (when (not (looking-at "("))
@@ -1726,6 +1730,12 @@ If there is none, add one."
   (save-excursion
     (go-goto-function-name)
     (symbol-name (symbol-at-point))))
+
+(defun go--in-anonymous-funcion-p ()
+  "Return t if point is inside an anonymous function, nil otherwise."
+  (save-excursion
+    (go-goto-function)
+    (looking-at "func(")))
 
 (define-prefix-command 'go-goto-map)
 (define-key go-mode-map (kbd "C-c C-g") 'go-goto-map)
