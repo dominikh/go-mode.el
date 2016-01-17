@@ -1573,22 +1573,68 @@ for."
 
 If we are on a docstring, follow the docstring down.
 If no function is found, assume that we are at the top of a file
-and search forward instead."
+and search forward instead.
+
+If we are inside an anonymous function, go to that.
+If we are inside a function that has an anonymous function inside of it and we
+are below that anonymous function, go to the root function."
   (interactive)
+  (let ((p (point)))
+    (cond
+     ((save-excursion
+        (beginning-of-line)
+        (looking-at "^//"))
+      ;; In case we are looking at the docstring, move on forward until we are
+      ;; not anymore
+      ;; TODO(thiderman): This would behave incorrectly if point is
+      ;; inside a standalone block of comments that are not a docstring.
+      (beginning-of-line)
+      (while (looking-at "^//")
+        (forward-line 1)))
 
-  (beginning-of-line)
-  (cond
-   ((looking-at "^//")
-    ;; In case we are looking at the docstring, move on forward until we are not anymore
-    (while (looking-at "^//")
-      (forward-line 1)))
-   ((not (looking-at "^func"))
-    ;; If we are not looking at the beginning of a function line, do a regexp search backwards
-    (re-search-backward "\\<func\\>" nil t)
+     ((not (looking-at "^func"))
+      ;; If we are not looking at the beginning of a function line, do a regexp
+      ;; search backwards
+      (re-search-backward "\\<func\\>" nil t)
 
-    (when (not (looking-at "func"))
-      (re-search-forward "\\<func\\>" nil t)
-      (backward-word)))))
+      ;; If nothing is found, assume that we are at the top of the file and
+      ;; should search forward instead.
+      (when (not (looking-at "func"))
+        (re-search-forward "\\<func\\>" nil t))
+
+      ;; If we have landed at an anonymous function, it is possible that we
+      ;; were not inside it but below it. If we were not inside it, we should
+      ;; go to the containing function.
+      (while (go--in-function-p p)
+        (go-goto-function)))))
+
+  ;; If we are still in a comment, redo the call so that we get out of it.
+  (when (go-in-comment-p)
+    (go-goto-function)))
+
+(defun go--in-function-p (compare-point)
+  "Return t if point is inside the function that starts at `compare-point', nil
+otherwise."
+  ;; Check that we are not looking at a top level function. If we are,
+  (when (not (looking-at "^func"))
+   (save-excursion
+     (go--goto-return-values)
+     ;; Try to place the point on the opening brace
+     (cond
+      ((looking-at "(")
+       (forward-list 1)
+       (forward-char 1))
+      ((not (looking-at "{"))
+       (forward-word 1)
+       (forward-char 1)))
+
+     (when (looking-at "{")
+       ;; Go past the body of the function and back inside of it.
+       (forward-list 1)
+       (backward-char 1)
+       ;; Finally, compare if our position is past the assert point.
+       ;; Return t if it is.
+       (< (point) compare-point)))))
 
 (defun go-goto-function-name ()
   "Go to the name of the current function.
@@ -1618,19 +1664,25 @@ If the function is anonymous, place point on the 'func' keyword."
   (forward-word 1)
   (forward-char 1))
 
-(defun go-goto-return-value ()
-  "Go to the return value declaration of the current function.
-
-If there is none, make space for one to be added."
-  (interactive)
+(defun go--goto-return-values ()
+  "Go to the declaration of return values for the current function."
   (go-goto-arguments)
   (backward-char)
   (forward-list)
-  (forward-char)
+  (forward-char))
+
+(defun go-goto-return-value ()
+  "Go to the return value declaration of the current function.
+
+If there are multiple ones contained in a parenthesis, enter the parenthesis.
+If there is none, make space for one to be added."
+  (interactive)
+  (go--goto-return-values)
 
   ;; Opening parenthesis, enter it
   (when (looking-at "(")
     (forward-char 1))
+
   ;; No return arguments, add space for adding
   (when (looking-at "{")
     (insert " ")
