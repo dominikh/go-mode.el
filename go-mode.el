@@ -1586,11 +1586,12 @@ are below that anonymous function, go to the root function."
         (looking-at "^//"))
       ;; In case we are looking at the docstring, move on forward until we are
       ;; not anymore
-      ;; TODO(thiderman): This would behave incorrectly if point is
-      ;; inside a standalone block of comments that are not a docstring.
       (beginning-of-line)
       (while (looking-at "^//")
-        (forward-line 1)))
+        (forward-line 1))
+      ;; If we are still not looking at a function, retry by calling self again.
+      (when (not (looking-at "^func"))
+        (go-goto-function)))
 
      ((not (looking-at "^func"))
       ;; If we are not looking at the beginning of a function line, do a regexp
@@ -1600,7 +1601,8 @@ are below that anonymous function, go to the root function."
       ;; If nothing is found, assume that we are at the top of the file and
       ;; should search forward instead.
       (when (not (looking-at "func"))
-        (re-search-forward "\\<func\\>" nil t))
+        (re-search-forward "\\<func\\>" nil t)
+        (forward-word -1))
 
       ;; If we have landed at an anonymous function, it is possible that we
       ;; were not inside it but below it. If we were not inside it, we should
