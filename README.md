@@ -41,15 +41,19 @@ the following extra features to provide an improved experience:
 - Basic support for imenu (functions and variables)
 - Built-in support for displaying code coverage as calculated by `go
   test` (`go-coverage`)
-- Several goto functions for manipulating function signatures:
+- Several goto functions for manipulating function signature of the method we
+  are currently editing:
   - Going to the arguments (`go-goto-arguments` - `C-c C-g a`)
-  - Going to the docstring, creating it if it does not exist and updating it
-    if the name does not match (`go-goto-docstring` - `C-c C-g d`)
+  - Going to the docstring, creating it if it does not exist
+    (`go-goto-docstring` - `C-c C-g d`). Skips anonymous functions.
   - Going to the function name (`go-goto-function-name` - `C-c C-g f`)
   - Going to the return value, adding space for adding one if there are none
     present (`go-goto-return-value` - `C-c C-g r`)
-  - Going to the type signature, adding parenthesis for adding one if there is
-    none present (`go-goto-type-signature` - `C-c C-g t`)
+  - Going to the method receiver, adding parenthesis for adding one if there is
+    none present (`go-goto-type-signature` - `C-c C-g m`). Skips anonymous
+    functions.
+  - All of the above accept one prefix argument (`C-u`), which if given makes
+    them skip anonymous functions and go directly to the root function.
 
 # Installation
 
