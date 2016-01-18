@@ -1615,28 +1615,31 @@ are below that anonymous function, go to the root function."
     (go-goto-function)))
 
 (defun go--in-function-p (compare-point)
-  "Return t if point is inside the function that starts at `compare-point', nil
-otherwise."
-  ;; Check that we are not looking at a top level function. If we are,
-  (when (not (looking-at "^func"))
-   (save-excursion
-     (go--goto-return-values)
-     ;; Try to place the point on the opening brace
-     (cond
-      ((looking-at "(")
-       (forward-list 1)
-       (forward-char 1))
-      ((not (looking-at "{"))
-       (forward-word 1)
-       (forward-char 1)))
+  "Return t if `compare-point' is inside the function that point is currently on.
+This should only be called as a helper when point is looking at \"func\".
 
-     (when (looking-at "{")
-       ;; Go past the body of the function and back inside of it.
-       (forward-list 1)
-       (backward-char 1)
-       ;; Finally, compare if our position is past the assert point.
-       ;; Return t if it is.
-       (< (point) compare-point)))))
+Returns nil in all other cases."
+  ;; Check that we are not looking at a top level function. If we are, return nil.
+  (when (not (looking-at "^func"))
+    (save-excursion
+      (go--goto-return-values)
+      ;; Try to place the point on the opening brace.
+      (cond
+       ((looking-at "(")
+        (forward-list 1)
+        (forward-char 1))
+       ((not (looking-at "{"))
+        (forward-word 1)
+        (forward-char 1)))
+
+      (when (looking-at "{")
+        ;; Go past the body of the function and back inside of it.
+        (forward-list 1)
+        (backward-char 1)
+        ;; Now that point is looking at the closing brace of the function
+        ;; body, compare if our position is earlier in the file than the
+        ;; comparing point. Return t if it is.
+        (< (point) compare-point)))))
 
 (defun go-goto-function-name ()
   "Go to the name of the current function.
