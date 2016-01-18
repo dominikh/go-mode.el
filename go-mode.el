@@ -1568,7 +1568,7 @@ for."
       (if (not (eq cur-buffer (current-buffer)))
           (display-buffer (current-buffer) `(,go-coverage-display-buffer-func))))))
 
-(defun go-goto-function ()
+(defun go-goto-function (&optional arg)
   "Go to the function defintion above point.
 
 If we are on a docstring, follow the docstring down.
@@ -1577,8 +1577,10 @@ and search forward instead.
 
 If we are inside an anonymous function, go to that.
 If we are inside a function that has an anonymous function inside of it and we
-are below that anonymous function, go to the root function."
-  (interactive)
+are below that anonymous function, go to the root function.
+
+If one prefix argument is given, anonymous functions are skipped."
+  (interactive "P")
   (let ((p (point)))
     (cond
      ((save-excursion
@@ -1591,7 +1593,7 @@ are below that anonymous function, go to the root function."
         (forward-line 1))
       ;; If we are still not looking at a function, retry by calling self again.
       (when (not (looking-at "^func"))
-        (go-goto-function)))
+        (go-goto-function arg)))
 
      ((not (looking-at "^func"))
       ;; If we are not looking at the beginning of a function line, do a regexp
@@ -1608,11 +1610,17 @@ are below that anonymous function, go to the root function."
       ;; were not inside it but below it. If we were not inside it, we should
       ;; go to the containing function.
       (while (go--in-function-p p)
-        (go-goto-function)))))
+        (go-goto-function arg)))))
 
-  ;; If we are still in a comment, redo the call so that we get out of it.
-  (when (go-in-comment-p)
-    (go-goto-function)))
+  (cond
+   ((go-in-comment-p)
+    ;; If we are still in a comment, redo the call so that we get out of it.
+    (go-goto-function arg))
+
+   ((and (looking-at "func(") (equal arg '(4)))
+    ;; If we are looking at an anonymous function and a prefix argument has
+    ;; been supplied, redo the call so that we skip the anonymous function.
+    (go-goto-function arg))))
 
 (defun go--in-function-p (compare-point)
   "Return t if `compare-point' is inside the function that point is currently on.
@@ -1641,14 +1649,16 @@ Returns nil in all other cases."
         ;; comparing point. Return t if it is.
         (< (point) compare-point)))))
 
-(defun go-goto-function-name ()
+(defun go-goto-function-name (&optional arg)
   "Go to the name of the current function.
 
 If the function is a test, place point after 'Test'.
-If the function is anonymous, place point on the 'func' keyword."
-  (interactive)
+If the function is anonymous, place point on the 'func' keyword.
+
+If one prefix argument is given, anonymous functions are skipped."
+  (interactive "P")
   (when (not (looking-at "func"))
-    (go-goto-function))
+    (go-goto-function arg))
   ;; If we are looking at func( we are on an anonymous function and
   ;; nothing else should be done.
   (when (not (looking-at "func("))
@@ -1662,27 +1672,31 @@ If the function is anonymous, place point on the 'func' keyword."
       (when (looking-at "Test")
         (forward-char 4)))))
 
-(defun go-goto-arguments ()
-  "Go to the arguments of the current function."
-  (interactive)
-  (go-goto-function-name)
+(defun go-goto-arguments (&optional arg)
+  "Go to the arguments of the current function.
+
+If one prefix argument is given, anonymous functions are skipped."
+  (interactive "P")
+  (go-goto-function-name arg)
   (forward-word 1)
   (forward-char 1))
 
-(defun go--goto-return-values ()
+(defun go--goto-return-values (&optional arg)
   "Go to the declaration of return values for the current function."
-  (go-goto-arguments)
+  (go-goto-arguments arg)
   (backward-char)
   (forward-list)
   (forward-char))
 
-(defun go-goto-return-value ()
+(defun go-goto-return-value (&optional arg)
   "Go to the return value declaration of the current function.
 
 If there are multiple ones contained in a parenthesis, enter the parenthesis.
-If there is none, make space for one to be added."
-  (interactive)
-  (go--goto-return-values)
+If there is none, make space for one to be added.
+
+If one prefix argument is given, anonymous functions are skipped."
+  (interactive "P")
+  (go--goto-return-values arg)
 
   ;; Opening parenthesis, enter it
   (when (looking-at "(")
@@ -1693,28 +1707,42 @@ If there is none, make space for one to be added."
     (insert " ")
     (backward-char 1)))
 
-(defun go-goto-method-receiver ()
+(defun go-goto-method-receiver (&optional arg)
   "Go to the receiver of the current method.
 
-If there is none, add parenthesis to add one."
-  (interactive)
+If there is none, add parenthesis to add one.
 
-  (when (go--in-anonymous-funcion-p)
+Anonymous functions cannot have method receivers, so when this is called
+interactively anonymous functions will be skipped. If called programmatically,
+an error is raised."
+  (interactive "P")
+
+  (when (and (not (called-interactively-p 'interactive))
+             (go--in-anonymous-funcion-p))
     (error "Anonymous functions cannot have method receivers"))
 
-  (go-goto-function)
+  (go-goto-function '(4))  ; Always skip anonymous functions
   (forward-char 5)
   (when (not (looking-at "("))
     (save-excursion
       (insert "() ")))
   (forward-char 1))
 
-(defun go-goto-docstring ()
+(defun go-goto-docstring (&optional arg)
   "Go to the top of the docstring of the current function.
 
-If there is none, add slashes to start writing one."
-  (interactive)
-  (go-goto-function)
+If there is none, add slashes to start writing one.
+
+Anonymous functions do not have docstrings, so when this is called
+interactively anonymous functions will be skipped. If called programmatically,
+an error is raised."
+  (interactive "P")
+
+  (when (and (not (called-interactively-p 'interactive))
+             (go--in-anonymous-funcion-p))
+    (error "Anonymous functions do not have docstrings"))
+
+  (go-goto-function '(4))
   (forward-line -1)
   (beginning-of-line)
 
@@ -1739,9 +1767,11 @@ If there is none, add slashes to start writing one."
     (insert (format "// %s " (go--get-function-name))))))
 
 (defun go--get-function-name ()
-  "Return the current function name as a string"
+  "Return the current function name as a string.
+
+Will skip anonymous functions since they do not have names."
   (save-excursion
-    (go-goto-function-name)
+    (go-goto-function-name '(4))
     (symbol-name (symbol-at-point))))
 
 (defun go--in-anonymous-funcion-p ()
