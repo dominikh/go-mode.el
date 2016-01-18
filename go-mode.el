@@ -1712,21 +1712,31 @@ If there is none, add parenthesis to add one."
 (defun go-goto-docstring ()
   "Go to the top of the docstring of the current function.
 
-If there is none, add one."
+If there is none, add slashes to start writing one."
   (interactive)
   (go-goto-function)
   (forward-line -1)
   (beginning-of-line)
+
   (while (looking-at "^//")
     (forward-line -1))
-  (next-line 1)
+  (forward-line 1)
   (beginning-of-line)
-  (if (not (looking-at "^func"))
-      (forward-char 3)
-    ;; If we are still at the function signature, we should add a new docstring.
+
+  (cond
+   ;; If we are looking at an empty comment, add a single space in front of it.
+   ((looking-at "^//$")
+    (forward-char 2)
+    (insert " "))
+   ;; If we are not looking at the function signature, we are looking at a docstring.
+   ;; Move to the beginning of the first word of it.
+   ((not (looking-at "^func"))
+    (forward-char 3))
+   ;; If we are still at the function signature, we should add a new docstring.
+   (t
     (forward-line -1)
     (newline)
-    (insert (format "// %s " (go--get-function-name)))))
+    (insert (format "// %s " (go--get-function-name))))))
 
 (defun go--get-function-name ()
   "Return the current function name as a string"
