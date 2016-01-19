@@ -1731,7 +1731,7 @@ an error is raised."
 (defun go-goto-docstring (&optional arg)
   "Go to the top of the docstring of the current function.
 
-If there is none, add slashes to start writing one.
+If there is none, add one beginning with the name of the current function.
 
 Anonymous functions do not have docstrings, so when this is called
 interactively anonymous functions will be skipped. If called programmatically,
@@ -1755,7 +1755,7 @@ an error is raised."
    ;; If we are looking at an empty comment, add a single space in front of it.
    ((looking-at "^//$")
     (forward-char 2)
-    (insert " "))
+    (insert (format " %s " (go--get-function-name))))
    ;; If we are not looking at the function signature, we are looking at a docstring.
    ;; Move to the beginning of the first word of it.
    ((not (looking-at "^func"))
