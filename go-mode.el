@@ -1718,6 +1718,7 @@ an error is raised."
   (interactive "P")
 
   (when (and (not (called-interactively-p 'interactive))
+             (not arg)
              (go--in-anonymous-funcion-p))
     (error "Anonymous functions cannot have method receivers"))
 
@@ -1739,6 +1740,7 @@ an error is raised."
   (interactive "P")
 
   (when (and (not (called-interactively-p 'interactive))
+             (not arg)
              (go--in-anonymous-funcion-p))
     (error "Anonymous functions do not have docstrings"))
 
