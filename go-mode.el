@@ -1617,7 +1617,7 @@ If one prefix argument is given, anonymous functions are skipped."
     ;; If we are still in a comment, redo the call so that we get out of it.
     (go-goto-function arg))
 
-   ((and (looking-at "func(") (equal arg '(4)))
+   ((and (looking-at "func(") arg)
     ;; If we are looking at an anonymous function and a prefix argument has
     ;; been supplied, redo the call so that we skip the anonymous function.
     (go-goto-function arg))))
@@ -1721,7 +1721,7 @@ an error is raised."
              (go--in-anonymous-funcion-p))
     (error "Anonymous functions cannot have method receivers"))
 
-  (go-goto-function '(4))  ; Always skip anonymous functions
+  (go-goto-function t)  ; Always skip anonymous functions
   (forward-char 5)
   (when (not (looking-at "("))
     (save-excursion
@@ -1742,7 +1742,7 @@ an error is raised."
              (go--in-anonymous-funcion-p))
     (error "Anonymous functions do not have docstrings"))
 
-  (go-goto-function '(4))
+  (go-goto-function t)
   (forward-line -1)
   (beginning-of-line)
 
@@ -1771,7 +1771,7 @@ an error is raised."
 
 Will skip anonymous functions since they do not have names."
   (save-excursion
-    (go-goto-function-name '(4))
+    (go-goto-function-name t)
     (symbol-name (symbol-at-point))))
 
 (defun go--in-anonymous-funcion-p ()
