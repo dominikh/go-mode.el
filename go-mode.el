@@ -1755,7 +1755,7 @@ an error is raised."
    ;; If we are looking at an empty comment, add a single space in front of it.
    ((looking-at "^//$")
     (forward-char 2)
-    (insert (format " %s " (go--get-function-name))))
+    (insert (format " %s " (go--function-name))))
    ;; If we are not looking at the function signature, we are looking at a docstring.
    ;; Move to the beginning of the first word of it.
    ((not (looking-at "^func"))
@@ -1764,9 +1764,9 @@ an error is raised."
    (t
     (forward-line -1)
     (newline)
-    (insert (format "// %s " (go--get-function-name))))))
+    (insert (format "// %s " (go--function-name))))))
 
-(defun go--get-function-name ()
+(defun go--function-name ()
   "Return the current function name as a string.
 
 Will skip anonymous functions since they do not have names."
