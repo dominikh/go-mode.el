@@ -1609,7 +1609,7 @@ If one prefix argument is given, anonymous functions are skipped."
       ;; If we have landed at an anonymous function, it is possible that we
       ;; were not inside it but below it. If we were not inside it, we should
       ;; go to the containing function.
-      (while (go--in-function-p p)
+      (while (go--below-anonymous-function p)
         (go-goto-function arg)))))
 
   (cond
@@ -1622,8 +1622,8 @@ If one prefix argument is given, anonymous functions are skipped."
     ;; been supplied, redo the call so that we skip the anonymous function.
     (go-goto-function arg))))
 
-(defun go--in-function-p (compare-point)
-  "Return t if `compare-point' is inside the function that point is currently on.
+(defun go--below-anonymous-function (compare-point)
+  "Return t if `compare-point' is below the function that point is currently on.
 This should only be called as a helper when point is looking at \"func\".
 
 Returns nil in all other cases."
