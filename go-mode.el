@@ -1757,7 +1757,7 @@ an error is raised."
    ;; If we are looking at an empty comment, add a single space in front of it.
    ((looking-at "^//$")
     (forward-char 2)
-    (insert (format " %s " (go--function-name))))
+    (insert (format " %s " (go--function-name t))))
    ;; If we are not looking at the function signature, we are looking at a docstring.
    ;; Move to the beginning of the first word of it.
    ((not (looking-at "^func"))
@@ -1766,15 +1766,20 @@ an error is raised."
    (t
     (forward-line -1)
     (newline)
-    (insert (format "// %s " (go--function-name))))))
+    (insert (format "// %s " (go--function-name t))))))
 
-(defun go--function-name ()
+(defun go--function-name (&optional arg)
   "Return the current function name as a string.
 
-Will skip anonymous functions since they do not have names."
-  (save-excursion
-    (go-goto-function-name t)
-    (symbol-name (symbol-at-point))))
+If `arg' is non-nil anonymous functions will be ignored and the
+name returned will be of the top-level function.
+
+Returns nil otherwise."
+  (when (or (not (go--in-anonymous-funcion-p))
+            arg)
+    (save-excursion
+      (go-goto-function-name t)
+      (symbol-name (symbol-at-point)))))
 
 (defun go--in-anonymous-funcion-p ()
   "Return t if point is inside an anonymous function, nil otherwise."
