@@ -1569,17 +1569,16 @@ for."
           (display-buffer (current-buffer) `(,go-coverage-display-buffer-func))))))
 
 (defun go-goto-function (&optional arg)
-  "Go to the function defintion above point.
+  "Go to the function defintion (named or anonymous) surrounding point.
 
 If we are on a docstring, follow the docstring down.
 If no function is found, assume that we are at the top of a file
 and search forward instead.
 
-If we are inside an anonymous function, go to that.
-If we are inside a function that has an anonymous function inside of it and we
-are below that anonymous function, go to the root function.
+If point is looking at the func keyword of an anonymous function,
+go to the surrounding function.
 
-If one prefix argument is given, anonymous functions are skipped."
+If ARG is non-nil, anonymous functions are ignored."
   (interactive "P")
   (let ((p (point)))
     (cond
@@ -1592,13 +1591,22 @@ If one prefix argument is given, anonymous functions are skipped."
       (while (looking-at "^//")
         (forward-line 1))
       ;; If we are still not looking at a function, retry by calling self again.
-      (when (not (looking-at "^func"))
+      (when (not (looking-at "func"))
         (go-goto-function arg)))
 
-     ((not (looking-at "^func"))
-      ;; If we are not looking at the beginning of a function line, do a regexp
-      ;; search backwards
-      (re-search-backward "\\<func\\>" nil t)
+     ;; If we're already looking at an anonymous func, look for the
+     ;; surrounding function.
+     ((and (looking-at "func")
+           (not (looking-at "^func")))
+      (re-search-backward "\\<func\\>" nil t))
+
+     ((not (looking-at "func"))
+      ;; If point is on the "func" keyword, step back a word and retry
+      (if (string= (symbol-name (symbol-at-point)) "func")
+          (backward-word)
+        ;; If we are not looking at the beginning of a function line, do a regexp
+        ;; search backwards
+        (re-search-backward "\\<func\\>" nil t))
 
       ;; If nothing is found, assume that we are at the top of the file and
       ;; should search forward instead.
@@ -1609,7 +1617,7 @@ If one prefix argument is given, anonymous functions are skipped."
       ;; If we have landed at an anonymous function, it is possible that we
       ;; were not inside it but below it. If we were not inside it, we should
       ;; go to the containing function.
-      (while (go--below-anonymous-function p)
+      (while (not (go--in-function-p p))
         (go-goto-function arg)))))
 
   (cond
@@ -1622,32 +1630,30 @@ If one prefix argument is given, anonymous functions are skipped."
     ;; been supplied, redo the call so that we skip the anonymous function.
     (go-goto-function arg))))
 
-(defun go--below-anonymous-function (compare-point)
-  "Return t if `compare-point' is below the function that point is currently on.
-This should only be called as a helper when point is looking at \"func\".
+(defun go--goto-opening-curly-brace ()
+  (go--goto-return-values)
+  ;; Try to place the point on the opening brace.
+  (cond
+   ((looking-at "(")
+    (forward-list 1)
+    (forward-char 1))
+   ((not (looking-at "{"))
+    (forward-word 1)
+    (forward-char 1))))
 
-Returns nil in all other cases."
-  ;; Check that we are not looking at a top level function. If we are, return nil.
-  (when (not (looking-at "^func"))
-    (save-excursion
-      (go--goto-return-values)
-      ;; Try to place the point on the opening brace.
-      (cond
-       ((looking-at "(")
-        (forward-list 1)
-        (forward-char 1))
-       ((not (looking-at "{"))
-        (forward-word 1)
-        (forward-char 1)))
+(defun go--in-function-p (compare-point)
+  "Return t if COMPARE-POINT lies inside the function immediately surrounding point."
+  (save-excursion
+    (when (not (looking-at "func"))
+      (go-goto-function))
+    (let ((start (point)))
+      (go--goto-opening-curly-brace)
 
-      (when (looking-at "{")
-        ;; Go past the body of the function and back inside of it.
-        (forward-list 1)
-        (backward-char 1)
-        ;; Now that point is looking at the closing brace of the function
-        ;; body, compare if our position is earlier in the file than the
-        ;; comparing point. Return t if it is.
-        (< (point) compare-point)))))
+      (unless (looking-at "{")
+        (error "expected to be looking at opening curly brace"))
+      (forward-list 1)
+      (and (>= compare-point start)
+           (<= compare-point (point))))))
 
 (defun go-goto-function-name (&optional arg)
   "Go to the name of the current function.
