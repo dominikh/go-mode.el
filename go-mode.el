@@ -1636,11 +1636,23 @@ If ARG is non-nil, anonymous functions are ignored."
   ;; Try to place the point on the opening brace.
   (cond
    ((looking-at "(")
+    ;; Multiple return values! Just walk past the list and we're done!
     (forward-list 1)
     (forward-char 1))
+
    ((not (looking-at "{"))
-    (forward-word 1)
-    (forward-char 1))))
+    ;; Place point at the next curly brace.
+    (search-forward "{")
+    (backward-char 1)
+    ;; Check of the end of the other parenthesis looks like "} {". If it does,
+    ;; we are looking at the definition of an anonymous intefrace return value.
+    ;; Move past the list and one char forward and we are done.
+    (when (save-excursion
+            (forward-list 1)
+            (backward-char 1)
+            (looking-at "} {"))
+      (forward-list 1)
+      (forward-char 1)))))
 
 (defun go--in-function-p (compare-point)
   "Return t if COMPARE-POINT lies inside the function immediately surrounding point."
