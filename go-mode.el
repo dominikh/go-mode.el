@@ -1591,16 +1591,16 @@ If ARG is non-nil, anonymous functions are ignored."
       (while (looking-at "^//")
         (forward-line 1))
       ;; If we are still not looking at a function, retry by calling self again.
-      (when (not (looking-at "func"))
+      (when (not (looking-at "\\<func\\>"))
         (go-goto-function arg)))
 
      ;; If we're already looking at an anonymous func, look for the
      ;; surrounding function.
-     ((and (looking-at "func")
-           (not (looking-at "^func")))
+     ((and (looking-at "\\<func\\>")
+           (not (looking-at "^func\\>")))
       (re-search-backward "\\<func\\>" nil t))
 
-     ((not (looking-at "func"))
+     ((not (looking-at "\\<func\\>"))
       ;; If point is on the "func" keyword, step back a word and retry
       (if (string= (symbol-name (symbol-at-point)) "func")
           (backward-word)
@@ -1610,7 +1610,7 @@ If ARG is non-nil, anonymous functions are ignored."
 
       ;; If nothing is found, assume that we are at the top of the file and
       ;; should search forward instead.
-      (when (not (looking-at "func"))
+      (when (not (looking-at "\\<func\\>"))
         (re-search-forward "\\<func\\>" nil t)
         (forward-word -1))
 
@@ -1618,7 +1618,7 @@ If ARG is non-nil, anonymous functions are ignored."
       ;; were not inside it but below it. If we were not inside it, we should
       ;; go to the containing function.
       (while (and (not (go--in-function-p p))
-                  (not (looking-at "^func")))
+                  (not (looking-at "^func\\>")))
         (go-goto-function arg)))))
 
   (cond
@@ -1626,7 +1626,7 @@ If ARG is non-nil, anonymous functions are ignored."
     ;; If we are still in a comment, redo the call so that we get out of it.
     (go-goto-function arg))
 
-   ((and (looking-at "func(") arg)
+   ((and (looking-at "\\<func(") arg)
     ;; If we are looking at an anonymous function and a prefix argument has
     ;; been supplied, redo the call so that we skip the anonymous function.
     (go-goto-function arg))))
@@ -1645,7 +1645,7 @@ If ARG is non-nil, anonymous functions are ignored."
 (defun go--in-function-p (compare-point)
   "Return t if COMPARE-POINT lies inside the function immediately surrounding point."
   (save-excursion
-    (when (not (looking-at "func"))
+    (when (not (looking-at "\\<func\\>"))
       (go-goto-function))
     (let ((start (point)))
       (go--goto-opening-curly-brace)
@@ -1664,14 +1664,14 @@ If the function is anonymous, place point on the 'func' keyword.
 
 If one prefix argument is given, anonymous functions are skipped."
   (interactive "P")
-  (when (not (looking-at "func"))
+  (when (not (looking-at "\\<func\\>"))
     (go-goto-function arg))
   ;; If we are looking at func( we are on an anonymous function and
   ;; nothing else should be done.
-  (when (not (looking-at "func("))
+  (when (not (looking-at "\\<func("))
     (let ((words 1)
           (chars 1))
-      (when (looking-at "func (")
+      (when (looking-at "\\<func (")
         (setq words 3
               chars 2))
       (forward-word words)
@@ -1792,7 +1792,7 @@ Returns nil otherwise."
   "Return t if point is inside an anonymous function, nil otherwise."
   (save-excursion
     (go-goto-function)
-    (looking-at "func(")))
+    (looking-at "\\<func(")))
 
 (define-prefix-command 'go-goto-map)
 (define-key go-mode-map (kbd "C-c C-g") 'go-goto-map)
