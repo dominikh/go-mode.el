@@ -600,7 +600,7 @@ current line will be returned."
     ;; breaks if there's a comment between the struct/interface keyword and
     ;; bracket, like this:
     ;;
-    ;;     struct /* why? */ { 
+    ;;     struct /* why? */ {
     (while (progn
       (skip-chars-forward "^{")
       (forward-char)
