@@ -1662,7 +1662,7 @@ If ARG is non-nil, anonymous functions are ignored."
 If the function is a test, place point after 'Test'.
 If the function is anonymous, place point on the 'func' keyword.
 
-If one prefix argument is given, anonymous functions are skipped."
+If ARG is non-nil, anonymous functions are skipped."
   (interactive "P")
   (when (not (looking-at "\\<func\\>"))
     (go-goto-function arg))
@@ -1682,7 +1682,7 @@ If one prefix argument is given, anonymous functions are skipped."
 (defun go-goto-arguments (&optional arg)
   "Go to the arguments of the current function.
 
-If one prefix argument is given, anonymous functions are skipped."
+If ARG is non-nil, anonymous functions are skipped."
   (interactive "P")
   (go-goto-function-name arg)
   (forward-word 1)
@@ -1701,7 +1701,7 @@ If one prefix argument is given, anonymous functions are skipped."
 If there are multiple ones contained in a parenthesis, enter the parenthesis.
 If there is none, make space for one to be added.
 
-If one prefix argument is given, anonymous functions are skipped."
+If ARG is non-nil, anonymous functions are skipped."
   (interactive "P")
   (go--goto-return-values arg)
 
@@ -1721,7 +1721,7 @@ If there is none, add parenthesis to add one.
 
 Anonymous functions cannot have method receivers, so when this is called
 interactively anonymous functions will be skipped. If called programmatically,
-an error is raised."
+an error is raised unless ARG is non-nil."
   (interactive "P")
 
   (when (and (not (called-interactively-p 'interactive))
@@ -1743,7 +1743,7 @@ If there is none, add one beginning with the name of the current function.
 
 Anonymous functions do not have docstrings, so when this is called
 interactively anonymous functions will be skipped. If called programmatically,
-an error is raised."
+an error is raised unless ARG is non-nil."
   (interactive "P")
 
   (when (and (not (called-interactively-p 'interactive))
@@ -1776,12 +1776,12 @@ an error is raised."
     (insert (format "// %s " (go--function-name t))))))
 
 (defun go--function-name (&optional arg)
-  "Return the current function name as a string.
+  "Return the name of the surrounding function.
 
-If `arg' is non-nil anonymous functions will be ignored and the
-name returned will be of the top-level function.
-
-Returns nil otherwise."
+If ARG is non-nil, anonymous functions will be ignored and the
+name returned will be that of the top-level function. If ARG is
+nil and the surrounding function is anonymous, nil will be
+returned."
   (when (or (not (go--in-anonymous-funcion-p))
             arg)
     (save-excursion
