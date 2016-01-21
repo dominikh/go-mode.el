@@ -1617,7 +1617,8 @@ If ARG is non-nil, anonymous functions are ignored."
       ;; If we have landed at an anonymous function, it is possible that we
       ;; were not inside it but below it. If we were not inside it, we should
       ;; go to the containing function.
-      (while (not (go--in-function-p p))
+      (while (and (not (go--in-function-p p))
+                  (not (looking-at "^func")))
         (go-goto-function arg)))))
 
   (cond
