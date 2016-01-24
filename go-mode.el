@@ -368,9 +368,10 @@ For mode=set, all covered lines will have this weight."
 (let ((m (define-prefix-command 'go-goto-map)))
   (define-key m "a" #'go-goto-arguments)
   (define-key m "d" #'go-goto-docstring)
-  (define-key m "f" #'go-goto-function-name)
+  (define-key m "f" #'go-goto-function)
   (define-key m "i" #'go-goto-imports)
   (define-key m "m" #'go-goto-method-receiver)
+  (define-key m "n" #'go-goto-function-name)
   (define-key m "r" #'go-goto-return-value))
 
 (defvar go-mode-map
