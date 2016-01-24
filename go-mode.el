@@ -365,6 +365,14 @@ For mode=set, all covered lines will have this weight."
      (2 (15 . nil))  ;; 15 = "generic string"
      (3 (7 . ?`)))))
 
+(let ((m (define-prefix-command 'go-goto-map)))
+  (define-key m "a" #'go-goto-arguments)
+  (define-key m "d" #'go-goto-docstring)
+  (define-key m "f" #'go-goto-function-name)
+  (define-key m "i" #'go-goto-imports)
+  (define-key m "m" #'go-goto-method-receiver)
+  (define-key m "r" #'go-goto-return-value))
+
 (defvar go-mode-map
   (let ((m (make-sparse-keymap)))
     (define-key m "}" #'go-mode-insert-and-indent)
@@ -376,6 +384,7 @@ For mode=set, all covered lines will have this weight."
     (define-key m (kbd "C-c C-j") #'godef-jump)
     (define-key m (kbd "C-x 4 C-c C-j") #'godef-jump-other-window)
     (define-key m (kbd "C-c C-d") #'godef-describe)
+    (define-key m (kbd "C-c C-g") 'go-goto-map)
     m)
   "Keymap used by Go mode to implement electric keys.")
 
@@ -1797,16 +1806,6 @@ returned."
   (save-excursion
     (go-goto-function)
     (looking-at "\\<func(")))
-
-(define-prefix-command 'go-goto-map)
-(define-key go-mode-map (kbd "C-c C-g") 'go-goto-map)
-
-(define-key go-goto-map (kbd "a") 'go-goto-arguments)
-(define-key go-goto-map (kbd "d") 'go-goto-docstring)
-(define-key go-goto-map (kbd "f") 'go-goto-function-name)
-(define-key go-goto-map (kbd "i") 'go-goto-imports)
-(define-key go-goto-map (kbd "m") 'go-goto-method-receiver)
-(define-key go-goto-map (kbd "r") 'go-goto-return-value)
 
 (provide 'go-mode)
 
