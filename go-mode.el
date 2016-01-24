@@ -1642,19 +1642,19 @@ If ARG is non-nil, anonymous functions are ignored."
     (go-goto-function arg))))
 
 (defun go--goto-opening-curly-brace ()
+  ;; Find the { that starts the function, i.e., the next { that isn't
+  ;; preceded by struct or interface, or a comment or struct tag.  BUG:
+  ;; breaks if there's a comment between the struct/interface keyword and
+  ;; bracket, like this:
+  ;;
+  ;;     struct /* why? */ {
   (go--goto-return-values)
-  ;; Try to place the point on the opening brace.
-  (cond
-   ((looking-at "(")
-    ;; Multiple return values! Just walk past the list and we're done!
-    (forward-list 1)
-    (forward-char 1))
-
-   ((not (looking-at "{"))
-    ;; Go to the end of the defun and back up and we'll be where we want to be.
-    (end-of-defun)
-    (backward-char 1)
-    (backward-list 1))))
+  (while (progn
+           (skip-chars-forward "^{")
+           (forward-char)
+           (or (go-in-string-or-comment-p)
+               (looking-back "\\(struct\\|interface\\)\\s-*{"))))
+  (backward-char))
 
 (defun go--in-function-p (compare-point)
   "Return t if COMPARE-POINT lies inside the function immediately surrounding point."
