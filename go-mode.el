@@ -600,7 +600,7 @@ current line will be returned."
     ;; breaks if there's a comment between the struct/interface keyword and
     ;; bracket, like this:
     ;;
-    ;;     struct /* why? */ { 
+    ;;     struct /* why? */ {
     (while (progn
       (skip-chars-forward "^{")
       (forward-char)
@@ -845,7 +845,13 @@ The following extra functions are defined:
 - `godoc'
 - `go-import-add'
 - `go-remove-unused-imports'
+- `go-goto-arguments'
+- `go-goto-docstring'
+- `go-goto-function'
+- `go-goto-function-name'
 - `go-goto-imports'
+- `go-goto-return-value'
+- `go-goto-type-signature'
 - `go-play-buffer' and `go-play-region'
 - `go-download-play'
 - `godef-describe' and `godef-jump'
@@ -1561,6 +1567,246 @@ for."
 
       (if (not (eq cur-buffer (current-buffer)))
           (display-buffer (current-buffer) `(,go-coverage-display-buffer-func))))))
+
+(defun go-goto-function (&optional arg)
+  "Go to the function defintion (named or anonymous) surrounding point.
+
+If we are on a docstring, follow the docstring down.
+If no function is found, assume that we are at the top of a file
+and search forward instead.
+
+If point is looking at the func keyword of an anonymous function,
+go to the surrounding function.
+
+If ARG is non-nil, anonymous functions are ignored."
+  (interactive "P")
+  (let ((p (point)))
+    (cond
+     ((save-excursion
+        (beginning-of-line)
+        (looking-at "^//"))
+      ;; In case we are looking at the docstring, move on forward until we are
+      ;; not anymore
+      (beginning-of-line)
+      (while (looking-at "^//")
+        (forward-line 1))
+      ;; If we are still not looking at a function, retry by calling self again.
+      (when (not (looking-at "\\<func\\>"))
+        (go-goto-function arg)))
+
+     ;; If we're already looking at an anonymous func, look for the
+     ;; surrounding function.
+     ((and (looking-at "\\<func\\>")
+           (not (looking-at "^func\\>")))
+      (re-search-backward "\\<func\\>" nil t))
+
+     ((not (looking-at "\\<func\\>"))
+      ;; If point is on the "func" keyword, step back a word and retry
+      (if (string= (symbol-name (symbol-at-point)) "func")
+          (backward-word)
+        ;; If we are not looking at the beginning of a function line, do a regexp
+        ;; search backwards
+        (re-search-backward "\\<func\\>" nil t))
+
+      ;; If nothing is found, assume that we are at the top of the file and
+      ;; should search forward instead.
+      (when (not (looking-at "\\<func\\>"))
+        (re-search-forward "\\<func\\>" nil t)
+        (forward-word -1))
+
+      ;; If we have landed at an anonymous function, it is possible that we
+      ;; were not inside it but below it. If we were not inside it, we should
+      ;; go to the containing function.
+      (while (and (not (go--in-function-p p))
+                  (not (looking-at "^func\\>")))
+        (go-goto-function arg)))))
+
+  (cond
+   ((go-in-comment-p)
+    ;; If we are still in a comment, redo the call so that we get out of it.
+    (go-goto-function arg))
+
+   ((and (looking-at "\\<func(") arg)
+    ;; If we are looking at an anonymous function and a prefix argument has
+    ;; been supplied, redo the call so that we skip the anonymous function.
+    (go-goto-function arg))))
+
+(defun go--goto-opening-curly-brace ()
+  (go--goto-return-values)
+  ;; Try to place the point on the opening brace.
+  (cond
+   ((looking-at "(")
+    ;; Multiple return values! Just walk past the list and we're done!
+    (forward-list 1)
+    (forward-char 1))
+
+   ((not (looking-at "{"))
+    ;; Go to the end of the defun and back up and we'll be where we want to be.
+    (end-of-defun)
+    (backward-char 1)
+    (backward-list 1))))
+
+(defun go--in-function-p (compare-point)
+  "Return t if COMPARE-POINT lies inside the function immediately surrounding point."
+  (save-excursion
+    (when (not (looking-at "\\<func\\>"))
+      (go-goto-function))
+    (let ((start (point)))
+      (go--goto-opening-curly-brace)
+
+      (unless (looking-at "{")
+        (error "expected to be looking at opening curly brace"))
+      (forward-list 1)
+      (and (>= compare-point start)
+           (<= compare-point (point))))))
+
+(defun go-goto-function-name (&optional arg)
+  "Go to the name of the current function.
+
+If the function is a test, place point after 'Test'.
+If the function is anonymous, place point on the 'func' keyword.
+
+If ARG is non-nil, anonymous functions are skipped."
+  (interactive "P")
+  (when (not (looking-at "\\<func\\>"))
+    (go-goto-function arg))
+  ;; If we are looking at func( we are on an anonymous function and
+  ;; nothing else should be done.
+  (when (not (looking-at "\\<func("))
+    (let ((words 1)
+          (chars 1))
+      (when (looking-at "\\<func (")
+        (setq words 3
+              chars 2))
+      (forward-word words)
+      (forward-char chars)
+      (when (looking-at "Test")
+        (forward-char 4)))))
+
+(defun go-goto-arguments (&optional arg)
+  "Go to the arguments of the current function.
+
+If ARG is non-nil, anonymous functions are skipped."
+  (interactive "P")
+  (go-goto-function-name arg)
+  (forward-word 1)
+  (forward-char 1))
+
+(defun go--goto-return-values (&optional arg)
+  "Go to the declaration of return values for the current function."
+  (go-goto-arguments arg)
+  (backward-char)
+  (forward-list)
+  (forward-char))
+
+(defun go-goto-return-value (&optional arg)
+  "Go to the return value declaration of the current function.
+
+If there are multiple ones contained in a parenthesis, enter the parenthesis.
+If there is none, make space for one to be added.
+
+If ARG is non-nil, anonymous functions are skipped."
+  (interactive "P")
+  (go--goto-return-values arg)
+
+  ;; Opening parenthesis, enter it
+  (when (looking-at "(")
+    (forward-char 1))
+
+  ;; No return arguments, add space for adding
+  (when (looking-at "{")
+    (insert " ")
+    (backward-char 1)))
+
+(defun go-goto-method-receiver (&optional arg)
+  "Go to the receiver of the current method.
+
+If there is none, add parenthesis to add one.
+
+Anonymous functions cannot have method receivers, so when this is called
+interactively anonymous functions will be skipped. If called programmatically,
+an error is raised unless ARG is non-nil."
+  (interactive "P")
+
+  (when (and (not (called-interactively-p 'interactive))
+             (not arg)
+             (go--in-anonymous-funcion-p))
+    (error "Anonymous functions cannot have method receivers"))
+
+  (go-goto-function t)  ; Always skip anonymous functions
+  (forward-char 5)
+  (when (not (looking-at "("))
+    (save-excursion
+      (insert "() ")))
+  (forward-char 1))
+
+(defun go-goto-docstring (&optional arg)
+  "Go to the top of the docstring of the current function.
+
+If there is none, add one beginning with the name of the current function.
+
+Anonymous functions do not have docstrings, so when this is called
+interactively anonymous functions will be skipped. If called programmatically,
+an error is raised unless ARG is non-nil."
+  (interactive "P")
+
+  (when (and (not (called-interactively-p 'interactive))
+             (not arg)
+             (go--in-anonymous-funcion-p))
+    (error "Anonymous functions do not have docstrings"))
+
+  (go-goto-function t)
+  (forward-line -1)
+  (beginning-of-line)
+
+  (while (looking-at "^//")
+    (forward-line -1))
+  (forward-line 1)
+  (beginning-of-line)
+
+  (cond
+   ;; If we are looking at an empty comment, add a single space in front of it.
+   ((looking-at "^//$")
+    (forward-char 2)
+    (insert (format " %s " (go--function-name t))))
+   ;; If we are not looking at the function signature, we are looking at a docstring.
+   ;; Move to the beginning of the first word of it.
+   ((not (looking-at "^func"))
+    (forward-char 3))
+   ;; If we are still at the function signature, we should add a new docstring.
+   (t
+    (forward-line -1)
+    (newline)
+    (insert (format "// %s " (go--function-name t))))))
+
+(defun go--function-name (&optional arg)
+  "Return the name of the surrounding function.
+
+If ARG is non-nil, anonymous functions will be ignored and the
+name returned will be that of the top-level function. If ARG is
+nil and the surrounding function is anonymous, nil will be
+returned."
+  (when (or (not (go--in-anonymous-funcion-p))
+            arg)
+    (save-excursion
+      (go-goto-function-name t)
+      (symbol-name (symbol-at-point)))))
+
+(defun go--in-anonymous-funcion-p ()
+  "Return t if point is inside an anonymous function, nil otherwise."
+  (save-excursion
+    (go-goto-function)
+    (looking-at "\\<func(")))
+
+(define-prefix-command 'go-goto-map)
+(define-key go-mode-map (kbd "C-c C-g") 'go-goto-map)
+
+(define-key go-goto-map (kbd "a") 'go-goto-arguments)
+(define-key go-goto-map (kbd "d") 'go-goto-docstring)
+(define-key go-goto-map (kbd "f") 'go-goto-function-name)
+(define-key go-goto-map (kbd "i") 'go-goto-imports)
+(define-key go-goto-map (kbd "m") 'go-goto-method-receiver)
+(define-key go-goto-map (kbd "r") 'go-goto-return-value)
 
 (provide 'go-mode)
 
