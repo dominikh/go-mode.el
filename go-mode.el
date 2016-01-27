@@ -208,6 +208,17 @@ a `before-save-hook'."
           (const :tag "None" nil))
   :group 'go)
 
+(defcustom godoc-command "godoc"
+  "The 'godoc' command."
+  :type 'string
+  :group 'go)
+
+(defcustom godoc-html nil
+  "Use HTML output of godoc.
+Requires `shr', which comes with Emacs 24.4 or newer."
+  :type 'boolean
+  :group 'go)
+
 (defcustom godef-command "godef"
   "The 'godef' command."
   :type 'string
@@ -1084,6 +1095,8 @@ you save any file, kind of defeating the point of autoloading."
   "Sentinel function run when godoc command completes."
   (with-current-buffer (process-buffer proc)
     (cond ((string= event "finished\n")  ;; Successful exit.
+           (when godoc-html
+             (shr-render-region (point-min) (point-max)))
            (goto-char (point-min))
            (godoc-mode)
            (display-buffer (current-buffer) t))
@@ -1103,7 +1116,7 @@ you save any file, kind of defeating the point of autoloading."
   (unless (string= query "")
     (set-process-sentinel
      (start-process-shell-command "godoc" (godoc--get-buffer query)
-                                  (concat "godoc " query))
+                                  (concat godoc-command " " (when godoc-html "-html ") query))
      'godoc--buffer-sentinel)
     nil))
 
