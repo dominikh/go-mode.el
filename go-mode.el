@@ -1787,7 +1787,8 @@ an error is raised unless ARG is non-nil."
    (t
     (forward-line -1)
     (newline)
-    (insert (format "// %s " (go--function-name t))))))
+    (insert "// ")
+    (insert (go--function-name t)))))
 
 (defun go--function-name (&optional arg)
   "Return the name of the surrounding function.
