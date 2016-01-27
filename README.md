@@ -26,7 +26,8 @@ the following extra features to provide an improved experience:
   - `go-download-play` to download a Playground entry into a new
     buffer
 - Managing imports
-  - A function for jumping to the file's imports (`go-goto-imports`)
+  - A function for jumping to the file's imports (`go-goto-imports` -
+    `C-c C-g i`)
   - A function for adding imports, including tab completion
     (`go-import-add`, bound to `C-c C-a`)
   - A function for removing or commenting unused imports
@@ -40,6 +41,21 @@ the following extra features to provide an improved experience:
 - Basic support for imenu (functions and variables)
 - Built-in support for displaying code coverage as calculated by `go
   test` (`go-coverage`)
+- Several functions for jumping to and manipulating the individual
+  parts of function signatures. These functions support anonymous
+  functions, but are smart enough to skip them when required (e.g.
+  when jumping to a method receiver or docstring.)
+  - Jump to the argument list (`go-goto-arguments` - `C-c C-g a`)
+  - Jump to the docstring, create it if it does not exist yet
+    (`go-goto-docstring` - `C-c C-g d`).
+  - Jump to the function keyword (`go-goto-function` - `C-c C-g f`)
+  - Jump to the function name (`go-goto-function-name` - `C-c C-g n`)
+  - Jump to the return values (`go-goto-return-values` - `C-c C-g r`)
+  - Jump to the method receiver, adding a pair of parentheses if no
+    method receiver exists (`go-goto-method-receiver` - `C-c C-g m`).
+
+  All of these functions accept a prefix argument (`C-u`), causing
+  them to skip anonymous functions.
 
 # Installation
 
