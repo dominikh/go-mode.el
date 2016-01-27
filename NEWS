@@ -1,0 +1,57 @@
+go-mode-1.4.0 (???)
+
+ * Fix minor bug in fontification.
+
+ * Use unwind-protect in gofmt, ensuring that temporary files will be
+   removed in all cases.
+
+ * Improve go-remove-unused-imports: don't fail to remove unused
+   imports because of compilation errors in other files.
+
+ * Add new functions for jumping to various parts of function
+   declarations:
+
+    - go-goto-arguments
+    - go-goto-docstring
+    - go-goto-function
+    - go-goto-function-name
+    - go-goto-return-values
+    - go-goto-method-receiver
+
+go-mode-1.3.1 (2015-07-03)
+
+ * The 1.3.0 release forgot to update the version in the package
+   metadata. This version fixes that.
+
+go-mode-1.3.0 (2015-05-03)
+
+ * Add a new minor mode godoc-mode, used instead of view-mode when
+   displaying godoc output.
+
+go-mode-1.2.1 (2015-04-10)
+
+  * After using godef-jump, don't temporarily mark old buffer as
+    active.
+
+go-mode-1.2.0 (2015/03/22):
+
+ * Add a menu for go-mode.
+
+ * Add a new variable go-play-browsw-function that controls the
+   behaviour of go-play-region and go-play-buffer.
+
+ * Fix minor bug in fontification.
+
+ * Fix minor bug in go-remove-unused-imports that sometimes prevented
+   it from removing unused imports.
+
+go-mode-1.1.0 (2015-02-25):
+
+ * Add a new variable godef-command, allowing customization of the
+   godef command.
+
+ * Automatically hide the gofmt error window after fixing errors.
+
+go-mode-1.0.0 (2014-11-28):
+
+ * First release since go-mode was removed from the Go distribution.
