@@ -41,19 +41,21 @@ the following extra features to provide an improved experience:
 - Basic support for imenu (functions and variables)
 - Built-in support for displaying code coverage as calculated by `go
   test` (`go-coverage`)
-- Several goto functions for manipulating function signature of the method we
-  are currently editing:
-  - Going to the arguments (`go-goto-arguments` - `C-c C-g a`)
-  - Going to the docstring, creating it if it does not exist
-    (`go-goto-docstring` - `C-c C-g d`). Skips anonymous functions.
-  - Going to the function name (`go-goto-function-name` - `C-c C-g f`)
-  - Going to the return value, adding space for adding one if there are none
-    present (`go-goto-return-value` - `C-c C-g r`)
-  - Going to the method receiver, adding parenthesis for adding one if there is
-    none present (`go-goto-type-signature` - `C-c C-g m`). Skips anonymous
-    functions.
-  - All of the above accept one prefix argument (`C-u`), which if given makes
-    them skip anonymous functions and go directly to the root function.
+- Several functions for jumping to and manipulating the individual
+  parts of function signatures. These functions support anonymous
+  functions, but are smart enough to skip them when required (e.g.
+  when jumping to a method receiver or docstring.)
+  - Jump to the argument list (`go-goto-arguments` - `C-c C-g a`)
+  - Jump to the docstring, create it if it does not exist yet
+    (`go-goto-docstring` - `C-c C-g d`).
+  - Jump to the function keyword (`go-goto-function` - `C-c C-g f`)
+  - Jump to the function name (`go-goto-function-name` - `C-c C-g n`)
+  - Jump to the return values (`go-goto-return-value` - `C-c C-g r`)
+  - Jump to the method receiver, adding a pair of parentheses if no
+    method receiver exists (`go-goto-method-receiver` - `C-c C-g m`).
+
+  All of these functions accept a prefix argument (`C-u`), causing
+  them to skip anonymous functions.
 
 # Installation
 
