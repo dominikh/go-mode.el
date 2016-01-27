@@ -372,7 +372,7 @@ For mode=set, all covered lines will have this weight."
   (define-key m "i" #'go-goto-imports)
   (define-key m "m" #'go-goto-method-receiver)
   (define-key m "n" #'go-goto-function-name)
-  (define-key m "r" #'go-goto-return-value))
+  (define-key m "r" #'go-goto-return-values))
 
 (defvar go-mode-map
   (let ((m (make-sparse-keymap)))
@@ -860,7 +860,7 @@ The following extra functions are defined:
 - `go-goto-function'
 - `go-goto-function-name'
 - `go-goto-imports'
-- `go-goto-return-value'
+- `go-goto-return-values'
 - `go-goto-method-receiver'
 - `go-play-buffer' and `go-play-region'
 - `go-download-play'
@@ -1709,7 +1709,7 @@ If ARG is non-nil, anonymous functions are skipped."
   (forward-list)
   (forward-char))
 
-(defun go-goto-return-value (&optional arg)
+(defun go-goto-return-values (&optional arg)
   "Go to the return value declaration of the current function.
 
 If there are multiple ones contained in a parenthesis, enter the parenthesis.

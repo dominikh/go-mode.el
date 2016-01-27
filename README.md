@@ -50,7 +50,7 @@ the following extra features to provide an improved experience:
     (`go-goto-docstring` - `C-c C-g d`).
   - Jump to the function keyword (`go-goto-function` - `C-c C-g f`)
   - Jump to the function name (`go-goto-function-name` - `C-c C-g n`)
-  - Jump to the return values (`go-goto-return-value` - `C-c C-g r`)
+  - Jump to the return values (`go-goto-return-values` - `C-c C-g r`)
   - Jump to the method receiver, adding a pair of parentheses if no
     method receiver exists (`go-goto-method-receiver` - `C-c C-g m`).
 
