@@ -1,3 +1,8 @@
+# This file contains all the authors that contributed to go-mode while
+# it was still part of the Go distribution. Most of these authors are
+# not tracked in this repository's history. For a complete list of
+# authors, see the AUTHORS file instead.
+
 Aaron France <aaron.l.france@gmail.com>
 Alan Donovan <adonovan@google.com>
 Austin Clements <aclements@csail.mit.edu>
@@ -6,19 +11,13 @@ Bobby Powers <bobbypowers@gmail.com>
 Charles Lee <zombie.fml@gmail.com>
 Dominik Honnef <dominik@honnef.co>
 Eric Eisner <eric.d.eisner@gmail.com>
-Erin Keenan <erinok@gmail.com>
 Evan Martin <evan.martin@gmail.com>
-Felix Lange <fjl@twurst.com>
 Florian Weimer <fw@deneb.enyo.de>
 Istvan Marko <mi-git@kismala.com>
-Iwasaki Yudai <yudai.iwasaki@ntti3.com>
 James Aguilar <jaguilar@google.com>
 Jan Newmarch <jan.newmarch@gmail.com>
 Jean-Marc Eurin <jmeurin@google.com>
-Juergen Hoetzel <juergen@archlinux.org>
 Kevin Ballard <kevin@sb.org>
-Lowe Thiderman <lowe.thiderman@gmail.com>
-Mark Petrovic <mark.petrovic@xoom.com>
 Mats Lidell <mats.lidell@cag.se>
 Peter Kleiweg <pkleiweg@xs4all.nl>
 Quan Yong Zhai <qyzhai@gmail.com>
@@ -26,10 +25,7 @@ Robert Zaremba <robert.zaremba@zoho.com>
 Rui Ueyama <ruiu@google.com>
 Russ Cox <rsc@golang.org>
 Ryan Barrett <ryanb@google.com>
-Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 Sameer Ajmani <sameer@golang.org>
 Scott Lawrence <bytbox@gmail.com>
 Steven Elliot Harris <seharris@gmail.com>
-Taiki Sugawara <buzz.taiki@gmail.com>
-Viacheslav Chimishuk <vchimishuk@yandex-team.ru>
 Yasuyuki Oka <yasuyk@gmail.com>
