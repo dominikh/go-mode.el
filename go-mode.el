@@ -241,6 +241,13 @@ See `display-buffer' for a list of possible functions."
   :type 'function
   :group 'go-cover)
 
+(defcustom go-packages-function 'go-packages
+  "The function called to determine the list of available packages.
+
+Set to `go-packages-external' if you use Cygwin or Tramp filenames."
+  :type 'function
+  :group 'go)
+
 (defface go-coverage-untracked
   '((t (:foreground "#505050")))
   "Coverage color of untracked code."
@@ -1070,7 +1077,7 @@ you save any file, kind of defeating the point of autoloading."
     (completing-read (if symbol
                          (format "godoc (default %s): " symbol)
                        "godoc: ")
-                     (go--old-completion-list-style (go-packages)) nil nil nil 'go-godoc-history symbol)))
+                     (go--old-completion-list-style (funcall go-packages-function)) nil nil nil 'go-godoc-history symbol)))
 
 (defun godoc--get-buffer (query)
   "Get an empty buffer for a godoc query."
@@ -1248,7 +1255,7 @@ uncommented, otherwise a new import will be added."
   (interactive
    (list
     current-prefix-arg
-    (replace-regexp-in-string "^[\"']\\|[\"']$" "" (completing-read "Package: " (go--old-completion-list-style (go-packages))))))
+    (replace-regexp-in-string "^[\"']\\|[\"']$" "" (completing-read "Package: " (go--old-completion-list-style (funcall go-packages-function))))))
   (save-excursion
     (let (as line import-start)
       (if arg
@@ -1321,6 +1328,11 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
                      (go--directory-dirs pkgdir)))))
      (go-root-and-paths)))
    #'string<))
+
+(defun go-packages-external ()
+  (with-temp-buffer
+    (process-file  go-command nil (current-buffer) nil "list" "-e" "...")
+    (split-string (buffer-string) "\n" t)))
 
 (defun go-unused-imports-lines ()
   ;; FIXME Technically, -o /dev/null fails in quite some cases (on
