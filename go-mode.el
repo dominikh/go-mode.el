@@ -220,6 +220,20 @@ a `before-save-hook'."
   :type '(repeat (list regexp (choice (repeat string) function)))
   :group 'go)
 
+(defcustom go-packages-function 'go-packages-native
+  "Function called by `go-packages' to determine the list of
+available packages. This is used in e.g. tab completion in
+`go-import-add'.
+
+This package provides two functions: `go-packages-native' uses
+elisp to find all .a files in all /pkg/ directories.
+`go-packages-go-list' uses 'go list all' to determine all Go
+packages. `go-packages-go-list' generally produces more accurate
+results, but can be slower than `go-packages-native'."
+  :type 'function
+  :package-version '(go-mode . 1.4.0)
+  :group 'go)
+
 (defun go--kill-new-message (url)
   "Make URL the latest kill and print a message."
   (kill-new url)
@@ -1305,6 +1319,11 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
 
 
 (defun go-packages ()
+  (funcall go-packages-function))
+
+(defun go-packages-native ()
+  "Return a list of all installed Go packages. It looks for
+archive files in /pkg/"
   (sort
    (delete-dups
     (mapcan
@@ -1321,6 +1340,12 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
                      (go--directory-dirs pkgdir)))))
      (go-root-and-paths)))
    #'string<))
+
+(defun go-packages-go-list ()
+  "Return a list of all Go packages, using `go list'"
+  (with-temp-buffer
+    (call-process go-command nil (current-buffer) nil "list" "-e" "all")
+    (split-string (buffer-string) "\n" t)))
 
 (defun go-unused-imports-lines ()
   ;; FIXME Technically, -o /dev/null fails in quite some cases (on

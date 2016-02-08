@@ -18,6 +18,11 @@ go-mode-1.4.0 (???)
     - go-goto-return-values
     - go-goto-method-receiver
 
+ * Add new variable go-packages-function, which allows choosing
+   between different ways of finding installed packages. Currently,
+   go-packages-native (the default) and go-packages-go-list are
+   provided.
+
 go-mode-1.3.1 (2015-07-03)
 
  * The 1.3.0 release forgot to update the version in the package
