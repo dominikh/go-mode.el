@@ -1834,26 +1834,19 @@ returned."
     (go-goto-function)
     (looking-at "\\<func(")))
 
-
 (defun go-search-package (target-pkg)
-  "Search for an import url for a package named like TARGET-PKG.
-This function calls the unix find(1) utility, so feel free to use any
-form of regular expression that find would understand.
-
-This function makes use of other functions defined in go-mode.el, make sure you
-(require 'go-mode) before running this.
-"
+  "Search for an import url for a package named like TARGET-PKG."
   (interactive "sPackage name: ")
-  (let* ((previous-working-directory (getenv "PWD"))
-	(gopath (cadr (go-root-and-paths)))
-	(default-directory (concat gopath "/pkg/linux_amd64/")) ;; CHANGE THIS!!
-	(results-buffer (get-buffer-create "*Go packages search result*")))
+  (require 'go-mode)
+  (let* ((results-buffer (get-buffer-create "*Go packages search result*"))
+          (packages-list  (go-packages-go-list)))
     (progn
       (switch-to-buffer results-buffer)
       (erase-buffer)
-      (call-process "find" nil results-buffer t "."  "-type" "d" "-name" (concat "*" target-pkg "*"))
+      (mapcar (lambda (package-name)
+         (if (string-match target-pkg package-name)
+             (insert (concat package-name "\n")))) packages-list)
       (view-mode))))
-
 
 (provide 'go-mode)
 
