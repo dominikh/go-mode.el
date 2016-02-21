@@ -1854,6 +1854,20 @@ returned."
     (go-goto-function)
     (looking-at "\\<func(")))
 
+(defun go-search-package (target-pkg)
+  "Search for an import url for a package named like TARGET-PKG."
+  (interactive "sPackage name: ")
+  (require 'go-mode)
+  (let* ((results-buffer (get-buffer-create "*Go packages search result*"))
+          (packages-list  (go-packages-go-list)))
+    (progn
+      (switch-to-buffer results-buffer)
+      (erase-buffer)
+      (mapcar (lambda (package-name)
+         (if (string-match target-pkg package-name)
+             (insert (concat package-name "\n")))) packages-list)
+      (view-mode))))
+
 (provide 'go-mode)
 
 ;;; go-mode.el ends here
