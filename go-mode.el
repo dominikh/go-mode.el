@@ -195,6 +195,12 @@ from https://github.com/bradfitz/goimports."
   :type 'string
   :group 'go)
 
+(defcustom gofmt-is-goimports nil
+  "Set to t if you use goimports. This is required to enable
+support for vendored packages."
+  :type 'boolean
+  :group 'go)
+
 (defcustom gofmt-show-errors 'buffer
   "Where to display gofmt error output.
 It can either be displayed in its own buffer, in the echo area, or not at all.
@@ -1010,7 +1016,8 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
         (patchbuf (get-buffer-create "*Gofmt patch*"))
         (errbuf (if gofmt-show-errors (get-buffer-create "*Gofmt Errors*")))
         (coding-system-for-read 'utf-8)
-        (coding-system-for-write 'utf-8))
+        (coding-system-for-write 'utf-8)
+        our-gofmt-args)
 
     (unwind-protect
         (save-restriction
@@ -1024,10 +1031,15 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 
           (write-region nil nil tmpfile)
 
+          (when (and gofmt-is-goimports buffer-file-name)
+            (setq our-gofmt-args
+                  (append our-gofmt-args
+                          (list "-srcdir" (file-name-directory (file-truename buffer-file-name))))))
+          (setq our-gofmt-args (append our-gofmt-args (list "-w" tmpfile)))
           ;; We're using errbuf for the mixed stdout and stderr output. This
           ;; is not an issue because gofmt -w does not produce any stdout
           ;; output in case of success.
-          (if (zerop (call-process gofmt-command nil errbuf nil "-w" tmpfile))
+          (if (zerop (apply #'call-process gofmt-command nil errbuf nil our-gofmt-args))
               (progn
                 (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
                     (message "Buffer is already gofmted")

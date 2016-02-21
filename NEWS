@@ -23,6 +23,14 @@ go-mode-1.4.0 (???)
    go-packages-native (the default) and go-packages-go-list are
    provided.
 
+ * Add new variable gofmt-is-goimports. If gofmt-command is set to a
+   value that invokes goimports instead of gofmt, this variable needs
+   to be set to t. Otherwise, goimports will not be able to add
+   imports for vendored packages.
+
+   Setting it to t while not using goimports will break gofmt, as
+   gofmt doesn't support goimports' -srcdir flag.
+
 go-mode-1.3.1 (2015-07-03)
 
  * The 1.3.0 release forgot to update the version in the package
