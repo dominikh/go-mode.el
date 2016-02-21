@@ -201,6 +201,11 @@ support for vendored packages."
   :type 'boolean
   :group 'go)
 
+(defcustom gofmt-args nil
+  "Additional arguments to pass to gofmt."
+  :type '(repeat string)
+  :group 'go)
+
 (defcustom gofmt-show-errors 'buffer
   "Where to display gofmt error output.
 It can either be displayed in its own buffer, in the echo area, or not at all.
@@ -1035,7 +1040,10 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
             (setq our-gofmt-args
                   (append our-gofmt-args
                           (list "-srcdir" (file-name-directory (file-truename buffer-file-name))))))
-          (setq our-gofmt-args (append our-gofmt-args (list "-w" tmpfile)))
+          (setq our-gofmt-args (append our-gofmt-args
+                                       gofmt-args
+                                       (list "-w" tmpfile)))
+          (message "Calling gofmt: %s %s" gofmt-command our-gofmt-args)
           ;; We're using errbuf for the mixed stdout and stderr output. This
           ;; is not an issue because gofmt -w does not produce any stdout
           ;; output in case of success.
