@@ -410,7 +410,7 @@ For mode=set, all covered lines will have this weight."
     (define-key m (kbd "C-c C-j") #'godef-jump)
     (define-key m (kbd "C-x 4 C-c C-j") #'godef-jump-other-window)
     (define-key m (kbd "C-c C-d") #'godef-describe)
-    (define-key m (kbd "C-c C-g") 'go-goto-map)
+    (define-key m (kbd "C-c C-f") 'go-goto-map)
     m)
   "Keymap used by Go mode to implement electric keys.")
 
