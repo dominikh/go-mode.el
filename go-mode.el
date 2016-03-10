@@ -195,12 +195,6 @@ from https://github.com/bradfitz/goimports."
   :type 'string
   :group 'go)
 
-(defcustom gofmt-is-goimports nil
-  "Set to t if you use goimports. This is required to enable
-support for vendored packages."
-  :type 'boolean
-  :group 'go)
-
 (defcustom gofmt-args nil
   "Additional arguments to pass to gofmt."
   :type '(repeat string)
@@ -1014,6 +1008,9 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
              (t
               (error "invalid rcs patch or internal error in go--apply-rcs-patch")))))))))
 
+(defun gofmt--is-goimports-p ()
+  (string-equal (file-name-base gofmt-command) "goimports"))
+
 (defun gofmt ()
   "Format the current buffer according to the gofmt tool."
   (interactive)
@@ -1036,7 +1033,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 
           (write-region nil nil tmpfile)
 
-          (when (and gofmt-is-goimports buffer-file-name)
+          (when (and (gofmt--is-goimports-p) buffer-file-name)
             (setq our-gofmt-args
                   (append our-gofmt-args
                           (list "-srcdir" (file-name-directory (file-truename buffer-file-name))))))
