@@ -47,6 +47,9 @@ go-mode-1.4.0 (???)
    useful when using godoc instead of go doc, and thus defaults to
    off.
 
+ * Fix parsing of test output in compilation-mode for new versions of
+   Emacs. It's probably broken in older versions now.
+
 go-mode-1.3.1 (2015-07-03)
 
  * The 1.3.0 release forgot to update the version in the package

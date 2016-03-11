@@ -983,14 +983,19 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 
   ;; Handle unit test failure output in compilation-mode
   ;;
-  ;; Note the final t argument to add-to-list for append, ie put these at the
-  ;; *ends* of compilation-error-regexp-alist[-alist]. We want go-test to be
-  ;; handled first, otherwise other elements will match that don't work, and
-  ;; those alists are traversed in *reverse* order:
+  ;; Note that we add our entry to the beginning of
+  ;; compilation-error-regexp-alist. In older versions of Emacs, the
+  ;; list was processed from the end, and we would've wanted to add
+  ;; ours last. But at some point this changed, and now the list is
+  ;; processed from the beginning. It's important that our entry comes
+  ;; before gnu, because gnu matches go test output, but includes the
+  ;; leading whitespace in the file name.
+  ;; 
   ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2001-12/msg00674.html
+  ;; documents the old, reverseed order.
   (when (and (boundp 'compilation-error-regexp-alist)
              (boundp 'compilation-error-regexp-alist-alist))
-    (add-to-list 'compilation-error-regexp-alist 'go-test t)
+    (add-to-list 'compilation-error-regexp-alist 'go-test)
     (add-to-list 'compilation-error-regexp-alist-alist
                  '(go-test . ("^\t+\\([^()\t\n]+\\):\\([0-9]+\\):? .*$" 1 2)) t)))
 
