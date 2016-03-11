@@ -1081,6 +1081,10 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
           (gofmt--kill-error-buffer errbuf))
       ;; Convert the gofmt stderr to something understood by the compilation mode.
       (goto-char (point-min))
+      (if (save-excursion
+            (save-match-data
+              (search-forward "flag provided but not defined: -srcdir" nil t)))
+          (insert "Your version of goimports is too old and doesn't support vendoring. Please update goimports!\n\n"))
       (insert "gofmt errors:\n")
       (while (search-forward-regexp (concat "^\\(" (regexp-quote tmpfile) "\\):") nil t)
         (replace-match (file-name-nondirectory filename) t t nil 1))
