@@ -64,7 +64,7 @@ the following extra features to provide an improved experience:
 The recommended way of installing go-mode is via
 [ELPA](http://www.emacswiki.org/emacs/ELPA), the Emacs package
 manager, and the
-[MELPA repository](http://melpa.org/#/getting-started), which provides
+[MELPA Stable repository](http://emacsredux.com/blog/2014/05/16/melpa-stable/), which provides
 an up-to-date version of go-mode.
 
 If you're not familiar with ELPA yet, consider reading
@@ -129,6 +129,22 @@ https://github.com/dominikh/yasnippet-go
 
 https://github.com/dominikh/go-errcheck.el provides integration with
 [errcheck](https://github.com/kisielk/errcheck).
+
+# Stability
+
+go-mode.el has regular, tagged releases and is part of the MELPA
+Stable repository. These tagged releases are intended to provide a
+stable experience. APIs added in tagged releases will usually not be
+removed or changed in future releases.
+
+Changes made on the master branch, which is tracked by the normal
+MELPA repository, however, are under active development. New APIs are
+experimental and may be changed or removed before the next release.
+Furthermore, there is a higher chance for bugs.
+
+If you want a stable experience, use MELPA Stable. If you want cutting
+edge features, or "beta-test" future releases, use MELPA or the master
+branch.
 
 # Donations
 
