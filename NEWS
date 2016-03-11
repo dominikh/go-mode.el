@@ -38,6 +38,15 @@ go-mode-1.4.0 (???)
    could be used from inside a projectile-switch-project-hook,
    directory variables or some other way of invoking per-project code.
 
+ * Add variable godoc-command, which allows choosing between using
+   godoc and go doc. It defaults to go doc, which differs from prior
+   versions which always used godoc.
+
+ * Add variable godoc-use-completing-read, which allows turning on or
+   off the completion of import paths in godoc. This is only really
+   useful when using godoc instead of go doc, and thus defaults to
+   off.
+
 go-mode-1.3.1 (2015-07-03)
 
  * The 1.3.0 release forgot to update the version in the package

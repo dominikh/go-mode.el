@@ -169,6 +169,10 @@ won't."
   "Options specific to `cover`."
   :group 'go)
 
+(defgroup godoc nil
+  "Options specific to `godoc'."
+  :group 'go)
+
 (defcustom go-fontify-function-calls t
   "Fontify function and method calls if this is non-nil."
   :type 'boolean
@@ -253,6 +257,18 @@ gb projects. That's why we need to detect wgo first, to avoid
 mis-identifying them as gb projects."
   :type '(repeat function)
   :group 'go)
+
+(defcustom godoc-command "go doc"
+  "Choose between using `godoc' and `go doc' for M-x godoc."
+  :type '(choice
+          (const :tag "godoc" "godoc")
+          (const :tag "go doc" "go doc"))
+  :group 'godoc)
+
+(defcustom godoc-use-completing-read nil
+  "Provide auto-completion for godoc. Only really desirable when using `godoc' instead of `go doc'."
+  :type 'boolean
+  :group 'godoc)
 
 (defun go--kill-new-message (url)
   "Make URL the latest kill and print a message."
@@ -1116,11 +1132,14 @@ you save any file, kind of defeating the point of autoloading."
   (let* ((bounds (bounds-of-thing-at-point 'symbol))
          (symbol (if bounds
                      (buffer-substring-no-properties (car bounds)
-                                                     (cdr bounds)))))
-    (completing-read (if symbol
-                         (format "godoc (default %s): " symbol)
-                       "godoc: ")
-                     (go--old-completion-list-style (go-packages)) nil nil nil 'go-godoc-history symbol)))
+                                                     (cdr bounds))))
+         (prompt (if symbol
+                     (format "godoc (default %s): " symbol)
+                   "godoc: ")))
+    (if godoc-use-completing-read
+        (completing-read prompt
+                         (go--old-completion-list-style (go-packages)) nil nil nil 'go-godoc-history symbol)
+      (read-from-minibuffer prompt symbol nil nil 'go-godoc-history))))
 
 (defun godoc--get-buffer (query)
   "Get an empty buffer for a godoc query."
@@ -1153,7 +1172,7 @@ you save any file, kind of defeating the point of autoloading."
   (unless (string= query "")
     (set-process-sentinel
      (start-process-shell-command "godoc" (godoc--get-buffer query)
-                                  (concat "godoc " query))
+                                  (concat godoc-command " " query))
      'godoc--buffer-sentinel)
     nil))
 
