@@ -30,6 +30,14 @@ go-mode-1.4.0 (???)
    will be passed to gofmt as additional arguments. Primarily this
    allows using the -s flag with gofmt.
 
+ * Add detection of GOPATH, Godep, wgo and gb. A new non-interactive
+   function go-guess-gopath will try a list of functions
+   (go-guess-gopath-functions) to detect a suitable value for GOPATH.
+   A new interactive command go-set-project uses the result of
+   go-guess-gopath to actually set GOPATH. This interactive function
+   could be used from inside a projectile-switch-project-hook,
+   directory variables or some other way of invoking per-project code.
+
 go-mode-1.3.1 (2015-07-03)
 
  * The 1.3.0 release forgot to update the version in the package
