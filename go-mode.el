@@ -1356,7 +1356,7 @@ uncommented, otherwise a new import will be added."
   (let* ((output (process-lines go-command "env" "GOROOT" "GOPATH"))
          (root (car output))
          (paths (split-string (cadr output) path-separator)))
-    (append (list root) paths)))
+    (cons root paths)))
 
 (defun go--string-prefix-p (s1 s2 &optional ignore-case)
   "Return non-nil if S1 is a prefix of S2.
