@@ -31,21 +31,22 @@ go-mode-1.4.0 (???)
    allows using the -s flag with gofmt.
 
  * Add detection of GOPATH, Godep, wgo and gb. A new non-interactive
-   function go-guess-gopath will try a list of functions
-   (go-guess-gopath-functions) to detect a suitable value for GOPATH.
-   A new interactive command go-set-project uses the result of
-   go-guess-gopath to actually set GOPATH. This interactive function
-   could be used from inside a projectile-switch-project-hook,
-   directory variables or some other way of invoking per-project code.
+   function go-guess-gopath will try a list of functions (the
+   customizable variable go-guess-gopath-functions) to detect a
+   suitable value for GOPATH. A new interactive command go-set-project
+   uses the result of go-guess-gopath to actually set GOPATH. This
+   interactive function could be used from inside a
+   projectile-switch-project-hook, directory variables or some other
+   way of invoking per-project code.
 
- * Add variable godoc-command, which allows choosing between using
-   godoc and go doc. It defaults to go doc, which differs from prior
-   versions which always used godoc.
+ * Add customizable variable godoc-command, which allows choosing
+   between using godoc and go doc. It defaults to go doc, which
+   differs from prior versions which always used godoc.
 
- * Add variable godoc-use-completing-read, which allows turning on or
-   off the completion of import paths in godoc. This is only really
-   useful when using godoc instead of go doc, and thus defaults to
-   off.
+ * Add customizable variable godoc-use-completing-read, which allows
+   turning on or off the completion of import paths in the godoc
+   command. This is only really useful when using godoc instead of go
+   doc, and thus defaults to off.
 
  * Fix parsing of test output in compilation-mode for new versions of
    Emacs. It's probably broken in older versions now.
