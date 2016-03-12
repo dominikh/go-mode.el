@@ -8,15 +8,17 @@ go-mode-1.4.0 (???)
  * Improve go-remove-unused-imports: don't fail to remove unused
    imports because of compilation errors in other files.
 
- * Add new functions for jumping to various parts of function
+ * Add new commands for jumping to various parts of function
    declarations:
 
-    - go-goto-arguments
-    - go-goto-docstring
-    - go-goto-function
-    - go-goto-function-name
-    - go-goto-return-values
-    - go-goto-method-receiver
+    - go-goto-arguments (C-c C-f a)
+    - go-goto-docstring (C-c C-f d)
+    - go-goto-function (C-c C-f f)
+    - go-goto-function-name (C-c C-f n)
+    - go-goto-return-values (C-c C-f r)
+    - go-goto-method-receiver (C-c C-f m)
+
+   Thanks to Lowe Thiderman for contributing these commands.
 
  * Add new customizable variable go-packages-function, which allows
    choosing between different ways of finding installed packages.
