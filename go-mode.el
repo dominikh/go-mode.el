@@ -44,7 +44,7 @@
 ;;
 ;; - Use go--position-bytes instead of position-bytes
 (defmacro go--xemacs-p ()
-  `(featurep 'xemacs))
+  (featurep 'xemacs))
 
 (defmacro go--has-syntax-propertize-p ()
   (boundp 'syntax-propertize-function))
