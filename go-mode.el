@@ -1412,11 +1412,6 @@ archive files in /pkg/"
     (split-string (buffer-string) "\n" t)))
 
 (defun go-unused-imports-lines ()
-  ;; FIXME Technically, -o /dev/null fails in quite some cases (on
-  ;; Windows, when compiling from within GOPATH). Practically,
-  ;; however, it has the same end result: There won't be a
-  ;; compiled binary/archive, and we'll get our import errors when
-  ;; there are any.
   (reverse (remove nil
                    (mapcar
                     (lambda (line)
@@ -1429,7 +1424,7 @@ archive files in /pkg/"
                                    (concat go-command
                                            (if (string-match "_test\\.go$" buffer-file-truename)
                                                " test -c"
-                                             " build -o /dev/null")
+                                             (concat " build -o " null-device))
                                            " -gcflags=-e"
                                            " "
                                            (shell-quote-argument (file-truename buffer-file-name)))) "\n")))))

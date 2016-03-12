@@ -62,6 +62,8 @@ go-mode-1.4.0 (???)
  * Avoid warnings by the byte compiler -- Use cl-lib instead of cl,
    and utilize a macro to conditionally compile fallback code.
 
+ * Use null-device instead of /dev/null to work better on Windows.
+
 go-mode-1.3.1 (2015-07-03)
 
  * The 1.3.0 release forgot to update the version in the package
