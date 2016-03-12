@@ -903,7 +903,7 @@ Playground (uploading and downloading pastes).
 The following extra functions are defined:
 
 - `gofmt'
-- `godoc'
+- `godoc' and `godoc-at-point'
 - `go-import-add'
 - `go-remove-unused-imports'
 - `go-goto-arguments'
@@ -917,6 +917,8 @@ The following extra functions are defined:
 - `go-download-play'
 - `godef-describe' and `godef-jump'
 - `go-coverage'
+- `go-set-project'
+- `go-reset-gopath'
 
 If you want to automatically run `gofmt' before saving a file,
 add the following hook to your emacs configuration:
