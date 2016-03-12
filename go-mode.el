@@ -1407,9 +1407,7 @@ archive files in /pkg/"
 
 (defun go-packages-go-list ()
   "Return a list of all Go packages, using `go list'"
-  (with-temp-buffer
-    (call-process go-command nil (current-buffer) nil "list" "-e" "all")
-    (split-string (buffer-string) "\n" t)))
+  (process-lines go-command "list" "-e" "all"))
 
 (defun go-unused-imports-lines ()
   (reverse (remove nil
