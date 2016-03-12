@@ -394,7 +394,7 @@ For mode=set, all covered lines will have this weight."
 
    `(
      ("\\(`[^`]*`\\)" 1 font-lock-multiline) ;; raw string literal, needed for font-lock-syntactic-keywords
-     (,(concat (go--regexp-enclose-in-symbol "type") "[[:space:]]+\\([^[:space:]]+\\)") 1 font-lock-type-face) ;; types
+     (,(concat (go--regexp-enclose-in-symbol "type") "[[:space:]]+\\([^[:space:](]+\\)") 1 font-lock-type-face) ;; types
      (,(concat (go--regexp-enclose-in-symbol "type") "[[:space:]]+" go-identifier-regexp "[[:space:]]*" go-type-name-regexp) 1 font-lock-type-face) ;; types
      (,(concat "[^[:word:][:multibyte:]]\\[\\([[:digit:]]+\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 2 font-lock-type-face) ;; Arrays/slices
      (,(concat "\\(" go-identifier-regexp "\\)" "{") 1 font-lock-type-face)

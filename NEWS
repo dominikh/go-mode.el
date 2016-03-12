@@ -1,6 +1,6 @@
 go-mode-1.4.0 (???)
 
- * Fix minor bug in fontification.
+ * Fix minor bugs in fontification.
 
  * Use unwind-protect in gofmt, ensuring that temporary files will be
    removed in all cases.
