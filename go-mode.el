@@ -1984,6 +1984,13 @@ switching projects."
     (setenv "GOPATH" gopath)
     (message "Set GOPATH to %s" gopath)))
 
+(defun go-reset-gopath ()
+  "Reset GOPATH to the value it had when Emacs started."
+  (interactive)
+  (let ((gopath (go-original-gopath)))
+    (setenv "GOPATH" gopath)
+    (message "Set GOPATH to %s" gopath)))
+
 (defun go-original-gopath ()
   "Return the original value of GOPATH from when Emacs was started."
   (let ((process-environment initial-environment)) (getenv "GOPATH")))

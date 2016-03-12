@@ -41,6 +41,9 @@ go-mode-1.4.0 (???)
    projectile-switch-project-hook, directory variables or some other
    way of invoking per-project code.
 
+ * Add new command go-reset-gopath, which resets GOPATH to the value
+   it had when Emacs started.
+
  * Add customizable variable godoc-command, which allows choosing
    between using godoc and go doc. It defaults to go doc, which
    differs from prior versions which always used godoc.
