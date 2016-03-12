@@ -56,6 +56,15 @@ the following extra features to provide an improved experience:
 
   All of these functions accept a prefix argument (`C-u`), causing
   them to skip anonymous functions.
+- GOPATH detection – the function `go-guess-gopath` will guess a
+  suitable value for GOPATH, based on gb or wgo projects, Godeps and
+  src folders for plain GOPATH workspaces. The command
+  `go-set-project` uses the return value of `go-guess-gopath` to set
+  the GOPATH environment variable.
+
+  You can either call `go-set-project` manually, or integrate it with
+  Projectile's project switching hooks, or any other means of
+  switching projects you may employ.
 
 # Installation
 
