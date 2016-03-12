@@ -13,7 +13,7 @@
 
 ;;; Code:
 
-(require 'cl)
+(require 'cl-lib)
 (require 'etags)
 (require 'ffap)
 (require 'find-file)
@@ -617,7 +617,7 @@ current line will be returned."
         (goto-char point)
       (setq indent (go-indentation-at-point))
       (if (looking-at (concat go-label-regexp ":\\([[:space:]]*/.+\\)?$\\|case .+:\\|default:"))
-          (decf indent tab-width))
+          (cl-decf indent tab-width))
       (setq shift-amt (- indent (current-column)))
       (if (zerop shift-amt)
           nil
@@ -1036,14 +1036,14 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
                 (forward-line len)
                 (let ((text (buffer-substring start (point))))
                   (with-current-buffer target-buffer
-                    (decf line-offset len)
+                    (cl-decf line-offset len)
                     (goto-char (point-min))
                     (forward-line (- from len line-offset))
                     (insert text)))))
              ((equal action "d")
               (with-current-buffer target-buffer
                 (go--goto-line (- from line-offset))
-                (incf line-offset len)
+                (cl-incf line-offset len)
                 (go--delete-whole-line len)))
              (t
               (error "invalid rcs patch or internal error in go--apply-rcs-patch")))))))))
@@ -1338,7 +1338,7 @@ uncommented, otherwise a new import will be added."
       (goto-char (point-min))
       (if (re-search-forward (concat "^[[:space:]]*//[[:space:]]*import " line "$") nil t)
           (uncomment-region (line-beginning-position) (line-end-position))
-        (case (go-goto-imports)
+        (cl-case (go-goto-imports)
           ('fail (message "Could not find a place to add import."))
           ('block-empty
            (insert "\n\t" line "\n"))
@@ -1390,10 +1390,10 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
 archive files in /pkg/"
   (sort
    (delete-dups
-    (mapcan
+    (cl-mapcan
      (lambda (topdir)
        (let ((pkgdir (concat topdir "/pkg/")))
-         (mapcan (lambda (dir)
+         (cl-mapcan (lambda (dir)
                    (mapcar (lambda (file)
                              (let ((sub (substring file (length pkgdir) -2)))
                                (unless (or (go--string-prefix-p "obj/" sub) (go--string-prefix-p "tool/" sub))
@@ -1551,7 +1551,7 @@ description at POINT."
     (forward-char (1- column))
     (point)))
 
-(defstruct go--covered
+(cl-defstruct go--covered
   start-line start-column end-line end-column covered count)
 
 (defun go--coverage-file ()
@@ -1615,7 +1615,7 @@ divisor for FILE-NAME."
                (file (car parts))
                (rest (split-string (nth 1 parts) "[., ]")))
 
-          (destructuring-bind
+          (cl-destructuring-bind
               (start-line start-column end-line end-column num count)
               (mapcar #'string-to-number rest)
 
