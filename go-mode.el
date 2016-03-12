@@ -46,6 +46,9 @@
 (defmacro go--xemacs-p ()
   `(featurep 'xemacs))
 
+(defmacro go--has-syntax-propertize-p ()
+  (boundp 'syntax-propertize-function))
+
 (defun go--delete-whole-line (&optional arg)
   "Delete the current line without putting it in the `kill-ring'.
 Derived from function `kill-whole-line'.  ARG is defined as for that
@@ -959,7 +962,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   (set (make-local-variable 'end-of-defun-function) #'go-end-of-defun)
 
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
-  (if (boundp 'syntax-propertize-function)
+  (if (go--has-syntax-propertize-p)
       (set (make-local-variable 'syntax-propertize-function) #'go-propertize-syntax)
     (set (make-local-variable 'font-lock-syntactic-keywords)
          go--font-lock-syntactic-keywords)
