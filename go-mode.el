@@ -426,18 +426,19 @@ For mode=set, all covered lines will have this weight."
 
 (defvar go-mode-map
   (let ((m (make-sparse-keymap)))
-    (define-key m "}" #'go-mode-insert-and-indent)
-    (define-key m ")" #'go-mode-insert-and-indent)
-    (define-key m "," #'go-mode-insert-and-indent)
-    (define-key m ":" #'go-mode-insert-and-indent)
-    (define-key m "=" #'go-mode-insert-and-indent)
+    (unless (boundp 'electric-indent-chars)
+        (define-key m "}" #'go-mode-insert-and-indent)
+        (define-key m ")" #'go-mode-insert-and-indent)
+        (define-key m "," #'go-mode-insert-and-indent)
+        (define-key m ":" #'go-mode-insert-and-indent)
+        (define-key m "=" #'go-mode-insert-and-indent))
     (define-key m (kbd "C-c C-a") #'go-import-add)
     (define-key m (kbd "C-c C-j") #'godef-jump)
     (define-key m (kbd "C-x 4 C-c C-j") #'godef-jump-other-window)
     (define-key m (kbd "C-c C-d") #'godef-describe)
     (define-key m (kbd "C-c C-f") 'go-goto-map)
     m)
-  "Keymap used by Go mode to implement electric keys.")
+  "Keymap used by go-mode.")
 
 (easy-menu-define go-mode-menu go-mode-map
   "Menu for Go mode."
@@ -967,6 +968,9 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
          go--font-lock-syntactic-keywords)
     (set (make-local-variable 'font-lock-multiline) t))
 
+  (if (boundp 'electric-indent-chars)
+      (set (make-local-variable 'electric-indent-chars) '(?\n ?} ?\) ?, ?: ?=)))
+
   (set (make-local-variable 'go-dangling-cache) (make-hash-table :test 'eql))
   (add-hook 'before-change-functions (lambda (x y) (setq go-dangling-cache (make-hash-table :test 'eql))) t t)
 
@@ -990,7 +994,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   ;; processed from the beginning. It's important that our entry comes
   ;; before gnu, because gnu matches go test output, but includes the
   ;; leading whitespace in the file name.
-  ;; 
+  ;;
   ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2001-12/msg00674.html
   ;; documents the old, reverseed order.
   (when (and (boundp 'compilation-error-regexp-alist)
