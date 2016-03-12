@@ -428,10 +428,7 @@ For mode=set, all covered lines will have this weight."
   (let ((m (make-sparse-keymap)))
     (unless (boundp 'electric-indent-chars)
         (define-key m "}" #'go-mode-insert-and-indent)
-        (define-key m ")" #'go-mode-insert-and-indent)
-        (define-key m "," #'go-mode-insert-and-indent)
-        (define-key m ":" #'go-mode-insert-and-indent)
-        (define-key m "=" #'go-mode-insert-and-indent))
+        (define-key m ")" #'go-mode-insert-and-indent))
     (define-key m (kbd "C-c C-a") #'go-import-add)
     (define-key m (kbd "C-c C-j") #'godef-jump)
     (define-key m (kbd "C-x 4 C-c C-j") #'godef-jump-other-window)
@@ -969,7 +966,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
     (set (make-local-variable 'font-lock-multiline) t))
 
   (if (boundp 'electric-indent-chars)
-      (set (make-local-variable 'electric-indent-chars) '(?\n ?} ?\) ?, ?: ?=)))
+      (set (make-local-variable 'electric-indent-chars) '(?\n ?} ?\))))
 
   (set (make-local-variable 'go-dangling-cache) (make-hash-table :test 'eql))
   (add-hook 'before-change-functions (lambda (x y) (setq go-dangling-cache (make-hash-table :test 'eql))) t t)
