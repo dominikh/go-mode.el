@@ -1117,8 +1117,12 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
               (search-forward "flag provided but not defined: -srcdir" nil t)))
           (insert "Your version of goimports is too old and doesn't support vendoring. Please update goimports!\n\n"))
       (insert "gofmt errors:\n")
-      (while (search-forward-regexp (concat "^\\(" (regexp-quote tmpfile) "\\):") nil t)
-        (replace-match (file-name-nondirectory filename) t t nil 1))
+      (let ((truefile
+             (if (gofmt--is-goimports-p)
+                 (concat (file-name-directory filename) (file-name-nondirectory tmpfile))
+               tmpfile)))
+        (while (search-forward-regexp (concat "^\\(" (regexp-quote truefile) "\\):") nil t)
+          (replace-match (file-name-nondirectory filename) t t nil 1)))
       (compilation-mode)
       (display-buffer errbuf))))
 
