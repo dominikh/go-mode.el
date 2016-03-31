@@ -1201,20 +1201,10 @@ you save any file, kind of defeating the point of autoloading."
 
 (defun godoc--read-query ()
   "Read a godoc query from the minibuffer."
-  ;; Compute the default query as the symbol under the cursor.
-  ;; TODO: This does the wrong thing for e.g. multipart.NewReader (it only grabs
-  ;; half) but I see no way to disambiguate that from e.g. foobar.SomeMethod.
-  (let* ((bounds (bounds-of-thing-at-point 'symbol))
-         (symbol (if bounds
-                     (buffer-substring-no-properties (car bounds)
-                                                     (cdr bounds))))
-         (prompt (if symbol
-                     (format "godoc (default %s): " symbol)
-                   "godoc: ")))
-    (if godoc-use-completing-read
-        (completing-read prompt
-                         (go--old-completion-list-style (go-packages)) nil nil nil 'go-godoc-history symbol)
-      (read-from-minibuffer prompt symbol nil nil 'go-godoc-history))))
+  (if godoc-use-completing-read
+      (completing-read "godoc; "
+                       (go--old-completion-list-style (go-packages)) nil nil nil 'go-godoc-history)
+    (read-from-minibuffer "godoc: " nil nil nil 'go-godoc-history)))
 
 (defun godoc--get-buffer (query)
   "Get an empty buffer for a godoc query."

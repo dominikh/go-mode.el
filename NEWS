@@ -71,6 +71,11 @@ go-mode-1.4.0 (???)
  * Add the function godoc-gogetdoc, which provides godoc-at-point
    functionality by using the third party tool gogetdoc.
 
+ * The godoc command no longer defaults to the symbol under point. It
+   rarely defaulted to a useful value. If you're interested in
+   documentation for the identifier at point, use godoc-at-point
+   instead.
+
 go-mode-1.3.1 (2015-07-03)
 
  * The 1.3.0 release forgot to update the version in the package
