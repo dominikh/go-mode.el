@@ -250,7 +250,7 @@ results, but can be slower than `go-packages-native'."
                                            #'go-wgo-gopath
                                            #'go-gb-gopath
                                            #'go-plain-gopath)
-  "Functions to run in sequence to detect a project's GOPATH.
+  "Functions to call in sequence to detect a project's GOPATH.
 
 The functions in this list will be called one after another,
 until a function returns non-nil. The order of the functions in
@@ -272,6 +272,62 @@ mis-identifying them as gb projects."
   "Provide auto-completion for godoc. Only really desirable when using `godoc' instead of `go doc'."
   :type 'boolean
   :group 'godoc)
+
+(defcustom godoc-at-point-function #'godoc-and-godef
+  "Function to call to display the documentation for an
+identifier at a given position.
+
+This package provides two functions: `godoc-and-godef' uses a
+combination of godef and godoc to find the documentation. This
+approach has several caveats. See its documentation for more
+information. The second function, `godoc-gogetdoc' uses an
+additional tool that correctly determines the documentation for
+any identifier. It provides better results than
+`godoc-and-godef'. "
+  :type 'function
+  :group 'godoc)
+
+(defun godoc-and-godef (point)
+  "Use a combination of godef and godoc to guess the documentation.
+
+Due to a limitation in godoc, it is not possible to differentiate
+between functions and methods, which may cause `godoc-at-point'
+to display more documentation than desired. Furthermore, it
+doesn't work on package names or variables.
+
+Consider using godoc-gogetdoc instead for more accurate results."
+  (condition-case nil
+      (let* ((output (godef--call point))
+             (file (car output))
+             (name-parts (split-string (cadr output) " "))
+             (first (car name-parts)))
+        (if (not (godef--successful-p file))
+            (message "%s" (godef--error file))
+          (godoc (format "%s %s"
+                         (file-name-directory file)
+                         (if (or (string= first "type") (string= first "const"))
+                             (cadr name-parts)
+                           (car name-parts))))))
+    (file-error (message "Could not run godef binary"))))
+
+(defun godoc-gogetdoc (point)
+  "Use the gogetdoc tool to find the documentation for an identifier.
+
+You can install gogetdoc with 'go get github.com/rogpeppe/godef'."
+  (if (not (buffer-file-name (go--coverage-origin-buffer)))
+      ;; TODO: once gogetdoc supports unsaved files, we can remove
+      ;; this by using a fake name
+      (error "Cannot use gogetdoc on a buffer without a file name"))
+  (if (buffer-modified-p)
+      ;; TODO: once gogetdoc supports unsaved files, we can remove
+      ;; this check
+      (error "Please save the buffer before invoking gogetdoc"))
+  (set-process-sentinel
+   (start-process "gogetdoc" (godoc--get-buffer "<at point>") "gogetdoc"
+                  (format "-pos=%s:#%d"
+                          (shell-quote-argument (file-truename buffer-file-name))
+                          (1- (go--position-bytes (point)))))
+   'godoc--buffer-sentinel))
 
 (defun go--kill-new-message (url)
   "Make URL the latest kill and print a message."
@@ -1198,27 +1254,9 @@ you save any file, kind of defeating the point of autoloading."
 (defun godoc-at-point (point)
   "Show Go documentation for the identifier at POINT.
 
-`godoc-at-point' requires godef to work.
-
-Due to a limitation in godoc, it is not possible to differentiate
-between functions and methods, which may cause `godoc-at-point'
-to display more documentation than desired."
-  ;; TODO(dominikh): Support executing godoc-at-point on a package
-  ;; name.
+It uses `godoc-at-point-function' to look up the documentation."
   (interactive "d")
-  (condition-case nil
-      (let* ((output (godef--call point))
-             (file (car output))
-             (name-parts (split-string (cadr output) " "))
-             (first (car name-parts)))
-        (if (not (godef--successful-p file))
-            (message "%s" (godef--error file))
-          (godoc (format "%s %s"
-                         (file-name-directory file)
-                         (if (or (string= first "type") (string= first "const"))
-                             (cadr name-parts)
-                           (car name-parts))))))
-    (file-error (message "Could not run godef binary"))))
+  (funcall godoc-at-point-function point))
 
 (defun go-goto-imports ()
   "Move point to the block of imports.
