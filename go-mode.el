@@ -315,19 +315,22 @@ Consider using godoc-gogetdoc instead for more accurate results."
 
 You can install gogetdoc with 'go get github.com/rogpeppe/godef'."
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
-      ;; TODO: once gogetdoc supports unsaved files, we can remove
-      ;; this by using a fake name
+      ;; TODO: gogetdoc supports unsaved files, but not introducing
+      ;; new artifical files, so this limitation will stay for now.
       (error "Cannot use gogetdoc on a buffer without a file name"))
-  (if (buffer-modified-p)
-      ;; TODO: once gogetdoc supports unsaved files, we can remove
-      ;; this check
-      (error "Please save the buffer before invoking gogetdoc"))
-  (set-process-sentinel
-   (start-process "gogetdoc" (godoc--get-buffer "<at point>") "gogetdoc"
-                  (format "-pos=%s:#%d"
-                          (shell-quote-argument (file-truename buffer-file-name))
-                          (1- (go--position-bytes (point)))))
-   'godoc--buffer-sentinel))
+  (let ((posn (format "%s:#%d" (shell-quote-argument (file-truename buffer-file-name)) (1- (go--position-bytes point))))
+        (out (godoc--get-buffer "<at point>")))
+  (with-current-buffer (get-buffer-create "*go-gogetdoc-input*")
+    (setq buffer-read-only nil)
+    (erase-buffer)
+    (go--insert-modified-files)
+    (call-process-region (point-min) (point-max) "gogetdoc" nil out nil
+                         "-modified"
+                         (format "-pos=%s" posn)))
+  (with-current-buffer out
+    (goto-char (point-min))
+    (godoc-mode)
+    (display-buffer (current-buffer) t))))
 
 (defun go--kill-new-message (url)
   "Make URL the latest kill and print a message."
@@ -2024,6 +2027,28 @@ switching projects."
 (defun go-original-gopath ()
   "Return the original value of GOPATH from when Emacs was started."
   (let ((process-environment initial-environment)) (getenv "GOPATH")))
+
+(defun go--insert-modified-files ()
+  "Insert the contents of each modified Go buffer into the
+current buffer in the format specified by guru's -modified flag."
+  (mapc #'(lambda (b)
+            (and (buffer-modified-p b)
+                 (buffer-file-name b)
+                 (string= (file-name-extension (buffer-file-name b)) "go")
+                 (go--insert-modified-file (buffer-file-name b) b)))
+        (buffer-list)))
+
+(defun go--insert-modified-file (name buffer)
+  (insert (format "%s\n%d\n" name (go--buffer-size-bytes buffer)))
+  (insert-buffer-substring buffer))
+
+(defun go--buffer-size-bytes (&optional buffer)
+  (message "buffer; %s" buffer)
+  "Return the number of bytes in the current buffer.
+If BUFFER, return the number of characters in that buffer instead."
+  (with-current-buffer (or buffer (current-buffer))
+    (1- (position-bytes (point-max)))))
+
 
 (provide 'go-mode)
 
