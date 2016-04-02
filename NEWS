@@ -45,8 +45,11 @@ go-mode-1.4.0 (???)
    it had when Emacs started.
 
  * Add customizable variable godoc-command, which allows choosing
-   between using godoc and go doc. It defaults to go doc, which
-   differs from prior versions which always used godoc.
+   between using godoc and go doc, and generally specifying
+   alternative paths to those tools.
+
+   It defaults to go doc, which differs from prior versions which always
+   used godoc.
 
  * Add customizable variable godoc-use-completing-read, which allows
    turning on or off the completion of import paths in the godoc
@@ -67,6 +70,12 @@ go-mode-1.4.0 (???)
  * Add new customizable variable godoc-at-point-function, which allows
    choosing between strategies for finding an identifier's
    documentation.
+
+ * Add new function godoc-and-godef, which is the default function
+   used for godoc-at-point and matches the previous behaviour.
+
+ * Add new customizable variable godoc-and-godef-command, which allows
+   specifying the path to the godoc binary.
 
  * Add the function godoc-gogetdoc, which provides godoc-at-point
    functionality by using the third party tool gogetdoc.

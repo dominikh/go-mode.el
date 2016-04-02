@@ -262,11 +262,18 @@ mis-identifying them as gb projects."
   :group 'go)
 
 (defcustom godoc-command "go doc"
-  "Choose between using `godoc' and `go doc' for M-x godoc."
-  :type '(choice
-          (const :tag "godoc" "godoc")
-          (const :tag "go doc" "go doc"))
-  :group 'godoc)
+  "Which executable to use for `godoc'. This can either be
+'godoc' or 'go doc', both as an absolute path or an executable in
+PATH."
+  :type 'string
+  :group 'go)
+
+(defcustom godoc-and-godef-command "godoc"
+  "Which executable to use for `godoc' in
+`godoc-and-godef-command'. Must be 'godoc' and not 'go doc' and
+can be an absolute path or an executable in PATH."
+  :type 'string
+  :group 'go)
 
 (defcustom godoc-use-completing-read nil
   "Provide auto-completion for godoc. Only really desirable when using `godoc' instead of `go doc'."
@@ -303,11 +310,12 @@ Consider using godoc-gogetdoc instead for more accurate results."
              (first (car name-parts)))
         (if (not (godef--successful-p file))
             (message "%s" (godef--error file))
-          (godoc (format "%s %s"
+          (go--godoc (format "%s %s"
                          (file-name-directory file)
                          (if (or (string= first "type") (string= first "const"))
                              (cadr name-parts)
-                           (car name-parts))))))
+                           (car name-parts)))
+                    godoc-and-godef-command)))
     (file-error (message "Could not run godef binary"))))
 
 (defun godoc-gogetdoc (point)
@@ -1236,11 +1244,14 @@ you save any file, kind of defeating the point of autoloading."
 ;;;###autoload
 (defun godoc (query)
   "Show Go documentation for QUERY, much like M-x man."
+  (go--godoc query godoc-command))
+
+(defun go--godoc (query command)
   (interactive (list (godoc--read-query)))
   (unless (string= query "")
     (set-process-sentinel
      (start-process-shell-command "godoc" (godoc--get-buffer query)
-                                  (concat godoc-command " " query))
+                                  (concat command " " query))
      'godoc--buffer-sentinel)
     nil))
 
