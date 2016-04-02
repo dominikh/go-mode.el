@@ -321,7 +321,7 @@ Consider using godoc-gogetdoc instead for more accurate results."
 (defun godoc-gogetdoc (point)
   "Use the gogetdoc tool to find the documentation for an identifier.
 
-You can install gogetdoc with 'go get github.com/rogpeppe/godef'."
+You can install gogetdoc with 'go get -u github.com/zmb3/gogetdoc'."
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
       ;; TODO: gogetdoc supports unsaved files, but not introducing
       ;; new artifical files, so this limitation will stay for now.
