@@ -1244,10 +1244,10 @@ you save any file, kind of defeating the point of autoloading."
 ;;;###autoload
 (defun godoc (query)
   "Show Go documentation for QUERY, much like M-x man."
+  (interactive (list (godoc--read-query)))
   (go--godoc query godoc-command))
 
 (defun go--godoc (query command)
-  (interactive (list (godoc--read-query)))
   (unless (string= query "")
     (set-process-sentinel
      (start-process-shell-command "godoc" (godoc--get-buffer query)
