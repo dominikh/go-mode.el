@@ -14,6 +14,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'compile)
 (require 'etags)
 (require 'ffap)
 (require 'find-file)
@@ -1043,6 +1044,8 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 
   (if (boundp 'electric-indent-chars)
       (set (make-local-variable 'electric-indent-chars) '(?\n ?} ?\))))
+
+  (set (make-local-variable 'compilation-error-screen-columns) nil)
 
   (set (make-local-variable 'go-dangling-cache) (make-hash-table :test 'eql))
   (add-hook 'before-change-functions (lambda (x y) (setq go-dangling-cache (make-hash-table :test 'eql))) t t)

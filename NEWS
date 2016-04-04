@@ -85,6 +85,13 @@ go-mode-1.4.0 (???)
    documentation for the identifier at point, use godoc-at-point
    instead.
 
+ * Set compilation-error-screen-columns to nil in go-mode buffers. Go
+   uses tabs for indentation, and go/parser-based tools emit column
+   numbers in terms of characters, where a tab is one character wide.
+   Emacs defaults to interpreting columns as screen columns, where a
+   tab is tab-width columns wide. This breaks jumping to the right
+   columns from compilation-mode
+
 go-mode-1.3.1 (2015-07-03)
 
  * The 1.3.0 release forgot to update the version in the package
