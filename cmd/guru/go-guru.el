@@ -483,6 +483,35 @@ end point."
       (message "Region: %s" (cdr (assoc 'desc block)))
       (setq deactivate-mark nil))))
 
+(defun go-guru--find-enclosing (elems)
+  (let* ((enclosing (go-guru--enclosing)))
+    (cl-find-if (lambda (el)
+                  (member (cdr (assoc 'desc el)) elems))
+                enclosing)))
+
+(defun go-guru-mark (elems)
+  "Mark the first surrounding syntactic element that matches an
+item in ELEMS.  The elements in ELEMS have to be the textual
+representations of AST nodes as returned by
+astutil.NodeDescription.
+
+For example,
+
+    (go-guru-mark '(\"function declaration\" \"function literal\"))
+
+can be used to mark the surrounding (anonymous) function.
+
+If no matching element is found, point and mark will remain unchanged.
+
+Returns t on success, nil otherwise."
+  (let ((block (go-guru--find-enclosing elems))
+        success)
+    (when block
+      (goto-char (1+ (cdr (assoc 'start block))))
+      (set-mark (1+ (cdr (assoc 'end block))))
+      (setq success t))
+    (setq deactivate-mark nil)
+    success))
 
 (provide 'go-guru)
 
