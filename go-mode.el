@@ -1329,7 +1329,7 @@ Playground URL."
            (buffer-substring-no-properties start end)
            'utf-8))
          (content-buf (url-retrieve
-                       "http://play.golang.org/share"
+                       "https://play.golang.org/share"
                        (lambda (arg)
                          (cond
                           ((equal :error (car arg))
