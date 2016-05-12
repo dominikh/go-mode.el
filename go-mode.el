@@ -1136,7 +1136,8 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
         (coding-system-for-read 'utf-8)
         (coding-system-for-write 'utf-8)
         our-gofmt-args
-	gofmt-full-cmd)
+	gofmt-full-cmd
+	(go-path (go-guess-gopath)))
 
     (unwind-protect
         (save-restriction
@@ -1158,7 +1159,10 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
                                        gofmt-args
                                        (list "-w" tmpfile)))
 
-	  (setq gofmt-full-cmd (format "GOPATH=%s:%s %s %s" (go-guess-gopath) (getenv "GOPATH") gofmt-command (mapconcat 'identity our-gofmt-args " ")))
+	  ;; Only override GOPATH when necessary
+	  (if go-path
+	      (setq gofmt-full-cmd (format "GOPATH=%s %s %s" go-path gofmt-command (mapconcat 'identity our-gofmt-args " ")))
+	    (setq gofmt-full-cmd (format "%s %s" gofmt-command (mapconcat 'identity our-gofmt-args " "))))
 
           (message "Calling gofmt: %s" gofmt-full-cmd)
           ;; We're using errbuf for the mixed stdout and stderr output. This
