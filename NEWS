@@ -92,6 +92,9 @@ go-mode-1.4.0 (???)
    tab is tab-width columns wide. This breaks jumping to the right
    columns from compilation-mode
 
+ * Use HTTPS when talking to the Go Playground. Not only is it safer,
+   it is required nowadays.
+
 go-mode-1.3.1 (2015-07-03)
 
  * The 1.3.0 release forgot to update the version in the package

@@ -1336,7 +1336,7 @@ Playground URL."
                            (signal 'go-play-error (cdr arg)))
                           (t
                            (re-search-forward "\n\n")
-                           (let ((url (format "http://play.golang.org/p/%s"
+                           (let ((url (format "https://play.golang.org/p/%s"
                                               (buffer-substring (point) (point-max)))))
                              (when go-play-browse-function
                                (funcall go-play-browse-function url)))))))))))
