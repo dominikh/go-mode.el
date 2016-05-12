@@ -1135,7 +1135,8 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
         (errbuf (if gofmt-show-errors (get-buffer-create "*Gofmt Errors*")))
         (coding-system-for-read 'utf-8)
         (coding-system-for-write 'utf-8)
-        our-gofmt-args)
+        our-gofmt-args
+	gofmt-full-cmd)
 
     (unwind-protect
         (save-restriction
@@ -1156,11 +1157,14 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
           (setq our-gofmt-args (append our-gofmt-args
                                        gofmt-args
                                        (list "-w" tmpfile)))
-          (message "Calling gofmt: %s %s" gofmt-command our-gofmt-args)
+
+	  (setq gofmt-full-cmd (format "GOPATH=%s:%s %s %s" (go-guess-gopath) (getenv "GOPATH") gofmt-command (mapconcat 'identity our-gofmt-args " ")))
+
+          (message "Calling gofmt: %s" gofmt-full-cmd)
           ;; We're using errbuf for the mixed stdout and stderr output. This
           ;; is not an issue because gofmt -w does not produce any stdout
           ;; output in case of success.
-          (if (zerop (apply #'call-process gofmt-command nil errbuf nil our-gofmt-args))
+          (if (zerop (shell-command gofmt-full-cmd nil errbuf))
               (progn
                 (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
                     (message "Buffer is already gofmted")
