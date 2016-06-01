@@ -1242,6 +1242,8 @@ you save any file, kind of defeating the point of autoloading."
 
 (define-derived-mode godoc-mode special-mode "Godoc"
   "Major mode for showing Go documentation."
+  (set (make-local-variable 'font-lock-defaults)
+       '(go--build-font-lock-keywords))
   (view-mode-enter))
 
 ;;;###autoload
