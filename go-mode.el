@@ -1527,25 +1527,25 @@ description at POINT."
       (error "godef does not reliably work in XEmacs, expect bad results"))
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
       (error "Cannot use godef on a buffer without a file name")
-    (let ((outbuf (get-buffer-create "*godef*"))
+    (let ((outbuf (generate-new-buffer "*godef*"))
           (coding-system-for-read 'utf-8)
           (coding-system-for-write 'utf-8))
-      (with-current-buffer outbuf
-        (erase-buffer))
-      (call-process-region (point-min)
-                           (point-max)
-                           godef-command
-                           nil
-                           outbuf
-                           nil
-                           "-i"
-                           "-t"
-                           "-f"
-                           (file-truename (buffer-file-name (go--coverage-origin-buffer)))
-                           "-o"
-                           (number-to-string (go--position-bytes point)))
-      (with-current-buffer outbuf
-        (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n")))))
+      (prog2
+          (call-process-region (point-min)
+                               (point-max)
+                               godef-command
+                               nil
+                               outbuf
+                               nil
+                               "-i"
+                               "-t"
+                               "-f"
+                               (file-truename (buffer-file-name (go--coverage-origin-buffer)))
+                               "-o"
+                               (number-to-string (go--position-bytes point)))
+          (with-current-buffer outbuf
+            (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n"))
+        (kill-buffer outbuf)))))
 
 (defun godef--successful-p (output)
   (not (or (string= "-" output)
