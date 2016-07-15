@@ -199,7 +199,7 @@ point to the wrapper script."
 (defcustom gofmt-command "gofmt"
   "The 'gofmt' command.
 Some users may replace this with 'goimports'
-from https://github.com/bradfitz/goimports."
+from https://golang.org/x/tools/cmd/goimports."
   :type 'string
   :group 'go)
 
