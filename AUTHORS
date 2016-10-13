@@ -1,9 +1,13 @@
 Aaron France <aaron.l.france@gmail.com>
 Alan Donovan <adonovan@google.com>
+Alan Donovan <alan@alandonovan.net>
+Andrew Gerrand <adg@golang.org>
 Austin Clements <aclements@csail.mit.edu>
 Ben Fried <ben.fried@gmail.com>
 Bobby Powers <bobbypowers@gmail.com>
 Charles Lee <zombie.fml@gmail.com>
+Daniel Morsing <daniel.morsing@gmail.com>
+Dominik Honnef <dominik.honnef@gmail.com>
 Dominik Honnef <dominik@honnef.co>
 Eric Eisner <eric.d.eisner@gmail.com>
 Erin Keenan <erinok@gmail.com>
@@ -17,6 +21,7 @@ Jan Newmarch <jan.newmarch@gmail.com>
 Jean-Marc Eurin <jmeurin@google.com>
 Juergen Hoetzel <juergen@archlinux.org>
 Kevin Ballard <kevin@sb.org>
+Konstantin Shaposhnikov <k.shaposhnikov@gmail.com>
 Lowe Thiderman <lowe.thiderman@gmail.com>
 Mark Petrovic <mark.petrovic@xoom.com>
 Mats Lidell <mats.lidell@cag.se>
@@ -30,7 +35,11 @@ Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 Sameer Ajmani <sameer@golang.org>
 Scott Lawrence <bytbox@gmail.com>
 Steven Elliot Harris <seharris@gmail.com>
+Syohei YOSHIDA <syohex@gmail.com>
 Taiki Sugawara <buzz.taiki@gmail.com>
 Viacheslav Chimishuk <vchimishuk@yandex-team.ru>
 Will <will@glozer.net>
 Yasuyuki Oka <yasuyk@gmail.com>
+Yutian Li <hotpxless@gmail.com>
+Zac Bergquist <zbergquist99@gmail.com>
+kostya-sh <kostya-sh@users.noreply.github.com>
