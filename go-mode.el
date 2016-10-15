@@ -1058,9 +1058,6 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
           ("func" "^func *\\(.*\\) {" 1)))
   (imenu-add-to-menubar "Index")
 
-  ;; Go style
-  (setq indent-tabs-mode t)
-
   ;; Handle unit test failure output in compilation-mode
   ;;
   ;; Note that we add our entry to the beginning of
