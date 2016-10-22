@@ -1152,7 +1152,11 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
           (when (and (gofmt--is-goimports-p) buffer-file-name)
             (setq our-gofmt-args
                   (append our-gofmt-args
-                          (list "-srcdir" (file-name-directory (file-truename buffer-file-name))))))
+                          ;; srcdir, despite its name, supports
+                          ;; accepting a full path, and some features
+                          ;; of goimports rely on knowing the full
+                          ;; name.
+                          (list "-srcdir" (file-truename buffer-file-name)))))
           (setq our-gofmt-args (append our-gofmt-args
                                        gofmt-args
                                        (list "-w" tmpfile)))
