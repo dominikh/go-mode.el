@@ -70,9 +70,9 @@
   nil
   "History of values supplied to `go-guru-set-scope'.")
 
-(defcustom go-guru-build-tags ""
+(defcustom go-guru-build-tags '()
   "Build tags passed to guru."
-  :type 'string
+  :type '(repeat string)
   :group 'go-guru)
 
 (defface go-guru-hl-identifier-face
