@@ -241,7 +241,7 @@ output of the Go guru tool."
   "Erase default output header inserted by `compilation-mode'."
   (with-current-buffer (process-buffer proc)
     (let ((inhibit-read-only t))
-      (beginning-of-buffer)
+      (goto-char (point-min))
       (delete-region (point) (point-max)))))
 
 (defun go-guru--start (mode)
