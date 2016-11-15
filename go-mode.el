@@ -1845,7 +1845,7 @@ If ARG is non-nil, anonymous functions are skipped."
 If ARG is non-nil, anonymous functions are skipped."
   (interactive "P")
   (go-goto-function-name arg)
-  (forward-word 1)
+  (forward-word-strictly 1)
   (forward-char 1))
 
 (defun go--goto-return-values (&optional arg)
