@@ -21,32 +21,8 @@
 (require 'ring)
 (require 'url)
 
-;; XEmacs compatibility guidelines
-;; - Minimum required version of XEmacs: 21.5.32
-;;   - Feature that cannot be backported: POSIX character classes in
-;;     regular expressions
-;;   - Functions that could be backported but won't because 21.5.32
-;;     covers them: plenty.
-;;   - Features that are still partly broken:
-;;     - godef will not work correctly if multibyte characters are
-;;       being used
-;;     - Fontification will not handle unicode correctly
-;;
-;; - Do not use \_< and \_> regexp delimiters directly; use
-;;   go--regexp-enclose-in-symbol
-;;
-;; - The character `_` must not be a symbol constituent but a
-;;   character constituent
-;;
-;; - Do not use process-lines
-;;
-;; - Use go--old-completion-list-style when using a plain list as the
-;;   collection for completing-read
-;;
-;; - Use go--position-bytes instead of position-bytes
-(defmacro go--xemacs-p ()
-  (featurep 'xemacs))
 
+;; TODO remove this function when we remove emacs 23 support
 (defmacro go--has-syntax-propertize-p ()
   (boundp 'syntax-propertize-function))
 
@@ -76,23 +52,8 @@ function."
          (delete-region (progn (forward-visible-line 0) (point))
                         (progn (forward-visible-line arg) (point))))))
 
-;; declare-function is an empty macro that only byte-compile cares
-;; about. Wrap in always false if to satisfy Emacsen without that
-;; macro.
-(if nil
-    (declare-function go--position-bytes "go-mode" (point)))
-
-;; XEmacs unfortunately does not offer position-bytes. We can fall
-;; back to just using (point), but it will be incorrect as soon as
-;; multibyte characters are being used.
-(if (fboundp 'position-bytes)
-    (defalias 'go--position-bytes #'position-bytes)
-  (defun go--position-bytes (point) point))
-
-(defun go--old-completion-list-style (list)
-  (mapcar (lambda (x) (cons x nil)) list))
-
-;; GNU Emacs 24 has prog-mode, older GNU Emacs and XEmacs do not, so
+;; TODO remove when we get rid of emacs 23 support
+;; GNU Emacs 24 has prog-mode, older GNU Emacs do not, so
 ;; copy its definition for those.
 (if (not (fboundp 'prog-mode))
     (define-derived-mode prog-mode fundamental-mode "Prog"
@@ -100,18 +61,6 @@ function."
       (set (make-local-variable 'require-final-newline) mode-require-final-newline)
       (set (make-local-variable 'parse-sexp-ignore-comments) t)
       (setq bidi-paragraph-direction 'left-to-right)))
-
-(defun go--regexp-enclose-in-symbol (s)
-  "Enclose S as regexp symbol.
-XEmacs does not support \\_<, GNU Emacs does.  In GNU Emacs we
-make extensive use of \\_< to support unicode in identifiers.
-Until we come up with a better solution for XEmacs, this solution
-will break fontification in XEmacs for identifiers such as
-\"typeµ\".  XEmacs will consider \"type\" a keyword, GNU Emacs
-won't."
-  (if (go--xemacs-p)
-      (concat "\\<" s "\\>")
-    (concat "\\_<" s "\\_>")))
 
 (defun go-goto-opening-parenthesis (&optional _legacy-unused)
   "Move up one level of parentheses."
@@ -131,9 +80,9 @@ won't."
 (defconst go-qualified-identifier-regexp (concat go-identifier-regexp "\\." go-identifier-regexp))
 (defconst go-label-regexp go-identifier-regexp)
 (defconst go-type-regexp "[[:word:][:multibyte:]*]+")
-(defconst go-func-regexp (concat (go--regexp-enclose-in-symbol "func") "\\s *\\(" go-identifier-regexp "\\)"))
+(defconst go-func-regexp (concat "\\_<func\\_>\\s *\\(" go-identifier-regexp "\\)"))
 (defconst go-func-meth-regexp (concat
-                               (go--regexp-enclose-in-symbol "func") "\\s *\\(?:(\\s *"
+                               "\\_<func\\_>\\s *\\(?:(\\s *"
                                "\\(" go-identifier-regexp "\\s +\\)?" go-type-regexp
                                "\\s *)\\s *\\)?\\("
                                go-identifier-regexp
@@ -327,7 +276,7 @@ You can install gogetdoc with 'go get -u github.com/zmb3/gogetdoc'."
       ;; TODO: gogetdoc supports unsaved files, but not introducing
       ;; new artifical files, so this limitation will stay for now.
       (error "Cannot use gogetdoc on a buffer without a file name"))
-  (let ((posn (format "%s:#%d" (shell-quote-argument (file-truename buffer-file-name)) (1- (go--position-bytes point))))
+  (let ((posn (format "%s:#%d" (shell-quote-argument (file-truename buffer-file-name)) (1- (position-bytes point))))
         (out (godoc--get-buffer "<at point>")))
   (with-current-buffer (get-buffer-create "*go-gogetdoc-input*")
     (setq buffer-read-only nil)
@@ -429,15 +378,14 @@ For mode=set, all covered lines will have this weight."
     (modify-syntax-entry ?=  "." st)
     (modify-syntax-entry ?<  "." st)
     (modify-syntax-entry ?>  "." st)
-    (modify-syntax-entry ?/ (if (go--xemacs-p) ". 1456" ". 124b") st)
+    (modify-syntax-entry ?/  ". 124b" st)
     (modify-syntax-entry ?*  ". 23" st)
     (modify-syntax-entry ?\n "> b" st)
     (modify-syntax-entry ?\" "\"" st)
     (modify-syntax-entry ?\' "\"" st)
     (modify-syntax-entry ?`  "\"" st)
     (modify-syntax-entry ?\\ "\\" st)
-    ;; It would be nicer to have _ as a symbol constituent, but that
-    ;; would trip up XEmacs, which does not support the \_< anchor
+    ;; TODO make _ a symbol constituent now that xemacs is gone
     (modify-syntax-entry ?_  "w" st)
 
     st)
@@ -450,9 +398,9 @@ For mode=set, all covered lines will have this weight."
    `((go--match-func
       ,@(mapcar (lambda (x) `(,x font-lock-type-face))
                 (number-sequence 1 go--font-lock-func-param-num-groups)))
-     (,(go--regexp-enclose-in-symbol (regexp-opt go-mode-keywords t)) . font-lock-keyword-face)
-     (,(concat "\\(" (go--regexp-enclose-in-symbol (regexp-opt go-builtins t)) "\\)[[:space:]]*(") 1 font-lock-builtin-face)
-     (,(go--regexp-enclose-in-symbol (regexp-opt go-constants t)) . font-lock-constant-face)
+     (,(concat "\\_<" (regexp-opt go-mode-keywords t) "\\_>") . font-lock-keyword-face)
+     (,(concat "\\(\\_<" (regexp-opt go-builtins t) "\\_>\\)[[:space:]]*(") 1 font-lock-builtin-face)
+     (,(concat "\\_<" (regexp-opt go-constants t) "\\_>") . font-lock-constant-face)
      (,go-func-regexp 1 font-lock-function-name-face)) ;; function (not method) name
 
    (if go-fontify-function-calls
@@ -462,21 +410,21 @@ For mode=set, all covered lines will have this weight."
 
    `(
      ("\\(`[^`]*`\\)" 1 font-lock-multiline) ;; raw string literal, needed for font-lock-syntactic-keywords
-     (,(concat (go--regexp-enclose-in-symbol "type") "[[:space:]]+\\([^[:space:](]+\\)") 1 font-lock-type-face) ;; types
-     (,(concat (go--regexp-enclose-in-symbol "type") "[[:space:]]+" go-identifier-regexp "[[:space:]]*" go-type-name-regexp) 1 font-lock-type-face) ;; types
+     (,(concat "\\_<type\\_>[[:space:]]+\\([^[:space:](]+\\)") 1 font-lock-type-face) ;; types
+     (,(concat "\\_<type\\_>[[:space:]]+" go-identifier-regexp "[[:space:]]*" go-type-name-regexp) 1 font-lock-type-face) ;; types
      (,(concat "[^[:word:][:multibyte:]]\\[\\([[:digit:]]+\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 2 font-lock-type-face) ;; Arrays/slices
      (,(concat "\\(" go-identifier-regexp "\\)" "{") 1 font-lock-type-face)
-     (,(concat (go--regexp-enclose-in-symbol "map") "\\[[^]]+\\]" go-type-name-regexp) 1 font-lock-type-face) ;; map value type
-     (,(concat (go--regexp-enclose-in-symbol "map") "\\[" go-type-name-regexp) 1 font-lock-type-face) ;; map key type
-     (,(concat (go--regexp-enclose-in-symbol "chan") "[[:space:]]*\\(?:<-[[:space:]]*\\)?" go-type-name-regexp) 1 font-lock-type-face) ;; channel type
-     (,(concat (go--regexp-enclose-in-symbol "\\(?:new\\|make\\)") "\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp) 1 font-lock-type-face) ;; new/make type
+     (,(concat "\\_<map\\_>\\[[^]]+\\]" go-type-name-regexp) 1 font-lock-type-face) ;; map value type
+     (,(concat "\\_<map\\_>\\[" go-type-name-regexp) 1 font-lock-type-face) ;; map key type
+     (,(concat "\\_<chan\\_>[[:space:]]*\\(?:<-[[:space:]]*\\)?" go-type-name-regexp) 1 font-lock-type-face) ;; channel type
+     (,(concat "\\_<\\(?:new\\|make\\)\\_>\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp) 1 font-lock-type-face) ;; new/make type
      ;; TODO do we actually need this one or isn't it just a function call?
      (,(concat "\\.\\s *(" go-type-name-regexp) 1 font-lock-type-face) ;; Type conversion
      ;; Like the original go-mode this also marks compound literal
      ;; fields. There, it was marked as to fix, but I grew quite
      ;; accustomed to it, so it'll stay for now.
      (,(concat "^[[:space:]]*\\(" go-label-regexp "\\)[[:space:]]*:\\(\\S.\\|$\\)") 1 font-lock-constant-face) ;; Labels and compound literal fields
-     (,(concat (go--regexp-enclose-in-symbol "\\(goto\\|break\\|continue\\)") "[[:space:]]*\\(" go-label-regexp "\\)") 2 font-lock-constant-face)))) ;; labels in goto/break/continue
+     (,(concat "\\_<\\(goto\\|break\\|continue\\)\\_>[[:space:]]*\\(" go-label-regexp "\\)") 2 font-lock-constant-face)))) ;; labels in goto/break/continue
 
 (defconst go--font-lock-syntactic-keywords
   ;; Override syntax property of raw string literal contents, so that
@@ -792,7 +740,7 @@ parenthesis before a comma, it stops at it."
   "Search for identifiers used as type names from a function
 parameter list, and set the identifier positions as the results
 of last search.  Return t if search succeeded."
-  (when (re-search-forward (go--regexp-enclose-in-symbol "func") end t)
+  (when (re-search-forward "\\_<func\\_>" end t)
     (let ((regions (go--match-func-type-names end)))
       (if (null regions)
           ;; Nothing to highlight. This can happen if the current func
@@ -844,7 +792,7 @@ after '('."
 (defconst go--parameter-type-regexp
   (concat go--opt-dotdotdot-regexp "[[:space:]*\n]*\\(" go-type-name-no-prefix-regexp "\\)[[:space:]\n]*\\([,)]\\|\\'\\)"))
 (defconst go--func-type-in-parameter-list-regexp
-  (concat go--opt-dotdotdot-regexp "[[:space:]*\n]*\\(" (go--regexp-enclose-in-symbol "func") "\\)"))
+  (concat go--opt-dotdotdot-regexp "[[:space:]*\n]*\\(\\_<func\\_>" "\\)"))
 
 (defun go--match-parameters-common (identifier-regexp end)
   (let ((acc ())
@@ -1227,7 +1175,7 @@ you save any file, kind of defeating the point of autoloading."
   "Read a godoc query from the minibuffer."
   (if godoc-use-completing-read
       (completing-read "godoc; "
-                       (go--old-completion-list-style (go-packages)) nil nil nil 'go-godoc-history)
+                       (go-packages) nil nil nil 'go-godoc-history)
     (read-from-minibuffer "godoc: " nil nil nil 'go-godoc-history)))
 
 (defun godoc--get-buffer (query)
@@ -1391,7 +1339,7 @@ uncommented, otherwise a new import will be added."
   (interactive
    (list
     current-prefix-arg
-    (replace-regexp-in-string "^[\"']\\|[\"']$" "" (completing-read "Package: " (go--old-completion-list-style (go-packages))))))
+    (replace-regexp-in-string "^[\"']\\|[\"']$" "" (completing-read "Package: " (go-packages)))))
   (save-excursion
     (let (as line import-start)
       (if arg
@@ -1533,8 +1481,6 @@ visit FILENAME and go to line LINE and column COLUMN."
 (defun godef--call (point)
   "Call godef, acquiring definition position and expression
 description at POINT."
-  (if (go--xemacs-p)
-      (error "godef does not reliably work in XEmacs, expect bad results"))
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
       (error "Cannot use godef on a buffer without a file name")
     (let ((outbuf (generate-new-buffer "*godef*"))
@@ -1552,7 +1498,7 @@ description at POINT."
                                "-f"
                                (file-truename (buffer-file-name (go--coverage-origin-buffer)))
                                "-o"
-                               (number-to-string (go--position-bytes point)))
+                               (number-to-string (position-bytes point)))
           (with-current-buffer outbuf
             (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n"))
         (kill-buffer outbuf)))))
