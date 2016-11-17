@@ -22,10 +22,6 @@
 (require 'url)
 
 
-;; TODO remove this function when we remove emacs 23 support
-(defmacro go--has-syntax-propertize-p ()
-  (boundp 'syntax-propertize-function))
-
 (defun go--delete-whole-line (&optional arg)
   "Delete the current line without putting it in the `kill-ring'.
 Derived from function `kill-whole-line'.  ARG is defined as for that
@@ -51,16 +47,6 @@ function."
         (t
          (delete-region (progn (forward-visible-line 0) (point))
                         (progn (forward-visible-line arg) (point))))))
-
-;; TODO remove when we get rid of emacs 23 support
-;; GNU Emacs 24 has prog-mode, older GNU Emacs do not, so
-;; copy its definition for those.
-(if (not (fboundp 'prog-mode))
-    (define-derived-mode prog-mode fundamental-mode "Prog"
-      "Major mode for editing source code."
-      (set (make-local-variable 'require-final-newline) mode-require-final-newline)
-      (set (make-local-variable 'parse-sexp-ignore-comments) t)
-      (setq bidi-paragraph-direction 'left-to-right)))
 
 (defun go-goto-opening-parenthesis (&optional _legacy-unused)
   "Move up one level of parentheses."
@@ -426,14 +412,6 @@ For mode=set, all covered lines will have this weight."
      (,(concat "^[[:space:]]*\\(" go-label-regexp "\\)[[:space:]]*:\\(\\S.\\|$\\)") 1 font-lock-constant-face) ;; Labels and compound literal fields
      (,(concat "\\_<\\(goto\\|break\\|continue\\)\\_>[[:space:]]*\\(" go-label-regexp "\\)") 2 font-lock-constant-face)))) ;; labels in goto/break/continue
 
-(defconst go--font-lock-syntactic-keywords
-  ;; Override syntax property of raw string literal contents, so that
-  ;; backslashes have no special meaning in ``. Used in Emacs 23 or older.
-  '((go--match-raw-string-literal
-     (1 (7 . ?`))
-     (2 (15 . nil))  ;; 15 = "generic string"
-     (3 (7 . ?`)))))
-
 (let ((m (define-prefix-command 'go-goto-map)))
   (define-key m "a" #'go-goto-arguments)
   (define-key m "d" #'go-goto-docstring)
@@ -534,19 +512,6 @@ STOP-AT-STRING is not true, over strings."
   (/= (buffer-size)
       (- (point-max)
          (point-min))))
-
-(defun go--match-raw-string-literal (end)
-  "Search for a raw string literal.
-Set point to the end of the occurence found on success.  Return nil on failure."
-  (unless (go-in-string-or-comment-p)
-    (when (search-forward "`" end t)
-      (goto-char (match-beginning 0))
-      (if (go-in-string-or-comment-p)
-          (progn (goto-char (match-end 0))
-                 (go--match-raw-string-literal end))
-        (when (looking-at "\\(`\\)\\([^`]*\\)\\(`\\)")
-          (goto-char (match-end 0))
-          t)))))
 
 (defun go-previous-line-has-dangling-op-p ()
   "Return non-nil if the current line is a continuation line."
@@ -990,11 +955,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   (set (make-local-variable 'end-of-defun-function) #'go-end-of-defun)
 
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
-  (if (go--has-syntax-propertize-p)
-      (set (make-local-variable 'syntax-propertize-function) #'go-propertize-syntax)
-    (set (make-local-variable 'font-lock-syntactic-keywords)
-         go--font-lock-syntactic-keywords)
-    (set (make-local-variable 'font-lock-multiline) t))
+  (set (make-local-variable 'syntax-propertize-function) #'go-propertize-syntax)
 
   (if (boundp 'electric-indent-chars)
       (set (make-local-variable 'electric-indent-chars) '(?\n ?} ?\))))
