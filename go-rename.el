@@ -52,9 +52,9 @@ the `gorename' tool. With FORCE, call `gorename' with the
   ;; Prompt-save all other modified Go buffers, since they might get written.
   (save-some-buffers nil #'(lambda ()
               (and (buffer-file-name)
-                   (string= (file-name-extension (buffer-file-name)) ".go"))))
+                   (string= (file-name-extension (file-truename (buffer-file-name))) ".go"))))
   (let* ((posflag (format "-offset=%s:#%d"
-                          buffer-file-name
+                          (file-truename buffer-file-name)
                           (1- (go--position-bytes (point)))))
          (env-vars (go-root-and-paths))
          (goroot-env (concat "GOROOT=" (car env-vars)))
