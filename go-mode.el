@@ -22,6 +22,12 @@
 (require 'url)
 
 
+(eval-when-compile
+  (defmacro go--forward-word (&optional arg)
+   (if (fboundp 'forward-word-strictly)
+       `(forward-word-strictly ,arg)
+     `(forward-word ,arg))))
+
 (defun go--delete-whole-line (&optional arg)
   "Delete the current line without putting it in the `kill-ring'.
 Derived from function `kill-whole-line'.  ARG is defined as for that
@@ -1675,7 +1681,7 @@ If ARG is non-nil, anonymous functions are ignored."
       ;; should search forward instead.
       (when (not (looking-at "\\<func\\>"))
         (re-search-forward "\\<func\\>" nil t)
-        (forward-word -1))
+        (go--forward-word -1))
 
       ;; If we have landed at an anonymous function, it is possible that we
       ;; were not inside it but below it. If we were not inside it, we should
@@ -1741,7 +1747,7 @@ If ARG is non-nil, anonymous functions are skipped."
       (when (looking-at "\\<func (")
         (setq words 3
               chars 2))
-      (forward-word words)
+      (go--forward-word words)
       (forward-char chars)
       (when (looking-at "Test")
         (forward-char 4)))))
@@ -1752,7 +1758,7 @@ If ARG is non-nil, anonymous functions are skipped."
 If ARG is non-nil, anonymous functions are skipped."
   (interactive "P")
   (go-goto-function-name arg)
-  (forward-word 1)
+  (go--forward-word 1)
   (forward-char 1))
 
 (defun go--goto-return-values (&optional arg)
