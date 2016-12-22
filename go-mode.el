@@ -339,7 +339,7 @@ You can install gogetdoc with 'go get -u github.com/zmb3/gogetdoc'."
   (with-current-buffer out
     (goto-char (point-min))
     (godoc-mode)
-    (display-buffer (current-buffer) t))))
+    (display-buffer (current-buffer)))))
 
 (defun go--kill-new-message (url)
   "Make URL the latest kill and print a message."
@@ -1244,7 +1244,7 @@ you save any file, kind of defeating the point of autoloading."
     (cond ((string= event "finished\n")  ;; Successful exit.
            (goto-char (point-min))
            (godoc-mode)
-           (display-buffer (current-buffer) t))
+           (display-buffer (current-buffer)))
           ((/= (process-exit-status proc) 0)  ;; Error exit.
            (let ((output (buffer-string)))
              (kill-buffer (current-buffer))
