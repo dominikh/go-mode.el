@@ -1496,8 +1496,9 @@ description at POINT."
     (file-error (message "Could not run godef binary"))))
 
 (defun godef-jump (point &optional other-window)
-  "Jump to the definition of the expression at POINT."
-  (interactive "d")
+  "Jump to the definition of the expression at POINT.
+With a prefix arg, show the definition in another window."
+  (interactive "d\nP")
   (condition-case nil
       (let ((file (car (godef--call point))))
         (if (not (godef--successful-p file))
