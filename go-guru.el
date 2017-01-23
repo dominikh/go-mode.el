@@ -319,11 +319,11 @@ If BUFFER, return the number of characters in that buffer instead."
   "Go to the OFFSETth byte in the current line."
   (goto-char (byte-to-position (+ (position-bytes (point-at-bol)) (1- offset)))))
 
-(defun go-guru--goto-pos (posn)
+(defun go-guru--goto-pos (posn other-window)
   "Find the file containing the position POSN (of the form `file:line:col')
 set the point to it, switching the current buffer."
   (let ((file-line-pos (split-string posn ":")))
-    (find-file (car file-line-pos))
+    (funcall (if other-window #'find-file-other-window #'find-file) (car file-line-pos))
     (goto-char (point-min))
     (forward-line (1- (string-to-number (cadr file-line-pos))))
     (go-guru--goto-byte-column (string-to-number (cl-caddr file-line-pos)))))
@@ -359,7 +359,7 @@ function containing the current point."
   (go-guru--start "callstack"))
 
 ;;;###autoload
-(defun go-guru-definition ()
+(defun go-guru-definition (&optional other-window)
   "Jump to the definition of the selected identifier."
   (interactive)
   (or buffer-file-name
@@ -371,8 +371,14 @@ function containing the current point."
         ;; TODO: Integrate this facility with XRef.
         (xref-push-marker-stack)
       (ring-insert find-tag-marker-ring (point-marker)))
-    (go-guru--goto-pos (cdr (assoc 'objpos res)))
+    (go-guru--goto-pos (cdr (assoc 'objpos res)) other-window)
     (message "%s" desc)))
+
+;;;###autoload
+(defun go-guru-definition-other-window ()
+  "Jump to the defintion of the selected identifier in another window"
+  (interactive)
+  (go-guru-definition t))
 
 ;;;###autoload
 (defun go-guru-describe ()
