@@ -22,6 +22,7 @@
 (require 'find-file)
 (require 'ring)
 (require 'url)
+(require 'xref nil :noerror)  ; xref is new in Emacs 25.1
 
 
 (eval-when-compile
@@ -1515,7 +1516,10 @@ description at POINT."
         (if (not (godef--successful-p file))
             (message "%s" (godef--error file))
           (push-mark)
-          (ring-insert find-tag-marker-ring (point-marker))
+          (if (eval-when-compile (fboundp 'xref-push-marker-stack))
+              ;; TODO: Integrate this facility with XRef.
+              (xref-push-marker-stack)
+            (ring-insert find-tag-marker-ring (point-marker)))
           (godef--find-file-line-column file other-window)))
     (file-error (message "Could not run godef binary"))))
 
