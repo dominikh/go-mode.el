@@ -1517,6 +1517,7 @@ description at POINT."
             (message "%s" (godef--error file))
           (push-mark)
           (if (eval-when-compile (fboundp 'xref-push-marker-stack))
+              ;; TODO: Integrate this facility with XRef.
               (xref-push-marker-stack)
             (ring-insert find-tag-marker-ring (point-marker)))
           (godef--find-file-line-column file other-window)))
