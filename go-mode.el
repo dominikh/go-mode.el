@@ -70,6 +70,12 @@ function."
 
 
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
+(defconst go--max-dangling-operator-length 2
+  "The maximum length of dangling operators.
+This must be at least the length of the longest string matched by
+‘go-dangling-operators-regexp.’, and must be updated whenever
+that constant is changed.")
+
 (defconst go-identifier-regexp "[[:word:][:multibyte:]]+")
 (defconst go-type-name-no-prefix-regexp "\\(?:[[:word:][:multibyte:]]+\\.\\)?[[:word:][:multibyte:]]+")
 (defconst go-qualified-identifier-regexp (concat go-identifier-regexp "\\." go-identifier-regexp))
@@ -530,7 +536,8 @@ STOP-AT-STRING is not true, over strings."
         (save-excursion
           (beginning-of-line)
           (go--backward-irrelevant t)
-          (setq val (looking-back go-dangling-operators-regexp (- (point) 2)))
+          (setq val (looking-back go-dangling-operators-regexp
+                                  (- (point) go--max-dangling-operator-length)))
           (if (not (go--buffer-narrowed-p))
               (puthash cur-line val go-dangling-cache))))
     val))
@@ -586,7 +593,8 @@ current line will be returned."
             (- (current-indentation) tab-width)
           (go--indentation-for-opening-parenthesis)))
        ((progn (go--backward-irrelevant t)
-               (looking-back go-dangling-operators-regexp (- (point) 2)))
+               (looking-back go-dangling-operators-regexp
+                             (- (point) go--max-dangling-operator-length)))
         ;; only one nesting for all dangling operators in one operation
         (if (go-previous-line-has-dangling-op-p)
             (current-indentation)
