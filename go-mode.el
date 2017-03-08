@@ -7,7 +7,7 @@
 ;; license that can be found in the LICENSE file.
 
 ;; Author: The go-mode Authors
-;; Version: 1.4.0
+;; Version: 1.5.0
 ;; Keywords: languages go
 ;; URL: https://github.com/dominikh/go-mode.el
 ;;
