@@ -229,7 +229,8 @@ output of the Go guru tool."
 	    (setq start end) ; break out of loop
 	  (setq p (1- p)) ; exclude final space
 	  (let* ((posn (buffer-substring-no-properties start p))
-		 (flen (cl-search ":" posn)) ; length of filename
+             (file-line-pos (go-guru--split-to-file-line-pos posn))
+             (flen (length (car file-line-pos))) ; length of filename
 		 (filename (if (< flen 19)
 			       (substring posn 0 flen)
 			     (concat "…" (substring posn (- flen 19) flen)))))
@@ -319,22 +320,31 @@ If BUFFER, return the number of characters in that buffer instead."
   "Go to the OFFSETth byte in the current line."
   (goto-char (byte-to-position (+ (position-bytes (point-at-bol)) (1- offset)))))
 
+(defun go-guru--split-to-file-line-pos(specifier)
+  "Given `file:line:col' splits it into a list of three values"
+  (if (not (string-match "\\(.+\\):\\([0-9]+\\):\\([0-9]+\\)" specifier))
+      (list specifier 0 0)
+    (let ((filename (match-string 1 specifier))
+          (line (string-to-number (match-string 2 specifier)))
+          (column (string-to-number (match-string 3 specifier))))
+      (list filename line column))))
+
 (defun go-guru--goto-pos (posn)
   "Find the file containing the position POSN (of the form `file:line:col')
 set the point to it, switching the current buffer."
-  (let ((file-line-pos (split-string posn ":")))
+  (let ((file-line-pos (go-guru--split-to-file-line-pos posn)))
     (find-file (car file-line-pos))
     (goto-char (point-min))
-    (forward-line (1- (string-to-number (cadr file-line-pos))))
-    (go-guru--goto-byte-column (string-to-number (cl-caddr file-line-pos)))))
+    (forward-line (1- (cadr file-line-pos)))
+    (go-guru--goto-byte-column (cl-caddr file-line-pos))))
 
 (defun go-guru--goto-pos-no-file (posn)
   "Given `file:line:col', go to the line and column. The file
 component will be ignored."
-  (let ((file-line-pos (split-string posn ":")))
+  (let ((file-line-pos (go-guru--split-to-file-line-pos posn)))
     (goto-char (point-min))
-    (forward-line (1- (string-to-number (cadr file-line-pos))))
-    (go-guru--goto-byte-column (string-to-number (cl-caddr file-line-pos)))))
+    (forward-line (1- (cadr file-line-pos)))
+    (go-guru--goto-byte-column (cl-caddr file-line-pos))))
 
 ;;;###autoload
 (defun go-guru-callees ()
