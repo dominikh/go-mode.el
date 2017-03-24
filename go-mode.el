@@ -1499,13 +1499,20 @@ description at POINT."
     output)))
 
 (defun godef-describe (point)
-  "Describe the expression at POINT."
+  "Describe the expression at POINT.
+
+The description appears in the echo area if possible, otherwise
+in a pop-up buffer. This is determined as described for
+`display-message-or-buffer'. In any case the description is
+available in the buffer `*godef describe*'"
   (interactive "d")
   (condition-case nil
       (let ((description (cdr (butlast (godef--call point) 1))))
         (if (not description)
             (message "No description found for expression at point")
-          (message "%s" (mapconcat #'identity description "\n"))))
+          (display-message-or-buffer
+	   (mapconcat #'identity description "\n")
+	   "*godef describe*")))
     (file-error (message "Could not run godef binary"))))
 
 (defun godef-jump (point &optional other-window)
