@@ -1398,8 +1398,12 @@ It looks for archive files in /pkg/."
    #'string<))
 
 (defun go-packages-go-list ()
-  "Return a list of all Go packages, using `go list'."
+  "Return a list of all Go packages, using 'go list'."
   (process-lines go-command "list" "-e" "all"))
+
+(defun go-packages-gopkgs ()
+  "Return a list of all Go packages, using 'gopkgs'."
+  (process-lines "gopkgs"))
 
 (defun go-unused-imports-lines ()
   (reverse (remove nil

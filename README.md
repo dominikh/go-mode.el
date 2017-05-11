@@ -29,7 +29,9 @@ the following extra features to provide an improved experience:
   - A function for jumping to the file's imports (`go-goto-imports` -
     `C-c C-f i`)
   - A function for adding imports, including tab completion
-    (`go-import-add`, bound to `C-c C-a`)
+    (`go-import-add`, bound to `C-c C-a`). Setting `go-packages-function` variable
+    allows to use custom search command to find available packages.
+    Possible values are: `go-packages-native`, `go-packages-go-list`, [go-packages-gopkgs](https://github.com/tpng/gopkgs)
   - A function for removing or commenting unused imports
     (`go-remove-unused-imports`)
 - Integration with godef
