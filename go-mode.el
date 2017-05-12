@@ -1412,7 +1412,7 @@ It looks for archive files in /pkg/."
                               (string-to-number error-line-num)))))
                     (split-string (shell-command-to-string
                                    (concat go-command
-                                           (if (string-match "_test\\.go$" buffer-file-truename)
+                                           (if (string-match "_test\\.go$" buffer-file-name)
                                                " test -c"
                                              (concat " build -o " null-device))
                                            " -gcflags=-e"
