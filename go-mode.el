@@ -31,6 +31,12 @@
        `(forward-word-strictly ,arg)
      `(forward-word ,arg))))
 
+(eval-when-compile
+  (defmacro go--forward-word (&optional arg)
+   (if (fboundp 'forward-word-strictly)
+       `(forward-word-strictly ,arg)
+     `(forward-word ,arg))))
+
 (defun go--delete-whole-line (&optional arg)
   "Delete the current line without putting it in the `kill-ring'.
 Derived from function `kill-whole-line'.  ARG is defined as for that
