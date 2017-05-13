@@ -995,6 +995,9 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   ;; Go style
   (setq indent-tabs-mode t)
 
+  (set (make-local-variable 'compile-command)
+       "go install")
+
   ;; Handle unit test failure output in compilation-mode
   ;;
   ;; Note that we add our entry to the beginning of
