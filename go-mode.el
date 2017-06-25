@@ -446,6 +446,7 @@ For mode=set, all covered lines will have this weight."
     (define-key m (kbd "C-x 4 C-c C-j") #'godef-jump-other-window)
     (define-key m (kbd "C-c C-d") #'godef-describe)
     (define-key m (kbd "C-c C-f") 'go-goto-map)
+    (define-key m (kbd "C-c C-t") 'go-alternate)
     m)
   "Keymap used by ‘go-mode’.")
 
@@ -2003,6 +2004,15 @@ If BUFFER, return the number of characters in that buffer instead."
   (with-current-buffer (or buffer (current-buffer))
     (1- (position-bytes (point-max)))))
 
+(defun go-alternate ()
+  "Switch from a code file to the corresponding test file
+and vice-versa."
+  (interactive)
+  (let ((here buffer-file-name))
+    (if (string= "_test.go" (substring here -8))
+      (find-file (concat (substring here 0 -8) ".go"))
+    (when (string= ".go" (substring here -3))
+      (find-file (concat (substring here 0 -3) "_test.go"))))))
 
 (provide 'go-mode)
 
