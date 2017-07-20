@@ -34,6 +34,7 @@ The following extra functions are defined:
 - `go-download-play'
 - `godef-describe' and `godef-jump'
 - `go-coverage'
+- `go-occur-definitions'
 
 If you want to automatically run `gofmt' before saving a file,
 add the following hook to your emacs configuration:

@@ -443,6 +443,7 @@ For mode=set, all covered lines will have this weight."
         (define-key m ")" #'go-mode-insert-and-indent))
     (define-key m (kbd "C-c C-a") #'go-import-add)
     (define-key m (kbd "C-c C-j") #'godef-jump)
+    (define-key m (kbd "C-c C-o") #'go-occur-definitions)
     (define-key m (kbd "C-x 4 C-c C-j") #'godef-jump-other-window)
     (define-key m (kbd "C-c C-d") #'godef-describe)
     (define-key m (kbd "C-c C-f") 'go-goto-map)
@@ -929,6 +930,7 @@ The following extra functions are defined:
 - `go-coverage'
 - `go-set-project'
 - `go-reset-gopath'
+- `go-occur-definitions'
 
 If you want to automatically run `gofmt' before saving a file,
 add the following hook to your emacs configuration:
@@ -2003,6 +2005,16 @@ If BUFFER, return the number of characters in that buffer instead."
   (with-current-buffer (or buffer (current-buffer))
     (1- (position-bytes (point-max)))))
 
+(defun go-occur-definitions ()
+  "Display an occur buffer of all definitions in the current buffer.
+Also, switch to that buffer."
+  (interactive)
+  (let ((list-matching-lines-face nil))
+    (occur "^ *\\(func\\|type\\) "))
+  (let ((window (get-buffer-window "*Occur*")))
+    (if window
+        (select-window window)
+      (switch-to-buffer "*Occur*"))))
 
 (provide 'go-mode)
 
