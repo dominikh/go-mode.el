@@ -18,6 +18,8 @@ the following extra features to provide an improved experience:
   buffers before saving them.
   - Setting the `gofmt-command` variable also allows using
     `goimports`.
+  - Setting the `gofmt-args` variable with a list of arguments allows
+    using e.g. `gofmt -s`.
 - Integration with `godoc` via the functions `godoc` and
   `godoc-at-point`.
 - Integration with the Playground

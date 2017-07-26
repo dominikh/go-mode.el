@@ -1062,7 +1062,10 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   (string-equal (file-name-base gofmt-command) "goimports"))
 
 (defun gofmt ()
-  "Format the current buffer according to the gofmt tool."
+  "Format the current buffer according to the formatting tool.
+
+The tool used can be set via ‘gofmt-command` (default: gofmt) and additional
+arguments can be set as a list via ‘gofmt-args`."
   (interactive)
   (let ((tmpfile (make-temp-file "gofmt" nil ".go"))
         (patchbuf (get-buffer-create "*Gofmt patch*"))
