@@ -1,4 +1,4 @@
-;;; go-present-mode.el --- major mode for editing Go present files -*- coding: utf-8; lexical-binding:t -*-
+;;; go-present-mode.el --- major mode for editing Go present files -*- lexical-binding:t -*-
 
 ;; Copyright 2017 The Go Authors. All rights reserved.
 ;; Use of this source code is governed by a BSD-style
@@ -8,9 +8,9 @@
 
 ;;; Commentary:
 
-;; Go-present-mode is a mode for viewing and editing Go present files
-;; (mainly slides). It strives to provide view and features consistent
-;; with Go present tool web view.
+;; Go-present-mode is a major mode for viewing and editing Go present
+;; files (mainly slides). It strives to provide view and features
+;; consistent with Go present tool web view.
 ;;
 ;;
 ;; Installation
@@ -72,8 +72,8 @@
 
 (defvar go-present-mode-syntax-table
   (let ((tbl (make-syntax-table)))
-    (dolist (ch (string-to-list "'\"~!@#$%^&-+=<>|"))
-      (modify-syntax-entry ch "." tbl))
+    (cl-loop for ch across "'\"~!@#$%^&-+=<>|"
+             do (modify-syntax-entry ch "." tbl))
     (dolist (ch (string-to-list "_*`"))
       (modify-syntax-entry ch "_" tbl))
     (modify-syntax-entry ?# "<" tbl)
@@ -110,27 +110,21 @@ Go present serves on the first free port that is not smaller than
 
 (defface go-present-bold-face '((t (:inherit bold)))
   "Face for bold text outside code sections.")
-(defvar go-present-bold-face 'go-present-bold-face)
 
 (defface go-present-italic-face '((t (:inherit italic)))
   "Face for italic text outside code sections.")
-(defvar go-present-italic-face 'go-present-italic-face)
 
 (defface go-present-program-face '((t (:inherit variable-pitch)))
   "Face for program text outside code sections.")
-(defvar go-present-program-face 'go-present-program-face)
 
 (defface go-present-slide-face '((t (:inherit outline-1 :weight bold)))
   "Face for slide and section titles.")
-(defvar go-present-slide-face 'go-present-slide-face)
 
 (defface go-present-keyword-face '((t (:inherit font-lock-keyword-face)))
   "Face for present mode keywords.")
-(defvar go-present-keyword-face 'go-present-keyword-face)
 
 (defface go-present-link-face '((t (:inherit link)))
   "Face for links.")
-(defvar go-present-link-face 'go-present-link-face)
 
 ;; Don't inherit from the default face because then you can't set
 ;; specific attributes of the font (e.g. weight) as the default face
@@ -138,15 +132,12 @@ Go present serves on the first free port that is not smaller than
 
 (defface go-present-code-face '((t (:background "#dcdcdc")))
   "Face for text in code sections.")
-(defvar go-present-code-face 'go-present-code-face)
 
 (defface go-present-bold-code-face '((t (:inherit go-present-code-face :weight bold)))
   "Face for bold text in code sections.")
-(defvar go-present-bold-code-face 'go-present-bold-code-face)
 
 (defface go-present-preformatted-text-face '((t (:background "#dcdcdc")))
   "Face for preformatted text.")
-(defvar go-present-preformatted-text-face 'go-present-preformatted-text-face)
 
 ;; Tell the compiler not to warn about our buffer-local variables.
 (defvar-local go-present--hostport nil)
@@ -155,18 +146,20 @@ Go present serves on the first free port that is not smaller than
 (defvar-local go-present--slide-path nil)
 (defvar-local go-present--update-buffers-list nil)
 
+(define-prefix-command 'go-present-prefix)
+(define-key go-present-prefix (kbd "C-p") #'go-present-preview)
+(define-key go-present-prefix (kbd "C-i") #'go-present-toggle-inline-images)
+(define-key go-present-prefix (kbd "TAB") #'go-present-toggle-inline-images)
+(define-key go-present-prefix (kbd "C-o") #'go-present-open-at-point)
+(define-key go-present-prefix (kbd "C-l") #'go-present-insert-edit-link)
+(define-key go-present-prefix (kbd "*") #'go-present-toggle-font-bold)
+(define-key go-present-prefix (kbd "_") #'go-present-toggle-font-italic)
+(define-key go-present-prefix (kbd "`") #'go-present-toggle-font-program)
+(define-key go-present-prefix (kbd "C-v") #'go-present-show-code)
+(define-key go-present-prefix (kbd "C-c") #'go-present-run-code-at-point)
 (defvar go-present-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-p C-p") #'go-present-preview)
-    (define-key map (kbd "C-c C-p C-i") #'go-present-toggle-inline-images)
-    (define-key map (kbd "C-c C-p TAB") #'go-present-toggle-inline-images)
-    (define-key map (kbd "C-c C-p C-o") #'go-present-open-at-point)
-    (define-key map (kbd "C-c C-p C-l") #'go-present-insert-edit-link)
-    (define-key map (kbd "C-c C-p *") #'go-present-toggle-font-bold)
-    (define-key map (kbd "C-c C-p _") #'go-present-toggle-font-italic)
-    (define-key map (kbd "C-c C-p `") #'go-present-toggle-font-program)
-    (define-key map (kbd "C-c C-p C-v") #'go-present-show-code)
-    (define-key map (kbd "C-c C-p C-c") #'go-present-run-code-at-point)
+    (define-key map (kbd "C-c C-p") 'go-present-prefix)
     (define-key map [remap save-buffer] #'go-present-save-buffer)
     (define-key map (kbd "<M-return>") #'go-present-insert-slide)
     map)
@@ -292,7 +285,7 @@ point, such as URLs, images, and files with code."
 VISIBILITY controls whether to set the 'invisible property to
 true."
   (list
-   'face go-present-link-face
+   'face 'go-present-link-face
    'keymap go-present--link-map
    'help-echo (match-string-no-properties 2)
    'mouse-face 'highlight
@@ -356,17 +349,17 @@ region)."
                (get-text-property start 'go-present--code-hlmark)
                (buffer-substring start end))))
        go-present--code-hlmark-re)
-     . ((1 (list 'face go-present-bold-code-face) t)
-        (2 (list 'face go-present-code-face 'invisible t))))
+     . ((1 (list 'face 'go-present-bold-code-face) t)
+        (2 (list 'face 'go-present-code-face 'invisible t))))
     ;; Make highlight mark itself invisible.
     (,(go-present--make-font-lock-matcher
        #'go-present--at-code
        go-present--code-hlmark-re)
-     . (2 (list 'face go-present-code-face 'invisible t)))
+     . (2 (list 'face 'go-present-code-face 'invisible t)))
     ;; Make OMIT lines invisible. Note that top and bottom OMIT lines
     ;; are stripped when converitng address to region.
     (,(go-present--make-font-lock-matcher #'go-present--at-code "^.*OMIT\n")
-     . (0 (list 'face go-present-code-face 'invisible t)))
+     . (0 (list 'face 'go-present-code-face 'invisible t)))
 
     ;; Handle links.
     (,(go-present--make-font-lock-matcher
@@ -386,17 +379,17 @@ region)."
 
     ;; Handle special formatting.
     (,(go-present--make-font-lock-matcher #'go-present--not-at-code "^\\*+ .*")
-     . go-present-slide-face)
+     . 'go-present-slide-face)
     (,(go-present--make-font-lock-matcher #'go-present--not-at-code "\\*\\S-+\\*")
-     . go-present-bold-face)
+     . 'go-present-bold-face)
     (,(go-present--make-font-lock-matcher #'go-present--not-at-code "_\\S-+_")
-     . go-present-italic-face)
+     . 'go-present-italic-face)
     (,(go-present--make-font-lock-matcher #'go-present--not-at-code "`\\S-+`")
-     . go-present-program-face)
+     . 'go-present-program-face)
 
     (,(go-present--make-font-lock-matcher
        #'go-present--not-at-code go-present--link-regexp)
-     . ((1 go-present-keyword-face)
+     . ((1 'go-present-keyword-face)
         (2 (go-present--font-lock-links 'visible))))
 
     (,(go-present--make-font-lock-matcher
@@ -405,7 +398,7 @@ region)."
                (regexp-opt '(".code" ".play" ".image" ".background"
                              ".html" ".caption"))
                "\\b"))
-     . go-present-keyword-face)
+     . 'go-present-keyword-face)
 
     ;; The first matching entry on the keywords list sets the 'face
     ;; property unless the override flag is set. For other properties,
@@ -417,7 +410,7 @@ region)."
     (,(go-present--make-font-lock-matcher #'go-present--not-at-code "^[ \t].*\n")
      . (0
         (list
-         'face go-present-preformatted-text-face
+         'face 'go-present-preformatted-text-face
          'keymap nil
          'help-echo nil
          'mouse-face nil
@@ -1128,7 +1121,7 @@ OFFSET is a pair (TYPE VALUE) where:
    regular expression then char-offset-positive moves forward
    from the end of regexp match, and char-offset-negative moves
    backwards from the beginning of regexp match.
-     
+
 Also, see `go-present--addr-part-re'."
   (unless (string-match go-present--addr-part-re addr-part)
     (error "Can't parse address: '%s'" addr-part))
@@ -1276,3 +1269,7 @@ This function replaces `save-buffer' in `go-present-mode'."
 (provide 'go-present-mode)
 
 ;;; go-present-mode.el ends here
+
+;; Local Variables:
+;; coding: utf-8
+;; End:
