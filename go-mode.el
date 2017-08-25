@@ -1516,7 +1516,9 @@ description at POINT."
   "Jump to the definition of the expression at POINT."
   (interactive "d")
   (condition-case nil
-      (let ((file (car (godef--call point))))
+      (let* ((delta (skip-chars-forward "[:space:]"))
+             (new-point (+ point delta))
+             (file (car (godef--call new-point))))
         (if (not (godef--successful-p file))
             (message "%s" (godef--error file))
           (push-mark)
