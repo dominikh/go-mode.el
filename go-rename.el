@@ -35,6 +35,12 @@
   :type 'string
   :group 'go-rename)
 
+(defcustom go-rename-flags ()
+  "Additional flags for the ‘gorename’ binary."
+  :type '(repeat string)
+  :group 'go-rename
+  :risky t)
+
 ;;;###autoload
 (defun go-rename (new-name &optional force)
   "Rename the entity denoted by the identifier at point, using
@@ -63,7 +69,9 @@ the `gorename' tool. With FORCE, call `gorename' with the
     (with-current-buffer (get-buffer-create "*go-rename*")
       (setq buffer-read-only nil)
       (erase-buffer)
-      (let ((args (append (list go-rename-command nil t nil posflag "-to" new-name) (if force '("-force")))))
+      (let ((args `(,go-rename-command nil t nil ,@go-rename-flags ,posflag
+                                       "-to" ,new-name
+                                       ,@(if force '("-force")))))
         ;; Log the command to *Messages*, for debugging.
         (message "Command: %s:" args)
         (message "Running gorename...")
