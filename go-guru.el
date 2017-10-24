@@ -162,13 +162,12 @@ matches all encoding packages except encoding/xml."
     (setq go-guru-scope scope)))
 
 (defun go-guru--set-scope-if-empty ()
+  "The scope of the analysis needs to be set."
   (if (string-equal "" go-guru-scope)
       (go-guru-set-scope)))
 
 (defun go-guru--json (mode)
-  "Execute the Go guru in the specified MODE, passing it the
-selected region of the current buffer, requesting JSON output.
-Parse and return the resulting JSON object."
+  "Execute the Go guru in the specified MODE, passing it the selected region of the current buffer, requesting JSON output.  Parse and return the resulting JSON object."
   ;; A "what" query works even in a buffer without a file name.
   (let* ((filename (file-truename (or buffer-file-name "synthetic.go")))
 	 (cmd (go-guru--command mode filename '("-json")))
@@ -238,18 +237,14 @@ output of the Go guru tool."
 	    (setq start (point))))))))
 
 (defun go-guru--compilation-start-hook (proc)
-  "Erase default output header inserted by `compilation-mode'."
+  "Erase default output header, PROC, inserted by `compilation-mode'."
   (with-current-buffer (process-buffer proc)
     (let ((inhibit-read-only t))
       (goto-char (point-min))
       (delete-region (point) (point-max)))))
 
 (defun go-guru--start (mode)
-  "Start an asynchronous Go guru process for the specified query
-MODE, passing it the selected region of the current buffer, and
-feeding its standard input with the contents of all modified Go
-buffers.  Its output is handled by `go-guru-output-mode', a
-variant of `compilation-mode'."
+  "Start an asynchronous Go guru process for the specified query MODE, passing it the selected region of the current buffer, and feeding its standard input with the contents of all modified Go buffers.  Its output is handled by `go-guru-output-mode', a variant of `compilation-mode'."
   (or buffer-file-name
       (error "Cannot use guru on a buffer without a file name"))
   (let* ((filename (file-truename buffer-file-name))
@@ -266,9 +261,7 @@ variant of `compilation-mode'."
     procbuf))
 
 (defun go-guru--command (mode filename &optional flags)
-  "Return a command and argument list for a Go guru query of MODE, passing it
-the selected region of the current buffer.  FILENAME is the
-effective name of the current buffer."
+  "Return a command and argument list for a Go guru query of MODE, passing it the selected region of the current buffer.  FILENAME is the effective name of the current buffer.  Pass FLAGS on to cmd."
   (let* ((posn (if (use-region-p)
 		   (format "%s:#%d,#%d"
 			   filename
@@ -291,8 +284,7 @@ effective name of the current buffer."
     cmd))
 
 (defun go-guru--insert-modified-files ()
-  "Insert the contents of each modified Go buffer into the
-current buffer in the format specified by guru's -modified flag."
+  "Insert the contents of each modified Go buffer into the current buffer in the format specified by guru's -modified flag."
   (mapc #'(lambda (b)
 	    (and (buffer-modified-p b)
 		 (buffer-file-name b)
@@ -301,6 +293,7 @@ current buffer in the format specified by guru's -modified flag."
 	(buffer-list)))
 
 (defun go-guru--insert-modified-file (name buffer)
+  "Insert into the current buffer, NAME, the contents of the modified Go BUFFER in the format specified by guru's -modified flag."
   (insert (format "%s\n%d\n" name (go-guru--buffer-size-bytes buffer)))
   (insert-buffer-substring buffer))
 
@@ -321,7 +314,7 @@ If BUFFER, return the number of characters in that buffer instead."
 
 (defun go-guru--goto-pos (posn other-window)
   "Find the file containing the position POSN (of the form `file:line:col')
-set the point to it, switching the current buffer."
+set the point to it, switching the current buffer to OTHER-WINDOW."
   (let ((file-line-pos (split-string posn ":")))
     (funcall (if other-window #'find-file-other-window #'find-file) (car file-line-pos))
     (goto-char (point-min))
@@ -329,8 +322,7 @@ set the point to it, switching the current buffer."
     (go-guru--goto-byte-column (string-to-number (cl-caddr file-line-pos)))))
 
 (defun go-guru--goto-pos-no-file (posn)
-  "Given `file:line:col', go to the line and column. The file
-component will be ignored."
+  "Given POSN, `file:line:col', go to the line and column.  The file component will be ignored."
   (let ((file-line-pos (split-string posn ":")))
     (goto-char (point-min))
     (forward-line (1- (string-to-number (cadr file-line-pos))))
@@ -352,15 +344,14 @@ component will be ignored."
 
 ;;;###autoload
 (defun go-guru-callstack ()
-  "Show an arbitrary path from a root of the call graph to the
-function containing the current point."
+  "Show an arbitrary path from a root of the call graph to the function containing the current point."
   (interactive)
   (go-guru--set-scope-if-empty)
   (go-guru--start "callstack"))
 
 ;;;###autoload
 (defun go-guru-definition (&optional other-window)
-  "Jump to the definition of the selected identifier."
+  "Jump to the definition of the selected identifier in OTHER-WINDOW."
   (interactive)
   (or buffer-file-name
       (error "Cannot use guru on a buffer without a file name"))
@@ -376,7 +367,7 @@ function containing the current point."
 
 ;;;###autoload
 (defun go-guru-definition-other-window ()
-  "Jump to the defintion of the selected identifier in another window"
+  "Jump to the defintion of the selected identifier in another window."
   (interactive)
   (go-guru-definition t))
 
@@ -395,8 +386,7 @@ function containing the current point."
 
 ;;;###autoload
 (defun go-guru-implements ()
-  "Describe the 'implements' relation for types in the package
-containing the current point."
+  "Describe the 'implements' relation for types in the package containing the current point."
   (interactive)
   (go-guru--start "implements"))
 
@@ -408,36 +398,30 @@ containing the current point."
 
 ;;;###autoload
 (defun go-guru-peers ()
-  "Enumerate the set of possible corresponding sends/receives for
-this channel receive/send operation."
+  "Enumerate the set of possible corresponding sends/receives for this channel receive/send operation."
   (interactive)
   (go-guru--set-scope-if-empty)
   (go-guru--start "peers"))
 
 ;;;###autoload
 (defun go-guru-referrers ()
-  "Enumerate all references to the object denoted by the selected
-identifier."
+  "Enumerate all references to the object denoted by the selected identifier."
   (interactive)
   (go-guru--start "referrers"))
 
 ;;;###autoload
 (defun go-guru-whicherrs ()
-  "Show globals, constants and types to which the selected
-expression (of type 'error') may refer."
+  "Show globals, constants and types to which the selected expression (of type 'error') may refer."
   (interactive)
   (go-guru--set-scope-if-empty)
   (go-guru--start "whicherrs"))
 
 (defun go-guru-what ()
-  "Run a 'what' query and return the parsed JSON response as an
-association list."
+  "Run a 'what' query and return the parsed JSON response as an association list."
   (go-guru--json "what"))
 
 (defun go-guru--hl-symbols (posn face id)
-  "Highlight the symbols at the positions POSN by creating
-overlays with face FACE. The attribute 'go-guru-overlay on the
-overlays will be set to ID."
+  "Highlight the symbols at the positions POSN by creating overlays with face FACE.  The attribute 'go-guru-overlay on the overlays will be set to ID."
   (save-excursion
     (mapc (lambda (pos)
 	    (go-guru--goto-pos-no-file pos)
@@ -448,21 +432,19 @@ overlays will be set to ID."
 
 ;;;###autoload
 (defun go-guru-unhighlight-identifiers ()
-  "Remove highlights from previously highlighted identifier."
+  "Remove any highlight in previously highlighted identifier."
   (remove-overlays nil nil 'go-guru-overlay 'sameid))
 
 ;;;###autoload
 (defun go-guru-hl-identifier ()
-  "Highlight all instances of the identifier under point. Removes
-highlights from previously highlighted identifier."
+  "Highlight all instances of the identifier under point.  Remove any highlight from previously highlighted identifier."
   (interactive)
   (go-guru-unhighlight-identifiers)
   (go-guru--hl-identifier))
 
 ;;;###autoload
 (define-minor-mode go-guru-hl-identifier-mode
-  "Highlight instances of the identifier at point after a short
-timeout."
+  "Highlight instances of the identifier at point after a short timeout."
   :group 'go-guru
   (if go-guru-hl-identifier-mode
       (progn
@@ -481,8 +463,7 @@ timeout."
     (go-guru--hl-symbols posn 'go-guru-hl-identifier-face 'sameid)))
 
 (defun go-guru--hl-identifiers-function ()
-  "Function run after an idle timeout, highlighting the
-identifier at point, if necessary."
+  "Function run after an idle timeout, highlighting the identifier at point, if necessary."
   (when go-guru-hl-identifier-mode
     (unless (go-guru--on-overlay-p 'sameid)
       ;; Ignore guru errors. Otherwise, we might end up with an error
@@ -495,6 +476,7 @@ identifier at point, if necessary."
       (go-guru--hl-set-timer))))
 
 (defun go-guru--hl-set-timer ()
+  "Set timeout to highlight text."
   (if go-guru--hl-identifier-timer
       (cancel-timer go-guru--hl-identifier-timer))
   (setq go-guru--current-hl-identifier-idle-time go-guru-hl-identifier-idle-time)
@@ -508,11 +490,13 @@ identifier at point, if necessary."
   (cl-find-if (lambda (el) (eq (overlay-get el 'go-guru-overlay) id)) (overlays-at (point))))
 
 (defun go-guru--hl-identifiers-post-command-hook ()
+  "Unhighlight if point not on identifier."
   (if (and go-guru-hl-identifier-mode
 	   (not (go-guru--on-overlay-p 'sameid)))
       (go-guru-unhighlight-identifiers)))
 
 (defun go-guru--hl-identifiers-before-change-function (_beg _end)
+  "Unhighlight indentifiers when there is a change in the buffer."
   (go-guru-unhighlight-identifiers))
 
 ;; TODO(dominikh): a future feature may be to cycle through all uses
@@ -555,6 +539,6 @@ end point."
 ;; Local variables:
 ;; indent-tabs-mode: t
 ;; tab-width: 8
-;; End
+;; End:
 
 ;;; go-guru.el ends here
