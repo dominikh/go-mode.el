@@ -37,9 +37,8 @@
 
 ;;;###autoload
 (defun go-rename (new-name &optional force)
-  "Rename the entity denoted by the identifier at point, using
-the `gorename' tool. With FORCE, call `gorename' with the
-`-force' flag."
+  "Rename the entity denoted by the identifier at point to NEW-NAME.
+Use the `gorename' tool.  With FORCE, call `gorename' with the `-force' flag."
   (interactive (list (read-string "New name: " (thing-at-point 'symbol))
                      current-prefix-arg))
   (if (not buffer-file-name)
@@ -99,6 +98,7 @@ the `gorename' tool. With FORCE, call `gorename' with the
 
 
 (defun go--buffer-string-no-trailing-space ()
+  "Remove any white space at the end of the string."
   (replace-regexp-in-string "[\t\n ]*\\'"
                             ""
                             (buffer-substring (point-min) (point-max))))
