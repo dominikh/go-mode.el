@@ -1408,7 +1408,7 @@ It looks for archive files in /pkg/."
   (reverse (remove nil
                    (mapcar
                     (lambda (line)
-                      (when (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\".*$" line)
+                      (when (string-match "^\\(.+\\):\\([[:digit:]]+\\):[[:digit:]]: imported and not used: \".+\".*$" line)
                         (let ((error-file-name (match-string 1 line))
                               (error-line-num (match-string 2 line)))
                           (if (string= (file-truename error-file-name) (file-truename buffer-file-name))
