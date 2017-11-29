@@ -987,10 +987,11 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   ;; ff-find-other-file
   (setq ff-other-file-alist 'go-other-file-alist)
 
-  (setq imenu-generic-expression
-        '(("type" "^type *\\([^ \t\n\r\f]*\\)" 1)
-          ("func" "^func *\\(.*\\) {" 1)))
-  (imenu-add-to-menubar "Index")
+  ;;(setq imenu-generic-expression
+  ;;      '(("type" "^type *\\([^ \t\n\r\f]*\\)" 1)
+  ;;        ("func" "^func *\\(.*\\) {" 1)))
+  ;;(imenu-add-to-menubar "Index")
+  (setq-local imenu-create-index-function 'go-imenu-create-index)
 
   ;; Go style
   (setq indent-tabs-mode t)
@@ -1015,6 +1016,90 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist (cons "\\.go\\'" 'go-mode))
+
+(defcustom go-outline-command "go-outline"
+  "The 'go-outline' command.
+from https://github.com/lukehoban/go-outline."
+  :type 'string
+  :group 'go)
+
+(defcustom go-imenu-generic-expression
+  '(("type" "^type *\\([^ \t\n\r\f]*\\)" 1)
+    ("func" "^func *\\(.*\\) {" 1))
+  "imenu-generic-expression")
+
+(defun go-imenu-create-index ()
+  "Create an imenu index of all methods in the buffer."
+  (if (executable-find go-outline-command)
+      (let ((index-alist (ignore-errors (go-imenu-create-index--outline))))
+        (if index-alist
+            index-alist
+          (imenu--generic-function go-imenu-generic-expression)))
+    (imenu--generic-function go-imenu-generic-expression)))
+
+(defun go-imenu-create-index--outline ()
+  "Create an imenu index of all methods in the buffer."
+  (let ((tmpfile (make-temp-file "Go-Outline" nil ".go"))
+        (outbuf (get-buffer-create "*Go-Outline*"))
+        (coding-system-for-read 'utf-8)
+        (coding-system-for-write 'utf-8)
+        (index-alist '())
+        (index-var-alist '())
+        (index-type-alist '())
+        (index-import-alist '())
+        (index-unknown-alist '())
+        cmd-args)
+    (unwind-protect
+        (save-restriction
+          (widen)
+          (with-current-buffer outbuf
+            (setq buffer-read-only nil)
+            (erase-buffer))
+          (write-region nil nil tmpfile)
+          (setq cmd-args (append cmd-args (list "-f" tmpfile)))
+          (if (zerop (apply #'call-process go-outline-command nil outbuf nil cmd-args))
+              (let* ((ol-res-str (with-current-buffer outbuf (buffer-string)))
+                     (ol-res-json (let ((json-key-type 'string))
+                                    (json-read-from-string ol-res-str))))
+                (let ((childrens (cdr (assoc "children" (aref ol-res-json 0)))))
+                  (mapc (lambda (entry)
+                            (let* ((label (cdr (assoc "label" entry)))
+                                   (type (cdr (assoc "type" entry)))
+                                   (pos (cdr (assoc "start" entry)))
+                                   (receiverType (when (assoc "receiverType" entry)
+                                                   (cdr (assoc "receiverType" entry))))
+                                   (index-name (if receiverType
+                                                   (concat receiverType "::" label)
+                                                 label)))
+                              (cond
+                               ((string= "function" type)
+                                (push (cons index-name pos) index-alist))
+                               ((string= "variable" type)
+                                (push (cons index-name pos) index-var-alist))
+                               ((string= "type" type)
+                                (push (cons index-name pos) index-type-alist))
+                               ((string= "import" type)
+                                (push (cons index-name pos) index-import-alist))
+                               (t
+                                (push (cons index-name pos) index-unknown-alist)))))
+                          childrens)
+                  ))
+            (message "Could not apply go-outline")
+            (if outbuf
+                (progn
+                  (message (with-current-buffer outbuf (buffer-string))))
+              ))))
+    (kill-buffer outbuf)
+    (delete-file tmpfile)
+    (and index-var-alist
+         (push (cons "Variables" index-var-alist) index-alist))
+    (and index-type-alist
+         (push (cons "Types" index-type-alist) index-alist))
+    ;;(and index-import-alist
+    ;;     (push (cons "Import" index-import-alist) index-alist))
+    (and index-unknown-alist
+         (push (cons "Syntax-unknown" index-unknown-alist) index-alist))
+    index-alist))
 
 (defun go--apply-rcs-patch (patch-buffer)
   "Apply an RCS-formatted diff from PATCH-BUFFER to the current buffer."
