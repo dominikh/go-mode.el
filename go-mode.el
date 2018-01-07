@@ -933,7 +933,7 @@ The following extra functions are defined:
 If you want to automatically run `gofmt' before saving a file,
 add the following hook to your emacs configuration:
 
-\(add-hook 'before-save-hook #'gofmt-before-save)
+\(add-hook 'go-mode-hook (lambda () (add-hook 'before-save-hook 'gofmt nil t)))
 
 If you want to use `godef-jump' instead of etags (or similar),
 consider binding godef-jump to `M-.', which is the default key
@@ -1153,6 +1153,10 @@ you save any file, kind of defeating the point of autoloading."
 
   (interactive)
   (when (eq major-mode 'go-mode) (gofmt)))
+
+(make-obsolete 'gofmt-before-save
+               "`gofmt-before-save' breaks autoloading. You should use \"(add-hook 'go-mode-hook (lambda () (add-hook 'before-save-hook 'gofmt nil t)))\" instead"
+               "v1.6.0")
 
 (defun godoc--read-query ()
   "Read a godoc query from the minibuffer."

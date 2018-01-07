@@ -13,9 +13,9 @@ and close integration with familiar Emacs functionality (for example
 syntax-based navigation like `beginning-of-defun`), go-mode comes with
 the following extra features to provide an improved experience:
 
-- Integration with `gofmt` by providing a command of the same name,
-  and `gofmt-before-save`, which can be used in a hook to format Go
-  buffers before saving them.
+- Integration with `gofmt` by providing a command of the same name.
+  This can be run before saving Go buffers by adding the following to your init file:
+  `(add-hook 'go-mode-hook (lambda () (add-hook 'before-save-hook 'gofmt nil t)))`
   - Setting the `gofmt-command` variable also allows using
     `goimports`.
   - Setting the `gofmt-args` variable with a list of arguments allows
