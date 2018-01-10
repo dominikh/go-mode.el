@@ -1065,7 +1065,7 @@ from https://github.com/lukehoban/go-outline."
                   (mapc (lambda (entry)
                             (let* ((label (cdr (assoc "label" entry)))
                                    (type (cdr (assoc "type" entry)))
-                                   (pos (cdr (assoc "start" entry)))
+                                   (pos (byte-to-position (cdr (assoc "start" entry))))
                                    (receiverType (when (assoc "receiverType" entry)
                                                    (cdr (assoc "receiverType" entry))))
                                    (index-name (if receiverType
