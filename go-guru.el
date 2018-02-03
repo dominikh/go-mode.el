@@ -323,6 +323,11 @@ If BUFFER, return the number of characters in that buffer instead."
   "Find the file containing the position POSN (of the form `file:line:col')
 set the point to it, switching the current buffer."
   (let ((file-line-pos (split-string posn ":")))
+    (if (eq system-type 'windows-nt)
+       (let ((first-file-line-pos (car file-line-pos)))
+         (if (string-match-p "^[a-z]$" first-file-line-pos);; looks like a drive name ...
+             (setq file-line-pos (cdr file-line-pos));; .. so remove it
+           )))
     (funcall (if other-window #'find-file-other-window #'find-file) (car file-line-pos))
     (goto-char (point-min))
     (forward-line (1- (string-to-number (cadr file-line-pos))))
