@@ -1386,8 +1386,7 @@ It looks for archive files in /pkg/."
   (sort
    (delete-dups
     (cl-mapcan
-     (lambda (topdir)
-       (let ((pkgdir (concat topdir "/pkg/")))
+     (lambda (pkgdir)
          (cl-mapcan (lambda (dir)
                    (mapcar (lambda (file)
                              (let ((sub (substring file (length pkgdir) -2)))
@@ -1396,8 +1395,16 @@ It looks for archive files in /pkg/."
                            (if (file-directory-p dir)
                                (directory-files dir t "\\.a$"))))
                  (if (file-directory-p pkgdir)
-                     (go--directory-dirs pkgdir)))))
-     (go-root-and-paths)))
+                     (go--directory-dirs pkgdir))))
+     (apply 'append
+            (mapcar (lambda (dir)
+                      (delete nil (let ((pkgdir (concat dir "/pkg")))
+                                    (mapcar (lambda (sub)
+                                              (unless (or (string-match-p
+                                                           "\\(dep\\|race\\|dyn\\|shared\\|include\\|obj\\|tool\\)"
+                                                           sub)
+                                                          (member sub '("." ".."))) (concat pkgdir "/" sub)))
+                                            (directory-files pkgdir nil nil t))))) (go-root-and-paths)))))
    #'string<))
 
 (defun go-packages-go-list ()
