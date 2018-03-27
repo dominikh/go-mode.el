@@ -156,12 +156,3 @@ Furthermore, there is a higher chance for bugs.
 If you want a stable experience, use MELPA Stable. If you want cutting
 edge features, or "beta-test" future releases, use MELPA or the master
 branch.
-
-# Donations
-
-I am accepting donations for go-mode, but it has to be said that even
-though I am its primary developer, there are several third party
-contributions with varying complexity. Donations would be towards me,
-Dominik Honnef, and not go-mode as a whole.
-
-<a href='http://www.pledgie.com/campaigns/21377'><img alt='Click here to lend your support to: go-mode.el and make a donation at www.pledgie.com !' src='http://www.pledgie.com/campaigns/21377.png?skin_name=chrome' border='0' /></a>
