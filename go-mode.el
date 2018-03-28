@@ -176,6 +176,12 @@ a `before-save-hook'."
   :type 'string
   :group 'go)
 
+(defcustom gopkgs-command "gopkgs"
+  "The 'gopkgs' command."
+  :type 'string
+  :group 'go
+  )
+
 (defcustom go-other-file-alist
   '(("_test\\.go\\'" (".go"))
     ("\\.go\\'" ("_test.go")))
@@ -183,15 +189,15 @@ a `before-save-hook'."
   :type '(repeat (list regexp (choice (repeat string) function)))
   :group 'go)
 
-(defcustom go-packages-function 'go-packages-native
+(defcustom go-packages-function 'go-packages-gopkgs
   "Function called by `go-packages' to determine the list of available packages.
 This is used in e.g. tab completion in `go-import-add'.
 
 This package provides two functions: `go-packages-native' uses
 elisp to find all .a files in all /pkg/ directories.
-`go-packages-go-list' uses 'go list all' to determine all Go
-packages.  `go-packages-go-list' generally produces more accurate
-results, but can be slower than `go-packages-native'."
+`go-packages-gopkgs' uses 'gopkgs' to determine all Go
+packages.  `go-packages-gopkgs' generally produces more accurate
+results, and can is faster than `go-packages-native'."
   :type 'function
   :package-version '(go-mode . 1.4.0)
   :group 'go)
@@ -1402,9 +1408,11 @@ It looks for archive files in /pkg/."
      (go-root-and-paths)))
    #'string<))
 
-(defun go-packages-go-list ()
-  "Return a list of all Go packages, using `go list'."
-  (process-lines go-command "list" "-e" "all"))
+(defun go-packages-gopkgs ()
+  "Return a list of all Go packages, using `gopkgs'."
+  (sort
+   (process-lines gopkgs-command)
+  #'string<))
 
 (defun go-unused-imports-lines ()
   (reverse (remove nil
