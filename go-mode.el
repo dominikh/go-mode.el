@@ -187,11 +187,16 @@ a `before-save-hook'."
   "Function called by `go-packages' to determine the list of available packages.
 This is used in e.g. tab completion in `go-import-add'.
 
-This package provides two functions: `go-packages-native' uses
+This package provides three functions: `go-packages-native' uses
 elisp to find all .a files in all /pkg/ directories.
 `go-packages-go-list' uses 'go list all' to determine all Go
 packages.  `go-packages-go-list' generally produces more accurate
-results, but can be slower than `go-packages-native'."
+results, but can be slower than `go-packages-native'.
+`go-packages-gopkgs' uses 'gopkgs' to determine all Go
+packages. `go-packages-gopkgs' is the fastest one. You can install gopkgs
+with 'go get -u github.com/tpng/gopkgs'.
+"
+
   :type 'function
   :package-version '(go-mode . 1.4.0)
   :group 'go)
@@ -1416,6 +1421,10 @@ It looks for archive files in /pkg/."
 (defun go-packages-go-list ()
   "Return a list of all Go packages, using `go list'."
   (process-lines go-command "list" "-e" "all"))
+
+(defun go-packages-gopkgs ()
+  "Return a list of all Go packages, using `gopkgs'."
+  (process-lines "gopkgs"))
 
 (defun go-unused-imports-lines ()
   (reverse (remove nil
