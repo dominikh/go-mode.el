@@ -146,6 +146,14 @@ point to the wrapper script."
   :type 'string
   :group 'go)
 
+(defcustom go-packages-command go-command
+  "The command to list go packages.
+Some users may replace this with `gopkgs' from
+https://github.com/tpng/gopkgs, which is faster than
+`go-packages-native' and `go list all'"
+  :type 'string
+  :group 'go)
+
 (defcustom gofmt-command "gofmt"
   "The 'gofmt' command.
 Some users may replace this with 'goimports'
@@ -1403,8 +1411,8 @@ It looks for archive files in /pkg/."
    #'string<))
 
 (defun go-packages-go-list ()
-  "Return a list of all Go packages, using `go list'."
-  (process-lines go-command "list" "-e" "all"))
+  "Return a list of all Go packages, using `go list all' or `gopkg'."
+  (process-lines go-packages-command "list" "all"))
 
 (defun go-unused-imports-lines ()
   (reverse (remove nil
