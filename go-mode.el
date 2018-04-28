@@ -1069,7 +1069,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 The tool used can be set via ‘gofmt-command` (default: gofmt) and additional
 arguments can be set as a list via ‘gofmt-args`."
   (interactive)
-  (let ((tmpfile (make-temp-file "gofmt" nil ".go"))
+  (let ((tmpfile (go--make-nearby-temp-file "gofmt" nil ".go"))
         (patchbuf (get-buffer-create "*Gofmt patch*"))
         (errbuf (if gofmt-show-errors (get-buffer-create "*Gofmt Errors*")))
         (coding-system-for-read 'utf-8)
@@ -1095,17 +1095,25 @@ arguments can be set as a list via ‘gofmt-args`."
                           ;; accepting a full path, and some features
                           ;; of goimports rely on knowing the full
                           ;; name.
-                          (list "-srcdir" (file-truename buffer-file-name)))))
-          (setq our-gofmt-args (append our-gofmt-args
-                                       gofmt-args
-                                       (list "-w" tmpfile)))
+                          (list "-srcdir" (go--file-local-name
+                                           (file-truename buffer-file-name))))))
+          (setq our-gofmt-args
+                (append our-gofmt-args gofmt-args
+                        (list "-w" (go--file-local-name tmpfile))))
           (message "Calling gofmt: %s %s" gofmt-command our-gofmt-args)
           ;; We're using errbuf for the mixed stdout and stderr output. This
           ;; is not an issue because gofmt -w does not produce any stdout
           ;; output in case of success.
-          (if (zerop (apply #'call-process gofmt-command nil errbuf nil our-gofmt-args))
+          (if (zerop (apply #'process-file gofmt-command nil errbuf nil our-gofmt-args))
               (progn
-                (if (zerop (call-process-region (point-min) (point-max) "diff" nil patchbuf nil "-n" "-" tmpfile))
+                ;; There is no remote variant of ‘call-process-region’, but we
+                ;; can invoke diff locally, and the results should be the same.
+                (if (zerop (let ((local-copy (file-local-copy tmpfile)))
+                             (unwind-protect
+                                 (call-process-region
+                                  (point-min) (point-max) "diff" nil patchbuf
+                                  nil "-n" "-" (or local-copy tmpfile))
+                               (when local-copy (delete-file local-copy)))))
                     (message "Buffer is already gofmted")
                   (go--apply-rcs-patch patchbuf)
                   (message "Applied gofmt"))
@@ -1134,7 +1142,10 @@ arguments can be set as a list via ‘gofmt-args`."
              (if (gofmt--is-goimports-p)
                  (concat (file-name-directory filename) (file-name-nondirectory tmpfile))
                tmpfile)))
-        (while (search-forward-regexp (concat "^\\(" (regexp-quote truefile) "\\):") nil t)
+        (while (search-forward-regexp
+                (concat "^\\(" (regexp-quote (go--file-local-name truefile))
+                        "\\):")
+                nil t)
           (replace-match (file-name-nondirectory filename) t t nil 1)))
       (compilation-mode)
       (display-buffer errbuf))))
@@ -2009,6 +2020,28 @@ If BUFFER, return the number of characters in that buffer instead."
   (with-current-buffer (or buffer (current-buffer))
     (1- (position-bytes (point-max)))))
 
+
+;; Polyfills for functions added in Emacs 26.  Remove these once we don’t
+;; support Emacs 25 any more.
+(defalias 'go--file-local-name
+  (if (fboundp 'file-local-name) #'file-local-name
+    (lambda (file) (or (file-remote-p file 'localname) file))))
+
+(defalias 'go--make-nearby-temp-file
+  (if (fboundp 'make-nearby-temp-file) #'make-nearby-temp-file
+    (lambda (prefix &optional dir-flag suffix)
+      (let ((temporary-file-directory (go--temporary-file-directory)))
+        (make-temp-file prefix dir-flag suffix)))))
+
+(defalias 'go--temporary-file-directory
+  (if (fboundp 'temporary-file-directory) #'temporary-file-directory
+    (lambda ()
+      (let ((remote (file-remote-p default-directory)))
+        (if remote
+            ;; Assume that /tmp is a temporary directory on the remote host.
+            ;; This won’t work on Windows.
+            (concat remote "/tmp")
+          temporary-file-directory)))))
 
 (provide 'go-mode)
 
