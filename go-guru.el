@@ -552,9 +552,9 @@ end point."
 
 (provide 'go-guru)
 
-;; Local variables:
+;; Local Variables:
 ;; indent-tabs-mode: t
 ;; tab-width: 8
-;; End
+;; End:
 
 ;;; go-guru.el ends here
