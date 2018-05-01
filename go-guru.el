@@ -157,13 +157,7 @@ matches all encoding packages except encoding/xml."
 				     nil
 				     nil
 				     'go-guru--scope-history)))
-    (if (string-equal "" scope)
-	(error "You must specify a non-empty scope for the Go guru"))
     (setq go-guru-scope scope)))
-
-(defun go-guru--set-scope-if-empty ()
-  (if (string-equal "" go-guru-scope)
-      (go-guru-set-scope)))
 
 (defun go-guru--json (mode)
   "Execute the Go guru in the specified MODE, passing it the
@@ -279,7 +273,7 @@ effective name of the current buffer."
 			 (1- (position-bytes (point))))))
 	 (cmd (append (list go-guru-command
 			    "-modified"
-			    "-scope" go-guru-scope
+			    (format "-scope=%s" go-guru-scope)
 			    (format "-tags=%s" (mapconcat 'identity go-guru-build-tags ",")))
 		      flags
 		      (list mode
@@ -340,14 +334,12 @@ component will be ignored."
 (defun go-guru-callees ()
   "Show possible callees of the function call at the current point."
   (interactive)
-  (go-guru--set-scope-if-empty)
   (go-guru--start "callees"))
 
 ;;;###autoload
 (defun go-guru-callers ()
   "Show the set of callers of the function containing the current point."
   (interactive)
-  (go-guru--set-scope-if-empty)
   (go-guru--start "callers"))
 
 ;;;###autoload
@@ -355,7 +347,6 @@ component will be ignored."
   "Show an arbitrary path from a root of the call graph to the
 function containing the current point."
   (interactive)
-  (go-guru--set-scope-if-empty)
   (go-guru--start "callstack"))
 
 ;;;###autoload
@@ -390,7 +381,6 @@ function containing the current point."
 (defun go-guru-pointsto ()
   "Show what the selected expression points to."
   (interactive)
-  (go-guru--set-scope-if-empty)
   (go-guru--start "pointsto"))
 
 ;;;###autoload
@@ -411,7 +401,6 @@ containing the current point."
   "Enumerate the set of possible corresponding sends/receives for
 this channel receive/send operation."
   (interactive)
-  (go-guru--set-scope-if-empty)
   (go-guru--start "peers"))
 
 ;;;###autoload
@@ -426,7 +415,6 @@ identifier."
   "Show globals, constants and types to which the selected
 expression (of type 'error') may refer."
   (interactive)
-  (go-guru--set-scope-if-empty)
   (go-guru--start "whicherrs"))
 
 (defun go-guru-what ()
