@@ -1489,36 +1489,6 @@ description at POINT."
         (kill-buffer outbuf)
         (split-string result "\n")))))
 
-
-(defun godef--call (point)
-  "Call godef, acquiring definition position and expression
-description at POINT."
-  (if (not (buffer-file-name (go--coverage-origin-buffer)))
-      (error "Cannot use godef on a buffer without a file name")
-    (let ((outbuf (generate-new-buffer "*godef*"))
-          (coding-system-for-read 'utf-8)
-          (coding-system-for-write 'utf-8))
-      (let ((filename (file-truename (buffer-file-name (go--coverage-origin-buffer)))))
-        (if (tramp-tramp-file-p filename)
-            (with-parsed-tramp-file-name filename nil
-              (message (tramp-make-tramp-file-name method user domain host port ""))
-              (process-file godef-command nil outbuf nil
-                            "-f" localname
-                            "-o" (number-to-string (go--position-bytes (point))))
-              (with-current-buffer outbuf
-                (split-string (tramp-make-tramp-file-name method user domain host port 
-                                                          (buffer-substring-no-properties (point-min) (point-max))) "\n")))    
-          (progn (process-file godef-command nil outbuf nil
-                               "-f" filename
-                               "-o" (number-to-string (go--position-bytes (point))))
-                 (with-current-buffer outbuf
-                   (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n")))))
-      (prog2
-          
-          (with-current-buffer outbuf
-            (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n"))
-        (kill-buffer outbuf)))))
-
 (defun godef--successful-p (output)
   (not (or (string= "-" output)
            (string= "godef: no identifier found" output)
