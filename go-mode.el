@@ -1471,19 +1471,22 @@ description at POINT."
     (let ((outbuf (generate-new-buffer "*godef*"))
           (coding-system-for-read 'utf-8)
           (coding-system-for-write 'utf-8))
-      (let ((filename (file-truename (buffer-file-name (go--coverage-origin-buffer)))))
+      (let ((filename (file-truename (buffer-file-name (go--coverage-origin-buffer))))
+            (token-position (number-to-string (1- (position-bytes point)))))
         (if (tramp-tramp-file-p filename)
             (with-parsed-tramp-file-name filename nil
               (message (tramp-make-tramp-file-name method user domain host port ""))
               (process-file godef-command nil outbuf nil
                             "-f" localname
-                            "-o" (number-to-string (1- (position-bytes point))))
+                            "-o" token-position)
               (with-current-buffer outbuf
-                (setq result (tramp-make-tramp-file-name method user domain host port 
-                                                         (buffer-substring-no-properties (point-min) (point-max))))))    
+                (let ((r (buffer-substring-no-properties (point-min) (point-max))))
+                  (setq result (if (godef--successful-p (car (split-string r "\n")))
+                                   (tramp-make-tramp-file-name method user domain host port r)
+                                 r)))))    
           (progn (process-file godef-command nil outbuf nil
                                "-f" filename
-                               "-o" (number-to-string (1- (position-bytes point))))
+                               "-o" token-position)
                  (with-current-buffer outbuf
                    (setq result (buffer-substring-no-properties (point-min) (point-max))))))
         (kill-buffer outbuf)
