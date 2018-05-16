@@ -1466,28 +1466,28 @@ visit FILENAME and go to line LINE and column COLUMN."
 (defun godef--call (point)
   "Call godef, acquiring definition position and expression
 description at POINT."
+  (if (go--xemacs-p)
+      (error "godef does not reliably work in XEmacs, expect bad results"))
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
       (error "Cannot use godef on a buffer without a file name")
-    (let ((outbuf (generate-new-buffer "*godef*"))
-          (coding-system-for-read 'utf-8)
-          (coding-system-for-write 'utf-8))
-      (prog2
-          (call-process-region (point-min)
-                               (point-max)
-                               godef-command
-                               nil
-                               outbuf
-                               nil
-                               "-i"
-                               "-t"
-                               "-f"
-                               (file-truename (buffer-file-name (go--coverage-origin-buffer)))
-                               "-o"
-                               ;; Emacs point and byte positions are 1-indexed.
-                               (number-to-string (1- (position-bytes point))))
-          (with-current-buffer outbuf
-            (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n"))
-        (kill-buffer outbuf)))))
+    (let ((outbuf (get-buffer-create "*godef*")))
+      (with-current-buffer outbuf
+        (erase-buffer))
+      (let ((filename (file-truename (buffer-file-name (go--coverage-origin-buffer)))))
+        (if (tramp-tramp-file-p filename)
+            (with-parsed-tramp-file-name filename nil
+              (message (tramp-make-tramp-file-name method user domain host port ""))
+              (process-file godef-command nil outbuf nil
+                            "-f" localname
+                            "-o" (number-to-string (go--position-bytes (point))))
+              (with-current-buffer outbuf
+                (split-string (tramp-make-tramp-file-name method user domain host port 
+                                                          (buffer-substring-no-properties (point-min) (point-max))) "\n")))    
+          (progn (process-file godef-command nil outbuf nil
+                               "-f" filename
+                               "-o" (number-to-string (go--position-bytes (point))))
+                 (with-current-buffer outbuf
+                   (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n"))))))))
 
 (defun godef--successful-p (output)
   (not (or (string= "-" output)
