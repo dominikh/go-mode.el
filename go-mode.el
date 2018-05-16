@@ -1466,8 +1466,6 @@ visit FILENAME and go to line LINE and column COLUMN."
 (defun godef--call (point)
   "Call godef, acquiring definition position and expression
 description at POINT."
-  (if (go--xemacs-p)
-      (error "godef does not reliably work in XEmacs, expect bad results"))
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
       (error "Cannot use godef on a buffer without a file name")
     (let ((outbuf (get-buffer-create "*godef*")))
