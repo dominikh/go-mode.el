@@ -1468,9 +1468,9 @@ visit FILENAME and go to line LINE and column COLUMN."
 description at POINT."
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
       (error "Cannot use godef on a buffer without a file name")
-    (let ((outbuf (get-buffer-create "*godef*")))
-      (with-current-buffer outbuf
-        (erase-buffer))
+    (let ((outbuf (generate-new-buffer "*godef*"))
+          (coding-system-for-read 'utf-8)
+          (coding-system-for-write 'utf-8))
       (let ((filename (file-truename (buffer-file-name (go--coverage-origin-buffer)))))
         (if (tramp-tramp-file-p filename)
             (with-parsed-tramp-file-name filename nil
