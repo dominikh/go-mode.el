@@ -1477,13 +1477,13 @@ description at POINT."
               (message (tramp-make-tramp-file-name method user domain host port ""))
               (process-file godef-command nil outbuf nil
                             "-f" localname
-                            "-o" (number-to-string (go--position-bytes (point))))
+                            "-o" (number-to-string (1- (position-bytes point))))
               (with-current-buffer outbuf
                 (setq result (tramp-make-tramp-file-name method user domain host port 
                                                          (buffer-substring-no-properties (point-min) (point-max))))))    
           (progn (process-file godef-command nil outbuf nil
                                "-f" filename
-                               "-o" (number-to-string (go--position-bytes (point))))
+                               "-o" (number-to-string (1- (position-bytes point))))
                  (with-current-buffer outbuf
                    (setq result (buffer-substring-no-properties (point-min) (point-max))))))
         (kill-buffer outbuf)
