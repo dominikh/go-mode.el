@@ -1456,12 +1456,12 @@ visit FILENAME and go to line LINE and column COLUMN."
     (let ((filename (match-string 1 specifier))
           (line (string-to-number (match-string 2 specifier)))
           (column (string-to-number (match-string 3 specifier))))
-      (funcall (if other-window #'find-file-other-window #'find-file) filename)
-      (go--goto-line line)
-      (beginning-of-line)
-      (forward-char (1- column))
-      (if (buffer-modified-p)
-          (message "Buffer is modified, file position might not have been correct")))))
+      (with-current-buffer (funcall (if other-window #'find-file-other-window #'find-file) filename)
+        (go--goto-line line)
+        (beginning-of-line)
+        (forward-char (1- column))
+        (if (buffer-modified-p)
+            (message "Buffer is modified, file position might not have been correct"))))))
 
 (defun godef--call (point)
   "Call godef, acquiring definition position and expression
