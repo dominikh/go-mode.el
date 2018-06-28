@@ -158,8 +158,6 @@ A pattern preceded by '-' is negative, so the scope
 matches all encoding packages except encoding/xml."
   (interactive)
   (let ((scope (go-guru--read-scope)))
-    (unless scope
-	      (error "You must specify a non-empty scope for the Go guru"))
     (setq go-guru-scope (string-join scope ","))))
 
 (defun go-guru--set-scope-if-empty ()
