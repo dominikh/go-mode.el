@@ -279,7 +279,7 @@ effective name of the current buffer."
 	 (cmd (append (list go-guru-command
 			    "-modified"
 			    "-scope" go-guru-scope
-			    (format "-tags=%s" (mapconcat 'identity go-guru-build-tags " ")))
+			    (format "-tags=%s" (mapconcat 'identity go-guru-build-tags ",")))
 		      flags
 		      (list mode
 			    posn))))
