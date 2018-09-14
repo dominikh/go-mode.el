@@ -143,6 +143,8 @@
   (completing-read-multiple "guru-scope (comma-separated): "
                             (go-packages) nil nil nil 'go-guru--scope-history))
 
+(eval-when-compile (require 'subr-x))
+
 ;;;###autoload
 (defun go-guru-set-scope ()
   "Set the scope for the Go guru, prompting the user to edit the previous scope.
