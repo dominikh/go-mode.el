@@ -1391,31 +1391,45 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
 
 
 (defun go-packages ()
-  (funcall go-packages-function))
+  (let ((workspace (go--current-workspace)))
+    (sort
+     (delete-dups
+      (mapcar (lambda (package) (if (not workspace)
+                                    package
+                                  (go--packages-strip-vendor workspace package)))
+              (funcall go-packages-function)))
+     #'string<)))
 
 (defun go-packages-native ()
   "Return a list of all installed Go packages.
 It looks for archive files in /pkg/."
-  (sort
-   (delete-dups
-    (cl-mapcan
-     (lambda (topdir)
-       (let ((pkgdir (concat topdir "/pkg/")))
-         (cl-mapcan (lambda (dir)
-                   (mapcar (lambda (file)
-                             (let ((sub (substring file (length pkgdir) -2)))
-                               (unless (or (go--string-prefix-p "obj/" sub) (go--string-prefix-p "tool/" sub))
-                                 (mapconcat #'identity (cdr (split-string sub "/")) "/"))))
-                           (if (file-directory-p dir)
-                               (directory-files dir t "\\.a$"))))
-                 (if (file-directory-p pkgdir)
-                     (go--directory-dirs pkgdir)))))
-     (go-root-and-paths)))
-   #'string<))
+  (cl-mapcan
+   (lambda (topdir)
+     (let ((pkgdir (concat topdir "/pkg/")))
+       (cl-mapcan (lambda (dir)
+                    (mapcar (lambda (file)
+                              (let ((sub (substring file (length pkgdir) -2)))
+                                (unless (or (go--string-prefix-p "obj/" sub) (go--string-prefix-p "tool/" sub))
+                                  (mapconcat #'identity (cdr (split-string sub "/")) "/"))))
+                            (if (file-directory-p dir)
+                                (directory-files dir t "\\.a$"))))
+                  (if (file-directory-p pkgdir)
+                      (go--directory-dirs pkgdir)))))
+   (go-root-and-paths)))
 
 (defun go-packages-go-list ()
   "Return a list of all Go packages, using `go list'."
   (process-lines go-command "list" "-e" "all"))
+
+(defun go--packages-strip-vendor (workspace package)
+  "Strip a preceding paths from vendoring PACKAGE name in WORKSPACE."
+  (let ((package-file-name (expand-file-name package (expand-file-name "src" workspace)))
+        (dir (file-name-directory buffer-file-name)))
+    (if (and (go--string-prefix-p dir package-file-name)
+             (string-match "/vendor/" package-file-name))
+        (substring package-file-name (match-end 0))
+      package)))
+
 
 (defun go-unused-imports-lines ()
   (reverse (remove nil
@@ -2020,6 +2034,10 @@ If BUFFER, return the number of characters in that buffer instead."
   (with-current-buffer (or buffer (current-buffer))
     (1- (position-bytes (point-max)))))
 
+(defun go--current-workspace ()
+  "Return a current project workspace (GOPATH)."
+  (cl-find-if (lambda (x) (string-prefix-p x buffer-file-name))
+              (mapcar 'expand-file-name (cdr (go-root-and-paths)))))
 
 ;; Polyfills for functions added in Emacs 26.  Remove these once we don’t
 ;; support Emacs 25 any more.
