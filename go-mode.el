@@ -2036,7 +2036,7 @@ If BUFFER, return the number of characters in that buffer instead."
 
 (defun go--current-workspace ()
   "Return a current project workspace (GOPATH)."
-  (cl-find-if (lambda (x) (string-prefix-p x buffer-file-name))
+  (cl-find-if (lambda (x) (go--string-prefix-p x buffer-file-name))
               (mapcar 'expand-file-name (cdr (go-root-and-paths)))))
 
 ;; Polyfills for functions added in Emacs 26.  Remove these once we don’t
