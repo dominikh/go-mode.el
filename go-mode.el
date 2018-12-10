@@ -893,6 +893,8 @@ Function result is a unparenthesized type or a parameter list."
 This is intended to be called from `before-change-functions'."
   (setq go-dangling-cache (make-hash-table :test 'eql)))
 
+(defun go-mode-xref-backend () 'go)
+
 ;;;###autoload
 (define-derived-mode go-mode prog-mode "Go"
   "Major mode for editing Go source text.
@@ -991,6 +993,9 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
         '(("type" "^type *\\([^ \t\n\r\f]*\\)" 1)
           ("func" "^func *\\(.*\\) {" 1)))
   (imenu-add-to-menubar "Index")
+
+  ;; xref
+  (add-hook 'xref-backend-functions #'go-mode-xref-backend nil t)
 
   ;; Go style
   (setq indent-tabs-mode t)
@@ -1538,6 +1543,18 @@ description at POINT."
               (xref-push-marker-stack)
             (ring-insert find-tag-marker-ring (point-marker)))
           (godef--find-file-line-column file other-window)))
+    (file-error (message "Could not run godef binary"))))
+
+(cl-defmethod xref-backend-definitions ((_backend (eql go)) identifier)
+  (condition-case nil
+      (let* ((output (godef--call (point)))
+             (file (car output))
+             (description (cadr output)))
+        (when (string-match "\\(.+\\):\\([0-9]+\\):\\([0-9]+\\)" file)
+          (let ((filename (match-string 1 file))
+                (line (string-to-number (match-string 2 file)))
+                (column (string-to-number (match-string 3 file))))
+            (list (xref-make description (xref-make-file-location filename line column))))))
     (file-error (message "Could not run godef binary"))))
 
 (defun godef-jump-other-window (point)
