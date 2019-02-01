@@ -255,7 +255,7 @@ doesn't work on package names or variables.
 
 Consider using ‘godoc-gogetdoc’ instead for more accurate results."
   (condition-case nil
-      (let* ((output (godef--call point))
+      (let* ((output (godef--call point t))
              (file (car output))
              (name-parts (split-string (cadr output) " "))
              (first (car name-parts)))
@@ -1474,28 +1474,33 @@ visit FILENAME and go to line LINE and column COLUMN."
       (if (buffer-modified-p)
           (message "Buffer is modified, file position might not have been correct")))))
 
-(defun godef--call (point)
+(defun godef--call (point with-type-info)
   "Call godef, acquiring definition position and expression
 description at POINT."
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
       (error "Cannot use godef on a buffer without a file name")
     (let ((outbuf (generate-new-buffer "*godef*"))
           (coding-system-for-read 'utf-8)
-          (coding-system-for-write 'utf-8))
+          (coding-system-for-write 'utf-8)
+          (godef-args (list "-i"
+                            "-f"
+                            (file-truename (buffer-file-name (go--coverage-origin-buffer)))
+                            "-o"
+                            ;; Emacs point and byte positions are 1-indexed.
+                            (number-to-string (1- (position-bytes point))))))
+      ;; Only pass -t if type info is needed (e.g. for godef-describe) as it
+      ;; can make godef run much slower
+      (when with-type-info
+        (setq godef-args (append godef-args '("-t"))))
       (prog2
-          (call-process-region (point-min)
-                               (point-max)
-                               godef-command
-                               nil
-                               outbuf
-                               nil
-                               "-i"
-                               "-t"
-                               "-f"
-                               (file-truename (buffer-file-name (go--coverage-origin-buffer)))
-                               "-o"
-                               ;; Emacs point and byte positions are 1-indexed.
-                               (number-to-string (1- (position-bytes point))))
+          (apply 'call-process-region
+                 (point-min)
+                 (point-max)
+                 godef-command
+                 nil
+                 outbuf
+                 nil
+                 godef-args)
           (with-current-buffer outbuf
             (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n"))
         (kill-buffer outbuf)))))
@@ -1519,7 +1524,7 @@ description at POINT."
   "Describe the expression at POINT."
   (interactive "d")
   (condition-case nil
-      (let ((description (cdr (butlast (godef--call point) 1))))
+      (let ((description (cdr (butlast (godef--call point t) 1))))
         (if (not description)
             (message "No description found for expression at point")
           (message "%s" (mapconcat #'identity description "\n"))))
@@ -1529,7 +1534,7 @@ description at POINT."
   "Jump to the definition of the expression at POINT."
   (interactive "d")
   (condition-case nil
-      (let ((file (car (godef--call point))))
+      (let ((file (car (godef--call point nil))))
         (if (not (godef--successful-p file))
             (message "%s" (godef--error file))
           (push-mark)
