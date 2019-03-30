@@ -41,7 +41,7 @@
 the `gorename' tool. With FORCE, call `gorename' with the
 `-force' flag."
   (interactive (list
-                (unless (buffer-modified-p (or (not buffer-file-name)))
+                (if (and buffer-file-name (not (buffer-modified-p)))
                   (read-string "New name: " (thing-at-point 'symbol)))
                 current-prefix-arg))
   (if (not buffer-file-name)
