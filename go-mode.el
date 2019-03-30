@@ -73,8 +73,8 @@ function."
 (defconst go--max-dangling-operator-length 2
   "The maximum length of dangling operators.
 This must be at least the length of the longest string matched by
-‘go-dangling-operators-regexp.’, and must be updated whenever
-that constant is changed.")
+‘go-dangling-operators-regexp’ and must be updated whenever that
+constant is changed.")
 
 (defconst go-identifier-regexp "[[:word:][:multibyte:]]+")
 (defconst go-type-name-no-prefix-regexp "\\(?:[[:word:][:multibyte:]]+\\.\\)?[[:word:][:multibyte:]]+")
@@ -1066,8 +1066,8 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 (defun gofmt ()
   "Format the current buffer according to the formatting tool.
 
-The tool used can be set via ‘gofmt-command` (default: gofmt) and additional
-arguments can be set as a list via ‘gofmt-args`."
+The tool used can be set via ‘gofmt-command’ (default: gofmt) and additional
+arguments can be set as a list via ‘gofmt-args’."
   (interactive)
   (let ((tmpfile (go--make-nearby-temp-file "gofmt" nil ".go"))
         (patchbuf (get-buffer-create "*Gofmt patch*"))
