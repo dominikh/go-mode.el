@@ -1444,7 +1444,7 @@ they will be removed completely."
     (let ((cur-buffer (current-buffer)) flymake-state lines)
       (when (boundp 'flymake-mode)
         (setq flymake-state flymake-mode)
-        (flymake-mode-off))
+        (flymake-mode -1))
       (save-some-buffers nil (lambda () (equal cur-buffer (current-buffer))))
       (if (buffer-modified-p)
           (message "Cannot operate on unsaved buffer")
@@ -1456,7 +1456,7 @@ they will be removed completely."
               (comment-region (line-beginning-position) (line-end-position))
             (go--delete-whole-line)))
         (message "Removed %d imports" (length lines)))
-      (if flymake-state (flymake-mode-on)))))
+      (if flymake-state (flymake-mode 1)))))
 
 (defun godef--find-file-line-column (specifier other-window)
   "Given a file name in the format of `filename:line:column',
