@@ -1382,7 +1382,8 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
         (dolist (file files)
           (unless (member file '("." ".."))
             (let ((file (concat dir "/" file)))
-              (if (file-directory-p file)
+              (if (and (file-directory-p file)
+                       (not (file-symlink-p file)))
                   (setq dirs (append (cons file
                                            (go--directory-dirs file))
                                      dirs))))))
