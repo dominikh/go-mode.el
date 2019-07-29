@@ -211,6 +211,14 @@ mis-identifying them as gb projects."
   :type '(repeat function)
   :group 'go)
 
+(defcustom go-confirm-playground-uploads t
+  "Ask before uploading code to the public Go Playground.
+
+Set this to nil to upload without prompting.
+"
+  :type 'boolean
+  :group 'go)
+
 (defcustom godoc-command "go doc"
   "Which executable to use for `godoc'.
 This can either be 'godoc' or 'go doc', both as an absolute path
@@ -1273,27 +1281,36 @@ declaration."
 (defun go-play-region (start end)
   "Send the region between START and END to the Playground.
 If non-nil `go-play-browse-function' is called with the
-Playground URL."
+Playground URL.
+
+By default this function will prompt to confirm you want to upload
+code to the Playground. You can disable the confirmation by setting
+`go-confirm-playground-uploads' to nil.
+"
   (interactive "r")
-  (let* ((url-request-method "POST")
-         (url-request-extra-headers
-          '(("Content-Type" . "application/x-www-form-urlencoded")))
-         (url-request-data
-          (encode-coding-string
-           (buffer-substring-no-properties start end)
-           'utf-8))
-         (content-buf (url-retrieve
-                       "https://play.golang.org/share"
-                       (lambda (arg)
-                         (cond
-                          ((equal :error (car arg))
-                           (signal 'go-play-error (cdr arg)))
-                          (t
-                           (re-search-forward "\n\n")
-                           (let ((url (format "https://play.golang.org/p/%s"
-                                              (buffer-substring (point) (point-max)))))
-                             (when go-play-browse-function
-                               (funcall go-play-browse-function url)))))))))))
+  (if (and go-confirm-playground-uploads
+           (not (yes-or-no-p "Upload to public Go Playground?")))
+      (message "Upload aborted")
+    (let* ((url-request-method "POST")
+           (url-request-extra-headers
+            '(("Content-Type" . "application/x-www-form-urlencoded")))
+           (url-request-data
+            (encode-coding-string
+             (buffer-substring-no-properties start end)
+             'utf-8))
+
+           (content-buf (url-retrieve
+                         "https://play.golang.org/share"
+                         (lambda (arg)
+                           (cond
+                            ((equal :error (car arg))
+                             (signal 'go-play-error (cdr arg)))
+                            (t
+                             (re-search-forward "\n\n")
+                             (let ((url (format "https://play.golang.org/p/%s"
+                                                (buffer-substring (point) (point-max)))))
+                               (when go-play-browse-function
+                                 (funcall go-play-browse-function url))))))))))))
 
 ;;;###autoload
 (defun go-download-play (url)
