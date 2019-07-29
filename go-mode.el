@@ -578,6 +578,17 @@ current line will be returned."
           (current-indentation))
       (current-indentation))))
 
+(defun go--line-opens-paren-p ()
+  "Returns whether current line opens a paren that contains point."
+  (save-excursion
+    (let ((start-paren-level (go-paren-level))
+          (line-beginning (line-beginning-position)))
+      (go-goto-opening-parenthesis)
+      (and
+       (eq (char-after) ?\() ; opening paren-like character is actually a paren
+       (< (go-paren-level) start-paren-level) ; point is before the closing paren
+       (>= (point) line-beginning))))) ; still on starting line
+
 (defun go-indentation-at-point ()
   (save-excursion
     (let (start-nesting)
@@ -589,20 +600,27 @@ current line will be returned."
         (current-indentation))
        ((looking-at "[])}]")
         (go-goto-opening-parenthesis)
-        (if (go-previous-line-has-dangling-op-p)
+        (if (and
+             (not (eq (char-after) ?\()) ; opening parens always indent
+             (go-previous-line-has-dangling-op-p))
             (- (current-indentation) tab-width)
           (go--indentation-for-opening-parenthesis)))
        ((progn (go--backward-irrelevant t)
                (looking-back go-dangling-operators-regexp
                              (- (point) go--max-dangling-operator-length)))
         ;; only one nesting for all dangling operators in one operation
-        (if (go-previous-line-has-dangling-op-p)
-            (current-indentation)
+        (if (and
+             (not (go--line-opens-paren-p))
+             (go-previous-line-has-dangling-op-p))
+            (progn
+              (current-indentation))
           (+ (current-indentation) tab-width)))
        ((zerop (go-paren-level))
         0)
        ((progn (go-goto-opening-parenthesis) (< (go-paren-level) start-nesting))
-        (if (go-previous-line-has-dangling-op-p)
+        (if (and
+             (not (eq (char-after) ?\()) ; opening parens always indent
+             (go-previous-line-has-dangling-op-p))
             (current-indentation)
           (+ (go--indentation-for-opening-parenthesis) tab-width)))
        (t
