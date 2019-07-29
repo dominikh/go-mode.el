@@ -25,5 +25,15 @@ func init() {
 		456,
 	)
 
+	f :=
+		print(1,
+			2,
+		)
+
+	g :=
+		int64(4 *
+			3 *
+			1)
+
 	return
 }
