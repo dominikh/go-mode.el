@@ -537,17 +537,22 @@ STOP-AT-STRING is not true, over strings."
          (point-min))))
 
 (defun go-previous-line-has-dangling-op-p ()
-  "Return non-nil if the current line is a continuation line."
-  (let* ((cur-line (line-number-at-pos))
-         (val (gethash cur-line go-dangling-cache 'nope)))
-    (if (or (go--buffer-narrowed-p) (equal val 'nope))
-        (save-excursion
-          (beginning-of-line)
-          (go--backward-irrelevant t)
-          (setq val (looking-back go-dangling-operators-regexp
-                                  (- (point) go--max-dangling-operator-length)))
-          (if (not (go--buffer-narrowed-p))
-              (puthash cur-line val go-dangling-cache))))
+  "Return non-nil if the current line is a continuation line.
+
+The returned value is the beginning of the line with the dangling operator."
+  (let* ((line-begin (line-beginning-position))
+         (val (gethash line-begin go-dangling-cache 'nope)))
+    (when (or (go--buffer-narrowed-p) (equal val 'nope))
+      (save-excursion
+        (beginning-of-line)
+        (go--backward-irrelevant t)
+        (if (looking-back go-dangling-operators-regexp
+                          (- (point) go--max-dangling-operator-length))
+            (setq val (line-beginning-position))
+          (setq val nil))
+
+        (if (not (go--buffer-narrowed-p))
+            (puthash line-begin val go-dangling-cache))))
     val))
 
 (defun go--at-function-definition ()
