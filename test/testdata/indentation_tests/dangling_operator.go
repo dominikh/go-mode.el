@@ -35,5 +35,10 @@ func init() {
 			3 *
 			1)
 
+	i :=
+		"" != "" ||
+			true == false ||
+			false == false
+
 	return
 }
