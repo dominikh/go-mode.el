@@ -583,20 +583,58 @@ current line will be returned."
           (current-indentation))
       (current-indentation))))
 
-(defun go--line-opens-paren-p ()
-  "Returns whether current line opens a paren that contains point."
+(defun go--dangling-line-opens-indent-p ()
+  "Return non-nil if current dangling line indents the following line."
   (save-excursion
-    (let ((start-paren-level (go-paren-level))
-          (line-beginning (line-beginning-position)))
+    (let ((line-begin (line-beginning-position))
+          (start-paren-level (go-paren-level)))
+
       (go-goto-opening-parenthesis)
-      (and
-       (eq (char-after) ?\() ; opening paren-like character is actually a paren
-       (< (go-paren-level) start-paren-level) ; point is before the closing paren
-       (>= (point) line-beginning))))) ; still on starting line
+
+      (let ((in-parens (and
+                        ;; opening paren-like character is actually a paren
+                        (eq (char-after) ?\()
+                        ;; point is before the closing paren
+                        (< (go-paren-level) start-paren-level)
+                        ;;  still on starting line
+                        (>= (point) line-begin))))
+
+        (if (not in-parens)
+            ;; if line doesn't open a paren, check if we are a dangling line under
+            ;; a dangling assignment with nothing on RHS of "="
+            ;;
+            ;; foo :=
+            ;;   bar ||   // check if we are this line (need to open indent)
+            ;;     baz ||
+            ;;     qux
+            (progn
+              (goto-char line-begin)
+              (let ((prev-line (go-previous-line-has-dangling-op-p)))
+                (when prev-line
+                  (goto-char prev-line)
+                  (and
+                   (not (go-previous-line-has-dangling-op-p))
+                   (looking-at ".*=[[:space:]]*$")))))
+          (or
+           ;; previous line is dangling and opens indent
+           (let ((prev-line (go-previous-line-has-dangling-op-p)))
+             (when prev-line
+               (save-excursion
+                 (goto-char prev-line)
+                 (end-of-line)
+                 (go--dangling-line-opens-indent-p))))
+
+           ;; or paren is only preceded by identifier or other parens
+           (string-match-p "^[[:space:]]*[[:word:][:multibyte:]]*(*$" (buffer-substring line-begin (point)))
+
+           ;; or a preceding paren on this line opens an indent
+           (and
+            (> (point) line-begin)
+            (progn (backward-char) (go--dangling-line-opens-indent-p)))))))))
 
 (defun go-indentation-at-point ()
   (save-excursion
-    (let (start-nesting)
+    (let (start-nesting dangling-line)
       (back-to-indentation)
       (setq start-nesting (go-paren-level))
 
@@ -606,30 +644,37 @@ current line will be returned."
        ((looking-at "[])}]")
         (go-goto-opening-parenthesis)
         (if (and
-             (not (eq (char-after) ?\()) ; opening parens always indent
+             (not (eq (char-after) ?\())
              (go-previous-line-has-dangling-op-p))
-            (- (current-indentation) tab-width)
+            (go--non-dangling-indent)
           (go--indentation-for-opening-parenthesis)))
-       ((progn (go--backward-irrelevant t)
-               (looking-back go-dangling-operators-regexp
-                             (- (point) go--max-dangling-operator-length)))
+       ((setq dangling-line (go-previous-line-has-dangling-op-p))
+        (goto-char dangling-line)
+        (end-of-line)
+
         ;; only one nesting for all dangling operators in one operation
         (if (and
-             (not (go--line-opens-paren-p))
+             (not (go--dangling-line-opens-indent-p))
              (go-previous-line-has-dangling-op-p))
-            (progn
-              (current-indentation))
+            (current-indentation)
           (+ (current-indentation) tab-width)))
        ((zerop (go-paren-level))
         0)
        ((progn (go-goto-opening-parenthesis) (< (go-paren-level) start-nesting))
         (if (and
-             (not (eq (char-after) ?\()) ; opening parens always indent
+             (not (eq (char-after) ?\())
              (go-previous-line-has-dangling-op-p))
-            (current-indentation)
-          (+ (go--indentation-for-opening-parenthesis) tab-width)))
+            (+ (go--non-dangling-indent) tab-width)
+          (+ (go--indentation-for-opening-parenthesis) tab-width))
+        )
        (t
         (current-indentation))))))
+
+(defun go--non-dangling-indent ()
+  (save-excursion
+    (while (go-previous-line-has-dangling-op-p)
+      (forward-line -1))
+    (current-indentation)))
 
 (defun go-mode-indent-line ()
   (interactive)
