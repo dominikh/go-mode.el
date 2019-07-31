@@ -58,14 +58,18 @@ function."
                         (progn (forward-visible-line arg) (point))))))
 
 (defun go-goto-opening-parenthesis (&optional _legacy-unused)
-  "Move up one level of parentheses."
+  "Move up one level of parentheses.
+
+Return non-nil if there was a paren to move up to."
   ;; The old implementation of go-goto-opening-parenthesis had an
   ;; optional argument to speed up the function.  It didn't change the
   ;; function's outcome.
 
   ;; Silently fail if there's no matching opening parenthesis.
   (condition-case nil
-      (backward-up-list)
+      (progn
+        (backward-up-list)
+        t)
     (scan-error nil)))
 
 
@@ -544,8 +548,11 @@ The returned value is the beginning of the line with the dangling operator."
       (save-excursion
         (beginning-of-line)
         (go--backward-irrelevant t)
-        (if (looking-back go-dangling-operators-regexp
-                          (- (point) go--max-dangling-operator-length))
+        (if (or
+             (looking-back go-dangling-operators-regexp
+                           (- (point) go--max-dangling-operator-length))
+             ;; treat comma as dangling operator in certain cases
+             (and (eq (char-before) ?,) (go--commas-indent-p)))
             (setq val (line-beginning-position))
           (setq val nil))
 
@@ -593,19 +600,9 @@ current line will be returned."
   "Return non-nil if current dangling line indents the following line."
   (save-excursion
     (let ((line-begin (line-beginning-position))
-          (start-paren-level (go-paren-level)))
+          (open-paren (go--open-paren-position)))
 
-      (go-goto-opening-parenthesis)
-
-      (let ((in-parens (and
-                        ;; opening paren-like character is actually a paren
-                        (eq (char-after) ?\()
-                        ;; point is before the closing paren
-                        (< (go-paren-level) start-paren-level)
-                        ;;  still on starting line
-                        (>= (point) line-begin))))
-
-        (if (not in-parens)
+          (if (not (and open-paren (>= open-paren line-begin)))
             ;; if line doesn't open a paren, check if we are a dangling line under
             ;; a dangling assignment with nothing on RHS of "="
             ;;
@@ -614,29 +611,86 @@ current line will be returned."
             ;;     baz ||
             ;;     qux
             (progn
-              (goto-char line-begin)
               (let ((prev-line (go-previous-line-has-dangling-op-p)))
-                (when prev-line
+                (goto-char line-begin)
+                (when (and
+                       prev-line
+                       (not (looking-at ".*,[[:space:]]*$"))) ;; doesn't apply to dangling commas
                   (goto-char prev-line)
                   (and
                    (not (go-previous-line-has-dangling-op-p))
                    (looking-at ".*=[[:space:]]*$")))))
-          (or
-           ;; previous line is dangling and opens indent
-           (let ((prev-line (go-previous-line-has-dangling-op-p)))
-             (when prev-line
-               (save-excursion
-                 (goto-char prev-line)
-                 (end-of-line)
-                 (go--dangling-line-opens-indent-p))))
 
-           ;; or paren is only preceded by identifier or other parens
-           (string-match-p "^[[:space:]]*[[:word:][:multibyte:]]*(*$" (buffer-substring line-begin (point)))
+            (goto-char open-paren)
 
-           ;; or a preceding paren on this line opens an indent
-           (and
-            (> (point) line-begin)
-            (progn (backward-char) (go--dangling-line-opens-indent-p)))))))))
+            (or
+             ;; previous line is dangling and opens indent
+             (let ((prev-line (go-previous-line-has-dangling-op-p)))
+               (when prev-line
+                 (save-excursion
+                   (goto-char prev-line)
+                   (end-of-line)
+                   (go--dangling-line-opens-indent-p))))
+
+             ;; or paren is only preceded by identifier or other parens
+             (string-match-p "^[[:space:]]*[[:word:][:multibyte:]]*(*$" (buffer-substring line-begin (point)))
+
+             ;; or a preceding paren on this line opens an indent
+             (and
+              (> (point) line-begin)
+              (progn (backward-char) (go--dangling-line-opens-indent-p))))))))
+
+(defun go--commas-indent-p ()
+  "Return non-nil if in a context where dangling commas indent next line."
+  (not (or
+        (go--open-paren-position)
+        (go--in-composite-literal-p)
+        (go--in-struct-definition-p))))
+
+(defun go--in-struct-definition-p ()
+  "Return non-nil if inside a struct definition."
+  (save-excursion
+    (and
+     ;; inside curlies
+     (go-goto-opening-parenthesis)
+     (eq (char-after) ?{)
+
+     ;; "struct" appears before opening curly
+     (backward-word)
+     (looking-at "struct[[:space:]]"))))
+
+(defun go--in-composite-literal-p ()
+  "Return non-nil if point is in a composite literal."
+  (save-excursion
+    (and
+     (go-goto-opening-parenthesis)
+
+     ;; opening paren-like character is curly
+     (eq (char-after) ?{)
+
+     (or
+      ;; preceded by non space (e.g. "Foo|{")
+      (not (looking-back "[[:space:]]" (1- (point))))
+
+      ;; or curly itself is in a composite literal (e.g. "Foo{|{")
+      (go--in-composite-literal-p)))))
+
+(defun go--open-paren-position ()
+  "Return non-nil if point is between '(' and ')'.
+
+The return value is the position of the opening paren."
+  (save-excursion
+    (let ((start-paren-level (go-paren-level)))
+      (and
+       (go-goto-opening-parenthesis)
+
+       ;; opening paren-like character is actually a paren
+       (eq (char-after) ?\()
+
+       ;; point is before the closing paren
+       (< (go-paren-level) start-paren-level)
+
+       (point)))))
 
 (defun go-indentation-at-point ()
   (save-excursion
