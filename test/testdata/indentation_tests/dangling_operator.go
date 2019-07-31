@@ -40,5 +40,13 @@ func init() {
 			true == false ||
 			false == false
 
-	return
+	a, b :=
+		1,
+		2
+
+	a,
+		b := 1, 2
+
+	return 123,
+		456
 }
