@@ -643,7 +643,34 @@ current line will be returned."
   (not (or
         (go--open-paren-position)
         (go--in-composite-literal-p)
+        (go--in-case-clause-list-p)
         (go--in-struct-definition-p))))
+
+(defun go--in-case-clause-list-p ()
+  "Return non-nil if inside a multi-line case cause list.
+
+This function is only concerned with list items on lines after the
+case keyword. It returns nil for the case line itself."
+  (save-excursion
+    (beginning-of-line)
+    (when (not (looking-at go--case-or-default-regexp))
+      (let (saw-colon)
+        ;; optionally skip line with the colon
+        (when (looking-at ".*:[[:space:]]*$")
+          (setq saw-colon t)
+          (forward-line -1))
+
+        ;; go backwards while at a comment or a line ending in comma
+        (while (and
+                (or (go-in-comment-p)
+                    (looking-at "[[:space:]]*\\(//\\|/\\*\\)\\|.*,[[:space:]]*$"))
+                (zerop (forward-line -1))))
+
+        (and
+         (looking-at go--case-regexp)
+         ;; we weren't in case list if first line ended in colon
+         ;; and the "case" line ended in colon
+         (not (and saw-colon (looking-at ".*:[[:space:]]*$"))))))))
 
 (defun go--in-struct-definition-p ()
   "Return non-nil if inside a struct definition."
@@ -734,6 +761,9 @@ The return value is the position of the opening paren."
       (forward-line -1))
     (current-indentation)))
 
+(defconst go--case-regexp "\\([[:space:]]*case\\([[:space:]]\\|$\\)\\)")
+(defconst go--case-or-default-regexp (concat "\\(" go--case-regexp "\\|"  "[[:space:]]*default:\\)"))
+
 (defun go-mode-indent-line ()
   (interactive)
   (let (indent
@@ -745,7 +775,11 @@ The return value is the position of the opening paren."
     (if (go-in-string-or-comment-p)
         (goto-char point)
       (setq indent (go-indentation-at-point))
-      (if (looking-at (concat go-label-regexp ":\\([[:space:]]*/.+\\)?$\\|case .+:\\|default:"))
+      (if (and
+           (looking-at (concat go-label-regexp ":\\([[:space:]]*/.+\\)?$\\|" go--case-or-default-regexp))
+           ;; don't think last part of multiline case statement is a label
+           (not (go-previous-line-has-dangling-op-p))
+           (not (go--in-case-clause-list-p)))
           (cl-decf indent tab-width))
       (setq shift-amt (- indent (current-column)))
       (if (zerop shift-amt)
