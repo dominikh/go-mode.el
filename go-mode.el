@@ -768,6 +768,8 @@ The return value is the position of the opening paren."
   (interactive)
   (let (indent
         shift-amt
+        ;; case sensitively match "case", "default", etc.
+        (case-fold-search nil)
         (pos (- (point-max) (point)))
         (point (point))
         (beg (line-beginning-position)))
