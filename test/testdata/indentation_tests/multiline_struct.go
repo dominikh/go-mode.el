@@ -5,8 +5,10 @@ func _() {
 
 	foo := Bar{
 		{
-			Index: int(index),
-			MTU:   int(row.Mtu),
+			Index:   int(index),
+			MTU:     int(row.Mtu),
+			DEFAULT: 123,
+			CASE:    123,
 		},
 		{
 			Index: int(index),
