@@ -1113,6 +1113,21 @@ Function result is a unparenthesized type or a parameter list."
 This is intended to be called from `before-change-functions'."
   (setq go-dangling-cache (make-hash-table :test 'eql)))
 
+(defun go--electric-indent-function (inserted-char)
+  (cond
+   ;; Indent after starting a "//" or "/*" comment.
+   ;; This is handy for comments above "case" statements.
+   ((or (eq inserted-char ?/) (eq inserted-char ?*))
+    (when (eq (char-before (1- (point))) ?/)
+      'do-indent))
+
+   ((eq inserted-char ? )
+    (and
+     (eq (char-before (- (point) 1)) ?e)
+     (eq (char-before (- (point) 2)) ?s)
+     (eq (char-before (- (point) 3)) ?a)
+     (eq (char-before (- (point) 4)) ?c)))))
+
 ;;;###autoload
 (define-derived-mode go-mode prog-mode "Go"
   "Major mode for editing Go source text.
@@ -1196,8 +1211,9 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'syntax-propertize-function) #'go-propertize-syntax)
 
-  (if (boundp 'electric-indent-chars)
-      (set (make-local-variable 'electric-indent-chars) '(?\n ?} ?\))))
+  (when (boundp 'electric-indent-chars)
+    (set (make-local-variable 'electric-indent-chars) '(?\n ?} ?\) ?:))
+    (add-hook 'electric-indent-functions #'go--electric-indent-function nil t))
 
   (set (make-local-variable 'compilation-error-screen-columns) nil)
 
