@@ -755,6 +755,60 @@ The return value is the position of the opening paren."
        (t
         (current-indentation))))))
 
+(defconst go--comment-start-regexp "[[:space:]]*\\(/\\*\\|//\\)")
+
+(defun go--case-comment-p (indent)
+  "Return non-nil if looking at a comment attached to a case statement.
+
+INDENT is the normal indent of this line, i.e. that of the case body."
+  (when (looking-at go--comment-start-regexp)
+    (let (switch-before
+          case-after
+          has-case-aligned-preceding-comment)
+
+      (save-excursion
+        ;; Search for previous case-aligned comment.
+        (while (and
+                (zerop (forward-line -1))
+                (cond
+                 ((go-in-comment-p))
+
+                 ((looking-at "^[[:space:]]*$"))
+
+                 ((looking-at go--comment-start-regexp)
+                  (when (= (current-indentation) (- indent tab-width))
+                    (setq has-case-aligned-preceding-comment t))
+                  t))))
+
+        ;; Record if a switch (or select) precedes us.
+        (setq switch-before (looking-at "^[[:space:]]*\\(switch\\|select\\)[[:space:]]")))
+
+      ;; Record if first proceeding non-comment line is a case statement.
+      (save-excursion
+        (while (and
+                (zerop (forward-line 1))
+                (or
+                 (go-in-comment-p)
+                 (looking-at go--comment-start-regexp)
+                 (looking-at "^[[:space:]]*$"))))
+
+        (setq case-after (looking-at go--case-or-default-regexp)))
+
+      (and
+       ;; a "case" statement comes after our comment
+       case-after
+
+       (or
+        ;; "switch" statement precedes us, always align with "case"
+        switch-before
+
+        ;; a preceding comment is aligned with "case", we should too
+        has-case-aligned-preceding-comment
+
+        ;; other cases are ambiguous, so if comment is currently
+        ;; aligned with "case", leave it that way
+        (= (current-indentation) (- indent tab-width)))))))
+
 (defun go--non-dangling-indent ()
   (save-excursion
     (while (go-previous-line-has-dangling-op-p)
@@ -777,12 +831,16 @@ The return value is the position of the opening paren."
     (if (go-in-string-or-comment-p)
         (goto-char point)
       (setq indent (go-indentation-at-point))
-      (if (and
-           (looking-at (concat go-label-regexp ":\\([[:space:]]*/.+\\)?$\\|" go--case-or-default-regexp))
-           ;; don't think last part of multiline case statement is a label
-           (not (go-previous-line-has-dangling-op-p))
-           (not (go--in-case-clause-list-p)))
-          (cl-decf indent tab-width))
+      (when (or
+             (and
+              (looking-at (concat go-label-regexp ":\\([[:space:]]*/.+\\)?$\\|" go--case-or-default-regexp))
+              ;; don't think last part of multiline case statement is a label
+              (not (go-previous-line-has-dangling-op-p))
+              (not (go--in-case-clause-list-p)))
+
+             ;; comment attached above a "case" statement
+             (go--case-comment-p indent))
+        (cl-decf indent tab-width))
       (setq shift-amt (- indent (current-column)))
       (if (zerop shift-amt)
           nil
