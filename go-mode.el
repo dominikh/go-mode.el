@@ -66,11 +66,9 @@ Return non-nil if there was a paren to move up to."
   ;; function's outcome.
 
   ;; Silently fail if there's no matching opening parenthesis.
-  (condition-case nil
-      (progn
-        (backward-up-list)
-        t)
-    (scan-error nil)))
+  (let ((open-char (nth 1 (syntax-ppss))))
+    (when open-char
+      (goto-char open-char))))
 
 
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
