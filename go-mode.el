@@ -221,15 +221,13 @@ Set this to nil to upload without prompting.
 
 (defcustom godoc-command "go doc"
   "Which executable to use for `godoc'.
-This can either be 'godoc' or 'go doc', both as an absolute path
-or an executable in PATH."
+This can be either an absolute path or an executable in PATH."
   :type 'string
   :group 'go)
 
-(defcustom godoc-and-godef-command "godoc"
-  "Which executable to use for `godoc' in `godoc-and-godef-command'.
-Must be 'godoc' and not 'go doc' and can be an absolute path or
-an executable in PATH."
+(defcustom godoc-and-godef-command "go doc"
+  "Which executable to use for `godoc-and-godef'.
+This can be either an absolute path or an executable in PATH."
   :type 'string
   :group 'go)
 
