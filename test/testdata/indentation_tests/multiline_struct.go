@@ -38,4 +38,26 @@ func _() {
 		bar, // important
 		baz int //comments
 	}
+
+	Cool(Foo{
+		Bar: Cool(Baz{
+			Blah: 123,
+		}),
+	})
+
+	Foo{{
+		1,
+	}, {
+		2,
+	}}
+
+	var Foo = Bar{
+		Baz: (&Blah{
+			One: 1,
+		}).Banana,
+	}
+
+	Foo{
+		1}.Bar(
+		1)
 }

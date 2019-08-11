@@ -6,7 +6,10 @@ func main() {
 	label:
 		code()
 	case "bar":
-	case "baz":
+	case "baz": // important comma,
+		if true {
+			return
+		}
 	case "meow": // some documentation
 	default:
 		code()
