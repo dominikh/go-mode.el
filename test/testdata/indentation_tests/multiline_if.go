@@ -42,9 +42,97 @@ func _() {
 		true
 	}
 
+	if (true &&
+		true) &&
+		true {
+		true
+	}
+
 	if bytes.Contains(out, []byte("-fsanitize")) &&
 		(bytes.Contains(out, []byte("unrecognized")) ||
 			bytes.Contains(out, []byte("unsupported"))) {
 		return true, errors.New(string(out))
 	}
+
+	if true ==
+		false {
+		return
+	}
+
+	if true !=
+		false {
+		return
+	}
+
+	if foo(1, // hi
+		// hi
+
+		2) { // hi
+		return
+	}
+
+	if foo(
+		func() {
+		}) {
+		return
+	}
+
+	if foo == 0 ||
+		!foo.Bar(
+			"some",
+			"args") {
+		return
+	}
+
+	if true {
+		break
+	} else if true {
+		if true {
+			break
+		}
+	}
+
+	if true {
+	} else if true ||
+		true {
+		return
+	}
+
+	if 1 +
+		1 {
+		X
+	}
+
+	if 1 +
+		(1 +
+			1) {
+		X
+	}
+
+	if 1 +
+		(1 +
+			1) +
+		1 {
+		X
+	}
+
+	if 1 +
+		1 +
+		1 + (1 +
+		1) {
+		X
+	}
+
+	if 1 +
+		(1 +
+			1) + (1 +
+		1) {
+		X
+	}
+
+	if (Foo{1,
+		1}).Bar {
+		return
+	}
+
 }
