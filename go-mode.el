@@ -893,7 +893,10 @@ Return non-nil if point changed lines."
   "Return non-nil if looking at a comment attached to a case statement.
 
 INDENT is the normal indent of this line, i.e. that of the case body."
-  (when (looking-at go--comment-start-regexp)
+  (when (and
+         (> (current-indentation) 0)
+         (looking-at go--comment-start-regexp))
+
     (let (switch-before
           case-after
           has-case-aligned-preceding-comment)
@@ -903,14 +906,14 @@ INDENT is the normal indent of this line, i.e. that of the case body."
         (while (and
                 (zerop (forward-line -1))
                 (cond
-                 ((go-in-comment-p))
-
                  ((looking-at "^[[:space:]]*$"))
 
                  ((looking-at go--comment-start-regexp)
                   (when (= (current-indentation) (- indent tab-width))
                     (setq has-case-aligned-preceding-comment t))
-                  t))))
+                  t)
+
+                 ((go-in-comment-p)))))
 
         ;; Record if a switch (or select) precedes us.
         (setq switch-before (looking-at "^[[:space:]]*\\(switch\\|select\\)[[:space:]]")))
@@ -920,9 +923,9 @@ INDENT is the normal indent of this line, i.e. that of the case body."
         (while (and
                 (zerop (forward-line 1))
                 (or
-                 (go-in-comment-p)
                  (looking-at go--comment-start-regexp)
-                 (looking-at "^[[:space:]]*$"))))
+                 (looking-at "^[[:space:]]*$")
+                 (go-in-comment-p))))
 
         (setq case-after (looking-at go--case-or-default-regexp)))
 
