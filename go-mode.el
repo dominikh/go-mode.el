@@ -656,15 +656,16 @@ case keyword. It returns nil for the case line itself."
     (when (not (looking-at go--case-or-default-regexp))
       (let (saw-colon)
         ;; optionally skip line with the colon
-        (when (looking-at ".*:[[:space:]]*$")
+        (when (go--line-suffix-p ":")
           (setq saw-colon t)
           (forward-line -1))
 
         ;; go backwards while at a comment or a line ending in comma
         (while (and
-                (or (go-in-comment-p)
-                    (looking-at "[[:space:]]*\\(//\\|/\\*\\)\\|.*,[[:space:]]*$"))
-                (zerop (forward-line -1))))
+                (or
+                 (go--boring-line-p)
+                 (go--line-suffix-p ","))
+                (go--forward-line -1)))
 
         (and
          (looking-at go--case-regexp)
@@ -673,7 +674,7 @@ case keyword. It returns nil for the case line itself."
          (not (and saw-colon (looking-at ".*:[[:space:]]*$"))))))))
 
 (defun go--in-struct-definition-p ()
-  "Return non-nil if inside a struct definition."
+  "Return non-nil if point is inside a struct definition."
   (save-excursion
     (and
      ;; inside curlies
@@ -754,6 +755,56 @@ The return value is the position of the opening paren."
         )
        (t
         (current-indentation))))))
+(defun go--end-of-line ()
+  "Move to the end of the code on the current line.
+Point will be left before any trailing comments. Point will be left
+after the opening backtick of multiline strings."
+  (end-of-line)
+  (skip-syntax-backward " ")
+  (when (looking-back "\\*/" (- (point) 2))
+    ;; back up so we are in the /* comment */
+    (backward-char))
+  (when (go-in-comment-p)
+    (go-goto-beginning-of-string-or-comment)
+    (skip-syntax-backward " "))
+  (when (go-in-string-p)
+    (go-goto-beginning-of-string-or-comment)
+    ;; forward one so point is after the opening "`"
+    (forward-char)))
+
+(defun go--line-suffix-p (re)
+  "Return non-nil if RE matches the end of the line starting from `point'.
+
+Trailing whitespace, trailing comments and trailing multiline strings are
+ignored."
+  (let ((start (point))
+        (end (save-excursion (go--end-of-line) (point))))
+    (when (< start end)
+      (string-match-p
+       (concat "\\(?:" re "\\)$")
+       (buffer-substring-no-properties start end)))))
+
+(defun go--boring-line-p ()
+  "Return non-nil if the current line probably doesn't impact indentation.
+
+A boring line is one that starts with a comment, is empty, is part of a
+multiline comment, or starts and ends in a multiline string."
+  (or
+   (looking-at (concat go--comment-start-regexp "\\|[[:space:]]*$"))
+   (go-in-comment-p)
+   (and (go-in-string-p) (save-excursion (end-of-line) (go-in-string-p)))))
+
+(defun go--forward-line (&optional count)
+  "Like `forward-line' but skip comments and empty lines.
+
+Return non-nil if point changed lines."
+  (let (moved)
+    (while (and
+            (zerop (forward-line count))
+            (setq moved t)
+            (go--boring-line-p))
+      (setq count (if (and count (< count 0 )) -1 1)))
+    moved))
 
 (defconst go--comment-start-regexp "[[:space:]]*\\(/\\*\\|//\\)")
 
