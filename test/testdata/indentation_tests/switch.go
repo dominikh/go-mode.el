@@ -26,8 +26,8 @@ func main() {
 	case
 		/* hi
 		   there */
-		"hi",
-		"there":
+		"hi",    // hi
+		"there": // there
 	}
 
 	switch {
