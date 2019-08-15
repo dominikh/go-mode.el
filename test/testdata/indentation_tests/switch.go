@@ -66,4 +66,11 @@ func main() {
 	// also works
 	default:
 	}
+
+	switch {
+	case 1:
+	case foo,
+		foo,
+		foo:
+	}
 }

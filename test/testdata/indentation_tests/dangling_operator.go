@@ -265,6 +265,20 @@ lol` +
 		2 +
 		3
 
+	foo ||
+		foo &&
+			foo(
+				123,
+			)
+
+	foo ||
+		foo &&
+			foo{
+				{
+					foo: bar,
+				},
+			}
+
 	return 123,
 		456
 }
