@@ -135,4 +135,18 @@ func _() {
 		return
 	}
 
+	if foo ||
+		foo &&
+			foo ==
+				foo+
+					foo*
+						foo {
+		foo
+	}
+
+	if foo() ||
+		foo() &&
+			foo() {
+		foo
+	}
 }

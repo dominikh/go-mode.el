@@ -590,6 +590,7 @@ case keyword. It returns nil for the case line itself."
                 (or
                  (go--boring-line-p)
                  (go--line-suffix-p ","))
+                (not (looking-at go--case-regexp))
                 (go--forward-line -1)))
 
         (and
@@ -651,21 +652,33 @@ encounters a closing paren or brace it bounces to the corresponding
 opener. If it arrives at the beginning of the line you are indenting,
 it moves to the end of the previous line if the current line is a
 continuation line, else it moves to the containing opening paren or
-brace. If it arrives at the beginning of a line other than the
-starting line, it is done."
+brace. If it arrives at the beginning of a line other than the line
+you are indenting, it will continue to the previous dangling line if
+the line you are indenting was not a continuation line, otherwise it
+is done."
   (save-excursion
     (beginning-of-line)
 
-    (let ((start-line (point))
+    (let (
+          ;; Beginning of our starting line.
+          (start-line (point))
+
+          ;; Whether this is our first iteration of the outer while loop.
           (first t)
+
+          ;; Whether we start in a block (i.e. our first line is not a
+          ;; continuation line and is in an "if", "for", "func" etc. block).
+          (in-block)
+
+          ;; Our desired indent relative to our ending line's indent.
           (indent 0))
 
       ;; Skip leading whitespace.
       (skip-syntax-forward " ")
 
-      ;; Move after following char if it is a closer. This is so below code
-      ;; sees it and jumps to the corresponding opener.
-      (skip-syntax-forward ")" (1+ (point)))
+      ;; Decrement indent if the first character on the line is a closer.
+      (when (or (eq (char-after) ?\)) (eq (char-after) ?}))
+        (cl-decf indent tab-width))
 
       (while (or
               ;; Always run the first iteration so we process empty lines.
@@ -690,8 +703,8 @@ starting line, it is done."
              ;; relative to the opener's line, and that indent should not
              ;; be inherited by our starting line.
              (when (and
-                    ;; Opener wasn't on our starting line.
-                    (< bol start-line)
+                    ;; We care about dangling expressions, not child blocks.
+                    (not in-block)
 
                     ;; Opener and closer aren't on same line.
                     (< (point) bol)
@@ -731,7 +744,24 @@ starting line, it is done."
             ;; If we aren't a continuation line and we have an enclosing paren
             ;; or brace, jump to opener and increment our indent.
             (when (go-goto-opening-parenthesis)
-              (cl-incf indent tab-width)))))
+              ;; We started in a child block if our opener is a curly brace.
+              (setq in-block (and
+                              (eq (char-after) ?{)
+                              (looking-back "[^[:space:]][[:space:]]" (- (point) 2))))
+              (cl-incf indent tab-width))))
+
+        ;; If we stared in a child block we must follow dangling lines
+        ;; until they don't dangle anymore. This is to handle cases like:
+        ;;
+        ;; if foo ||
+        ;;      foo &&
+        ;;        foo {
+        ;;   X
+        ;;
+        ;; There can be an arbitrary number of indents, so we must go back to
+        ;; the "if" to determine the indent of "X".
+        (when (and in-block (bolp) (go-previous-line-has-dangling-op-p))
+          (goto-char (go-previous-line-has-dangling-op-p))))
 
       ;; If our ending line is a continuation line but doesn't open
       ;; an extra indent, reduce indent. We tentatively gave indents to all
@@ -841,13 +871,15 @@ foo ||
 Point will be left before any trailing comments. Point will be left
 after the opening backtick of multiline strings."
   (end-of-line)
-  (skip-syntax-backward " ")
-  (when (looking-back "\\*/" (- (point) 2))
-    ;; back up so we are in the /* comment */
-    (backward-char))
-  (when (go-in-comment-p)
-    (go-goto-beginning-of-string-or-comment)
-    (skip-syntax-backward " "))
+  (let ((keep-going t))
+    (while keep-going
+      (skip-syntax-backward " ")
+      (when (looking-back "\\*/" (- (point) 2))
+        ;; back up so we are in the /* comment */
+        (backward-char))
+      (if (go-in-comment-p)
+          (go-goto-beginning-of-string-or-comment)
+        (setq keep-going nil))))
   (when (go-in-string-p)
     (go-goto-beginning-of-string-or-comment)
     ;; forward one so point is after the opening "`"
