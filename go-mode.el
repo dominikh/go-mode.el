@@ -616,15 +616,20 @@ case keyword. It returns nil for the case line itself."
     (and
      (go-goto-opening-parenthesis)
 
-     ;; opening paren-like character is curly
+     ;; Opening paren-like character is a curly.
      (eq (char-after) ?{)
 
      (or
-      ;; preceded by non space (e.g. "Foo|{")
+      ;; Curly is preceded by non space (e.g. "Foo|{").
       (not (looking-back "[[:space:]]" (1- (point))))
 
-      ;; or curly itself is in a composite literal (e.g. "Foo{|{")
-      (go--in-composite-literal-p)))))
+      (and
+       (progn (skip-syntax-backward " ") t)
+
+       ;; Curly looks like a composite literal with implicit type
+       ;; name. In particular, the curly is the first character on the
+       ;; line or the previous character is a comma or colon.
+       (or (bolp) (looking-back "[,:]" (1- (point)))))))))
 
 (defun go--open-paren-position ()
   "Return non-nil if point is between '(' and ')'.

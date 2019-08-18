@@ -18,4 +18,17 @@ func _() {
 			println("there")
 		},
 	}
+
+	Foo{
+		Bar: func() {
+			switch {
+			case baz:
+			}
+		},
+
+		"bar": {
+			"foo",
+			"bar",
+		},
+	}
 }
