@@ -239,6 +239,12 @@ Only really desirable when using `godoc' instead of `go doc'."
   :type 'boolean
   :group 'godoc)
 
+(defcustom godoc-reuse-buffer nil
+  "Reuse a single *godoc* buffer to display godoc-at-point calls.
+The default behavior is to open a separate buffer for each call."
+  :type 'boolean
+  :group 'godoc)
+
 (defcustom godoc-at-point-function #'godoc-and-godef
   "Function to call to display the documentation for an
 identifier at a given position.
@@ -1577,9 +1583,15 @@ you save any file, kind of defeating the point of autoloading."
                        (go-packages) nil nil nil 'go-godoc-history)
     (read-from-minibuffer "godoc: " nil nil nil 'go-godoc-history)))
 
+(defun godoc--buffer-name (query)
+  "Determine the name to use for the output buffer of a given godoc QUERY."
+  (if godoc-reuse-buffer
+      "*godoc*"
+    (concat "*godoc " query "*")))
+
 (defun godoc--get-buffer (query)
   "Get an empty buffer for a godoc QUERY."
-  (let* ((buffer-name (concat "*godoc " query "*"))
+  (let* ((buffer-name (godoc--buffer-name query))
          (buffer (get-buffer buffer-name)))
     ;; Kill the existing buffer if it already exists.
     (when buffer (kill-buffer buffer))
