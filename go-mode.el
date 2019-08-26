@@ -556,7 +556,11 @@ The return value is cached based on the current `line-beginning-position'."
   "Return non-nil if current line ends in a dangling operator.
 The return value is not cached."
   (or
-   (go--line-suffix-p go-dangling-operators-regexp)
+   (and
+    (go--line-suffix-p go-dangling-operators-regexp)
+    ;; "=" does not behave like a dangling operator in decl statements.
+    (not (go--line-suffix-p "\\(?:var\\|type\\|const\\)[[:space:]].*=")))
+
    ;; treat comma as dangling operator in certain cases
    (and
     (go--line-suffix-p ",")
