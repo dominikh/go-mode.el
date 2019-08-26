@@ -558,8 +558,12 @@ The return value is not cached."
   (or
    (and
     (go--line-suffix-p go-dangling-operators-regexp)
+
     ;; "=" does not behave like a dangling operator in decl statements.
-    (not (go--line-suffix-p "\\(?:var\\|type\\|const\\)[[:space:]].*=")))
+    (not (go--line-suffix-p "\\(?:var\\|type\\|const\\)[[:space:]].*="))
+
+    ;; Don't mistake "1234." for a dangling operator.
+    (not (go--line-suffix-p "[[:space:]]-?[[:digit:]][_0-9]*\\.")))
 
    ;; treat comma as dangling operator in certain cases
    (and
