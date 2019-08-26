@@ -127,6 +127,28 @@ func main() {
 }"
    ))
 
+
+(ert-deftest go--fill-paragraph-block-offset ()
+  (go--should-fill
+   "
+func main() {
+<>  /*
+       Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+         sed do eiusmod tempor incididunt ut labore
+         et dolore magna aliqua.
+  */
+}"
+
+   "
+func main() {
+  /*
+       Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
+       do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  */
+}"
+   ))
+
+
 (ert-deftest go--fill-paragraph-block-region ()
   (go--should-fill
    "

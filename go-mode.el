@@ -656,13 +656,20 @@ case keyword. It returns nil for the case line itself."
             (or (go--empty-line-p) (go--boring-comment-p))
             (zerop (forward-line 1))))
 
-    ;; If we are looking at the start of an interesting comment, our
-    ;; prefix is the comment opener and any space following.
-    (if (looking-at (concat go--comment-start-regexp "[[:space:]]*"))
-        ;; Replace "/*" opener with spaces so following lines don't
-        ;; get "/*" prefix.
-        (replace-regexp-in-string "/\\*" "  "
-                                  (match-string-no-properties 0)))))
+    ;; If we are in a block comment, set prefix based on first line
+    ;; with content.
+    (if (go-in-comment-p)
+        (progn
+          (looking-at "[[:space:]]*")
+          (match-string-no-properties 0))
+
+      ;; Else if we are looking at the start of an interesting comment, our
+      ;; prefix is the comment opener and any space following.
+      (if (looking-at (concat go--comment-start-regexp "[[:space:]]*"))
+          ;; Replace "/*" opener with spaces so following lines don't
+          ;; get "/*" prefix.
+          (replace-regexp-in-string "/\\*" "  "
+                                    (match-string-no-properties 0))))))
 
 (defun go--fill-paragraph (&rest args)
   "Wrap fill-paragraph to set custom fill-prefix."
