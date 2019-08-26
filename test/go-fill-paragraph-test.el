@@ -1,0 +1,178 @@
+;;; go-fill-paragraph-test.el
+
+;; Copyright 2019 The go-mode Authors.  All rights reserved.
+;; Use of this source code is governed by a BSD-style
+;; license that can be found in the LICENSE file.
+
+(defun go--should-fill (got expected)
+  "Run `fill-paragraph' against GOT and make sure it matches EXPECTED.
+
+<> in GOT represents point. If they aren't next to each other, then it
+represents point and mark to test the region based fill-paragraph."
+  (with-temp-buffer
+    (go-mode)
+    (insert got)
+    (goto-char (point-min))
+    (let ((beg (progn (search-forward "<") (delete-char -1) (point)))
+          (end (progn (search-forward ">") (delete-char -1) (point))))
+      (when (/= beg end)
+        (set-mark beg))
+      (call-interactively 'fill-paragraph)
+      (should (string= (buffer-string) expected)))))
+
+(ert-deftest go--fill-paragraph-no-comment ()
+  (go--should-fill
+   "
+func main() {
+<>
+  reallyLongLineButThereAreNoCommentsHere() + reallyLongLineButThereAreNoCommentsHere()
+}"
+
+   "
+func main() {
+
+  reallyLongLineButThereAreNoCommentsHere() + reallyLongLineButThereAreNoCommentsHere()
+}"
+   ))
+
+(ert-deftest go--fill-paragraph-single ()
+  (go--should-fill
+   "
+func main() {
+<>  // Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+}"
+
+   "
+func main() {
+  // Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+  // eiusmod tempor incididunt ut labore et dolore magna aliqua.
+}"
+   ))
+
+(ert-deftest go--fill-paragraph-single-region ()
+  (go--should-fill
+   "
+func main() {
+<  // Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+>}"
+
+   "
+func main() {
+  // Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+  // eiusmod tempor incididunt ut labore et dolore magna aliqua.
+}"
+   ))
+
+(ert-deftest go--fill-paragraph-block ()
+  (go--should-fill
+   "
+func main() {
+<>  /* Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. */
+}"
+
+   "
+func main() {
+  /* Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+     eiusmod tempor incididunt ut labore et dolore magna aliqua. */
+}"
+   ))
+
+(ert-deftest go--fill-paragraph-block-region ()
+  (go--should-fill
+   "
+func main() {
+<  /* Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. */
+>}"
+
+   "
+func main() {
+  /* Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+     eiusmod tempor incididunt ut labore et dolore magna aliqua. */
+}"
+   ))
+
+(ert-deftest go--fill-paragraph-block-empty-first ()
+  (go--should-fill
+   "
+func main() {
+<>  /*
+       Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  */
+}"
+
+   "
+func main() {
+  /*
+       Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
+       do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  */
+}"
+   ))
+
+(ert-deftest go--fill-paragraph-block-empty-first-region ()
+  (go--should-fill
+   "
+func main() {
+<  /*
+       Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  */
+>}"
+
+   "
+func main() {
+  /*
+       Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
+       do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  */
+}"
+   ))
+
+(ert-deftest go--fill-paragraph-block-region ()
+  (go--should-fill
+   "
+func main() {
+<  /* Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. */
+>}"
+
+   "
+func main() {
+  /* Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+     eiusmod tempor incididunt ut labore et dolore magna aliqua. */
+}"
+   ))
+
+(ert-deftest go--fill-paragraph-single-artful ()
+  (go--should-fill
+   "
+func main() {
+<>  /////////////////////
+  // Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  /////////////////////
+}"
+
+   "
+func main() {
+  /////////////////////
+  // Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+  // eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  /////////////////////
+}"
+   ))
+
+(ert-deftest go--fill-paragraph-single-artful-region ()
+  (go--should-fill
+   "
+func main() {
+<  /////////////////////
+  // Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  /////////////////////
+>}"
+
+   "
+func main() {
+  /////////////////////
+  // Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do
+  // eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  /////////////////////
+}"
+   ))

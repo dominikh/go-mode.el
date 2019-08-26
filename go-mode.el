@@ -632,6 +632,106 @@ case keyword. It returns nil for the case line itself."
        ;; line or the previous character is a comma or colon.
        (or (bolp) (looking-back "[,:]" (1- (point)))))))))
 
+(defun go--fill-prefix ()
+  "Return fill prefix for following comment paragraph."
+  (save-excursion
+    (beginning-of-line)
+
+    ;; Skip over empty lines and empty comment openers/closers.
+    (while (and
+            (or (go--empty-line-p) (go--boring-comment-p))
+            (zerop (forward-line 1))))
+
+    ;; If we are looking at the start of an interesting comment, our
+    ;; prefix is the comment opener and any space following.
+    (if (looking-at (concat go--comment-start-regexp "[[:space:]]*"))
+        ;; Replace "/*" opener with spaces so following lines don't
+        ;; get "/*" prefix.
+        (replace-regexp-in-string "/\\*" "  "
+                                  (match-string-no-properties 0)))))
+
+(defun go--fill-paragraph (&rest args)
+  "Wrap fill-paragraph to set custom fill-prefix."
+  (let ((fill-prefix (go--fill-prefix))
+        (fill-paragraph-function nil))
+    (apply 'fill-paragraph args)))
+
+(defun go--empty-line-p ()
+  (looking-at "[[:space:]]*$"))
+
+(defun go--boring-comment-p ()
+  "Return non-nil if we are looking at a boring comment.
+
+A boring comment is a comment with no content. For example:
+
+////////  ; boring
+// hello
+////////  ; boring
+
+/*        ; boring
+  hello
+*/        ; boring
+"
+  (or
+   (looking-at-p "[[:space:]]*//+[[:space:]]*$")
+   (looking-at-p "[[:space:]]*\\(?:/\\*+\\|\\*/+\\)[[:space:]]*$")))
+
+(defun go--interesting-comment-p ()
+  "Return non-nil if we are looking at an interesting comment.
+
+An interesting comment is one that contains content other than
+comment starter/closer characters."
+
+  (if (go-in-comment-p)
+      (and
+       (not (go--empty-line-p))
+       (not (looking-at-p "[[:space:]]*\\*/")))
+    (and
+     (looking-at go--comment-start-regexp)
+     (not (go--boring-comment-p)))))
+
+(defun go--fill-forward-paragraph (&optional arg)
+  "forward-paragraph like function used for fill-paragraph.
+
+This function is key for making fill-paragraph do the right
+thing for comments."
+  (beginning-of-line)
+  (let* ((arg (or arg 1))
+         (single (if (> arg 0) 1 -1))
+         (done nil))
+    (while (and (not done) (not (zerop arg)))
+      ;; If we are moving backwards and aren't currently looking at a
+      ;; comment, move back one line. This is to make sure
+      ;; (go--file-forward-paragraph -1) always works properly as the
+      ;; inverse of (go--file-forward-paragraph 1).
+      (when (and
+             (= single -1)
+             (not (go-in-comment-p))
+             (not (looking-at-p go--comment-start-regexp)))
+        (forward-line -1))
+
+      ;; Skip empty lines and comment lines with no content.
+      (while (and
+              (or (go--empty-line-p) (go--boring-comment-p))
+              (zerop (forward-line single))))
+
+      (let (saw-comment)
+        ;; Skip comment lines that have content.
+        (while (and
+                (go--interesting-comment-p)
+                (zerop (forward-line single)))
+          (setq saw-comment t))
+
+        (if (not saw-comment)
+            (setq done t)
+          ;; If we are going backwards, back up one more line so
+          ;; we are on the line before the comment.
+          (when (= single -1)
+            (forward-line 1))
+          (cl-decf arg single))))
+    arg))
+
+
 (defun go--open-paren-position ()
   "Return non-nil if point is between '(' and ')'.
 
@@ -924,7 +1024,7 @@ Return non-nil if point changed lines."
       (setq count (if (and count (< count 0 )) -1 1)))
     moved))
 
-(defconst go--comment-start-regexp "[[:space:]]*\\(/\\*\\|//\\)")
+(defconst go--comment-start-regexp "[[:space:]]*\\(?:/[/*]\\)")
 
 (defun go--case-comment-p (indent)
   "Return non-nil if looking at a comment attached to a case statement.
@@ -1386,6 +1486,10 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 
   (set (make-local-variable 'go-dangling-cache) (make-hash-table :test 'eql))
   (add-hook 'before-change-functions #'go--reset-dangling-cache-before-change t t)
+
+  (set (make-local-variable 'adaptive-fill-function) #'go--fill-prefix)
+  (set (make-local-variable 'fill-paragraph-function) #'go--fill-paragraph)
+  (set (make-local-variable 'fill-forward-paragraph-function) #'go--fill-forward-paragraph)
 
   ;; ff-find-other-file
   (setq ff-other-file-alist 'go-other-file-alist)
