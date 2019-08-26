@@ -895,8 +895,13 @@ is done."
              (not (go--continuation-line-indents-p)))
         (cl-decf indent tab-width))
 
-      ;; Apply our computed indent relative to the indent of the ending line.
-      (+ indent (current-indentation)))))
+      ;; Apply our computed indent relative to the indent of the
+      ;; ending line, or 0 if we are at the top level.
+      (if (and
+           (= 0 (go-paren-level))
+           (not (go-previous-line-has-dangling-op-p)))
+          indent
+        (+ indent (current-indentation))))))
 
 (defconst go--operator-chars "*/%<>&\\^+\\-|=!,"
   "Individual characters that appear in operators.
