@@ -15,3 +15,28 @@
       (let ((contents-before-indent (buffer-string)))
         (indent-region (point-min) (point-max) nil)
         (should (string= contents-before-indent (buffer-string)))))))
+
+(defun go--should-indent (input expected)
+  "Run `indent-region' against INPUT and make sure it matches EXPECTED."
+  (with-temp-buffer
+    (go-mode)
+    (insert input)
+    (indent-region (point-min) (point-max))
+    (should (string= (buffer-string) expected))))
+
+(ert-deftest go--indent-top-level ()
+  (go--should-indent
+   "
+package foo
+  var foo = 123 +
+    456 +
+    789
+"
+
+   "
+package foo
+var foo = 123 +
+	456 +
+	789
+"
+   ))
