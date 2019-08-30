@@ -723,8 +723,8 @@ thing for comments."
     (while (and (not done) (not (zerop arg)))
       ;; If we are moving backwards and aren't currently looking at a
       ;; comment, move back one line. This is to make sure
-      ;; (go--file-forward-paragraph -1) always works properly as the
-      ;; inverse of (go--file-forward-paragraph 1).
+      ;; (go--fill-forward-paragraph -1) always works properly as the
+      ;; inverse of (go--fill-forward-paragraph 1).
       (when (and
              (= single -1)
              (not (go-in-comment-p))
@@ -744,7 +744,14 @@ thing for comments."
           (setq saw-comment t))
 
         (if (not saw-comment)
-            (setq done t)
+            (progn
+              ;; In fill-region case user may have selected a region
+              ;; with non-comments. fill-region will loop forever
+              ;; until it makes it to the end of the region, so just
+              ;; fall back to `forward-paragraph' so we make progress.
+              (when mark-active
+                (setq arg (forward-paragraph arg)))
+              (setq done t))
           ;; If we are going backwards, back up one more line so
           ;; we are on the line before the comment.
           (when (= single -1)
