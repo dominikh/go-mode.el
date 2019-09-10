@@ -185,15 +185,15 @@ a `before-save-hook'."
   :type '(repeat (list regexp (choice (repeat string) function)))
   :group 'go)
 
-(defcustom go-packages-function 'go-packages-native
+(defcustom go-packages-function 'go-packages-go-list
   "Function called by `go-packages' to determine the list of available packages.
 This is used in e.g. tab completion in `go-import-add'.
 
-This package provides two functions: `go-packages-native' uses
+This package provides two functions: `go-packages-go-list' uses
+'go list all' to determine all Go packages. `go-packages-native' uses
 elisp to find all .a files in all /pkg/ directories.
-`go-packages-go-list' uses 'go list all' to determine all Go
-packages.  `go-packages-go-list' generally produces more accurate
-results, but can be slower than `go-packages-native'."
+`go-packages-native' is obsolete as it doesn't behave correctly with
+the Go build cache or Go modules."
   :type 'function
   :package-version '(go-mode . 1.4.0)
   :group 'go)
@@ -1950,8 +1950,11 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
   (funcall go-packages-function))
 
 (defun go-packages-native ()
-  "Return a list of all installed Go packages.
-It looks for archive files in /pkg/."
+  "Return a list of all installed Go packages. Obsolete.
+It looks for archive files in /pkg/. This strategy does not work
+well with the Go build cache or Go modules.
+
+You should use `go-packages-go-list' instead."
   (sort
    (delete-dups
     (cl-mapcan
