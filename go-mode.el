@@ -2620,6 +2620,50 @@ If BUFFER, return the number of characters in that buffer instead."
   (with-current-buffer (or buffer (current-buffer))
     (1- (position-bytes (point-max)))))
 
+(defvar go-dot-mod-mode-map
+  (let ((map (make-sparse-keymap)))
+    map)
+  "Keymap for `go-dot-mod-mode'.")
+
+(defvar go-dot-mod-mode-syntax-table
+  (let ((st (make-syntax-table)))
+    ;; handle '//' comment syntax
+    (modify-syntax-entry ?/ ". 124b" st)
+    (modify-syntax-entry ?\n "> b" st)
+    st)
+  "Syntax table for `go-dot-mod-mode'.")
+
+(defconst go-dot-mod-mode-keywords
+  '("module" "go" "require" "replace" "exclude")
+  "All keywords in the Go language.  Used for font locking.")
+
+(defvar go-dot-mod-font-lock-keywords
+  `(
+    (,(concat "\\_<" (regexp-opt go-dot-mod-mode-keywords t) "\\_>") . font-lock-keyword-face))
+  "Keyword highlighting specification for `go-dot-mod-mode'.")
+
+;;;###autoload
+(define-derived-mode go-dot-mod-mode fundamental-mode "Go Mod"
+  "A major mode for editing go.mod files."
+  :syntax-table go-dot-mod-mode-syntax-table
+  (set (make-local-variable 'comment-start) "// ")
+  (set (make-local-variable 'comment-end)   "")
+  (set (make-local-variable 'comment-use-syntax) t)
+  (set (make-local-variable 'comment-start-skip) "\\(//+\\)\\s *")
+
+  (set (make-local-variable 'font-lock-defaults)
+       '(go-dot-mod-font-lock-keywords))
+  (set (make-local-variable 'indent-line-function) 'go-mode-indent-line)
+
+  ;; Go style
+  (setq indent-tabs-mode t)
+
+  ;; we borrow the go-mode-indent function so we need this buffer cache
+  (set (make-local-variable 'go-dangling-cache) (make-hash-table :test 'eql))
+  (add-hook 'before-change-functions #'go--reset-dangling-cache-before-change t t))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("go\\.mod\\'" . go-dot-mod-mode))
 
 ;; Polyfills for functions added in Emacs 26.  Remove these once we don’t
 ;; support Emacs 25 any more.

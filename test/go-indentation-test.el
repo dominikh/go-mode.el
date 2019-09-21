@@ -16,6 +16,14 @@
         (indent-region (point-min) (point-max) nil)
         (should (string= contents-before-indent (buffer-string)))))))
 
+(ert-deftest go-dot-mod--indent-line ()
+  (with-temp-buffer
+    (go-dot-mod-mode)
+    (insert-file-contents "testdata/indentation_tests/go.mod")
+    (let ((contents-before-indent (buffer-string)))
+      (indent-region (point-min) (point-max) nil)
+      (should (string= contents-before-indent (buffer-string))))))
+
 (defun go--should-indent (input expected)
   "Run `indent-region' against INPUT and make sure it matches EXPECTED."
   (with-temp-buffer
