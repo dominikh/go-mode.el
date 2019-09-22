@@ -100,6 +100,26 @@ Either evaluate the statements with `C-x C-e`, or restart Emacs.
 There are several third party extensions that can enhance the Go
 experience in Emacs.
 
+## Gopls integration
+
+[Gopls](https://github.com/golang/tools/blob/master/gopls/README.md)
+is the official language server protocol (lsp) implementation provided
+by the Go team. It is intended to replace the existing third party
+tools for code formatting (gofmt), automatic imports (goimports), code
+navigation (godef/guru), type and function descriptions (godoc/godef),
+error checking, auto completion (gocode), variable and type renaming
+(rename), and more. Once gopls is stable the older tools will no
+longer be supported.
+
+Gopls is a supported backend for
+[lsp-mode](https://github.com/emacs-lsp/lsp-mode). It will be used
+automatically by lsp-mode if `gopls` is found in your PATH. You can
+install gopls via: `go get golang.org/x/tools/gopls@latest`. To enable
+lsp-mode for go buffers:
+
+    (add-hook 'go-mode-hook 'lsp-deferred)
+
+
 ## Syntax/error checking
 
 There are two ways of using flymake with Go:
