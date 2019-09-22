@@ -1,0 +1,17 @@
+name: Emacs CI
+on: [push, pull_request]
+jobs:
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - name: Install emacs
+      run: sudo apt-get update && sudo apt-get install -y emacs
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v1
+
+    - name: Test
+      run: cd test; emacs --batch -q -l ert -l ../go-mode.el -l go-indentation-test.el -f ert-run-tests-batch-and-exit
