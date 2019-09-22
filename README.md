@@ -34,6 +34,9 @@ the following extra features to provide an improved experience:
     (`go-import-add`, bound to `C-c C-a`)
   - A function for removing or commenting unused imports
     (`go-remove-unused-imports`)
+  - It is recommended that you use `goimports` or the
+    `organize-imports` feature of `gopls` to manage
+    adding/removing/organizing imports automatically.
 - Integration with godef
   - `godef-describe` (`C-c C-d`) to describe expressions
   - `godef-jump` (`C-c C-j`) and `godef-jump-other-window` (`C-x 4 C-c
