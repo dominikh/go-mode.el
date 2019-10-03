@@ -1600,6 +1600,21 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
               (error "Invalid rcs patch or internal error in go--apply-rcs-patch")))))))
     (move-to-column column)))
 
+(defun go-build ()
+  "Build using `go build`"
+  (interactive)
+  (compile (format "%s build" go-command)))
+
+(defun go-test ()
+  "Test using `go test`"
+  (interactive)
+  (compile (format "%s test" go-command)))
+
+(defun go-vet ()
+  "Check using `go vet`"
+  (interactive)
+  (compile (format "%s vet" go-command)))
+
 (defun gofmt--is-goimports-p ()
   (string-equal (file-name-base gofmt-command) "goimports"))
 
