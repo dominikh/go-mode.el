@@ -421,6 +421,10 @@ For mode=set, all covered lines will have this weight."
       ,@(mapcar (lambda (x) `(,x font-lock-type-face))
                 (number-sequence 1 go--font-lock-func-param-num-groups)))
 
+     (go--match-interface
+      ,@(mapcar (lambda (x) `(,x font-lock-type-face))
+                (number-sequence 1 go--font-lock-func-param-num-groups)))
+
      ;; Fontify types in e.g. "var foo string".
      (go--match-ident-type-pair 1 font-lock-type-face)
 
@@ -619,7 +623,7 @@ case keyword. It returns nil for the case line itself."
                 (go--forward-line -1)))
 
         (and
-         (looking-at go--case-regexp)
+         (looking-at-p go--case-regexp)
          ;; we weren't in case list if first line ended in colon
          ;; and the "case" line ended in colon
          (not (and saw-colon (looking-at ".*:[[:space:]]*$"))))))))
@@ -633,8 +637,8 @@ case keyword. It returns nil for the case line itself."
      (eq (char-after) ?{)
 
      ;; "struct" appears before opening curly
-     (backward-word)
-     (looking-at "struct[[:space:]]"))))
+     (skip-syntax-backward " ")
+     (looking-back "struct" (- (point) 6)))))
 
 (defun go--in-composite-literal-p ()
   "Return non-nil if point is in a composite literal."
@@ -659,6 +663,18 @@ case keyword. It returns nil for the case line itself."
       ;; are the latter, we must be contained in another composite
       ;; literal.
       (and (bolp) (go--in-composite-literal-p))))))
+
+(defun go--in-interface-p ()
+  "Return non-nil if point is inside an interface definition."
+  (save-excursion
+    (and
+     ;; inside curlies
+     (go-goto-opening-parenthesis)
+     (eq (char-after) ?{)
+
+     ;; "interface" appears before opening curly
+     (skip-syntax-backward " ")
+     (looking-back "interface" (- (point) 9)))))
 
 (defun go--fill-prefix ()
   "Return fill prefix for following comment paragraph."
@@ -1270,6 +1286,42 @@ of last search.  Return t if search succeeded."
         (when regions
           (set-match-data (go--make-match-data regions))
           t)))))
+
+(defun go--match-interface (end)
+  "Search for function signatures in interface declarations.
+
+Interface items are function signatures without the \"func\"
+keyword. To find them, we search for lines that look like
+\"\\s*\\w+(\" and are enclosed in an \"interface { }\"
+declaration. Return non-nil if search succeeds."
+  (let (type-names found-match)
+    (while (and
+            (not found-match)
+
+            ;; Search for the beginning of a function name as it shows
+            ;; up in an interface (e.g. "foo(").
+            (re-search-forward (concat "\\_<" go-identifier-regexp "(") end t))
+      (let ((search-end (match-end 0)))
+        ;; Move back to before the "foo(".
+        (goto-char (match-beginning 0))
+
+        ;; Make sure we are in an interface declaration.
+        (when (go--in-interface-p)
+          ;; Invoke the normal "func" signature search.
+          (setq type-names (go--filter-match-data (go--match-func-type-names end) end))
+
+          (when type-names
+            (set-match-data (go--make-match-data type-names))
+            (setq found-match t)))
+
+        ;; Reset point to the end of the search. If we have no match
+        ;; yet we need to continue to make progress as we search. If
+        ;; we found a match, we need to reset the point since the
+        ;; function signature itself may contain another interface
+        ;; declaration.
+        (goto-char search-end)))
+
+    found-match))
 
 (defun go--match-ident-type-pair (end)
   "Search for identifier + type-name pairs.
