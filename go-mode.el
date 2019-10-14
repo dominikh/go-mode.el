@@ -410,9 +410,20 @@ For mode=set, all covered lines will have this weight."
   ;; we cannot use 'symbols in regexp-opt because GNU Emacs <24
   ;; doesn't understand that
   (append
-   `((go--match-func
+   `(
+     ;; Fontify types in function signatures.
+     (go--match-func
+      ;; The signature logic is "anchored" to a "func" keyword, so
+      ;; `go--match-func' must match all signature types in a single
+      ;; invocation since it can't remember if it is inside a "func"
+      ;; across invocations. So, it must have an explicit limit on the
+      ;; number of sub-expressions.
       ,@(mapcar (lambda (x) `(,x font-lock-type-face))
                 (number-sequence 1 go--font-lock-func-param-num-groups)))
+
+     ;; Fontify types in e.g. "var foo string".
+     (go--match-ident-type-pair 1 font-lock-type-face)
+
      (,(concat "\\_<" (regexp-opt go-mode-keywords t) "\\_>") . font-lock-keyword-face)
      (,(concat "\\(\\_<" (regexp-opt go-builtins t) "\\_>\\)[[:space:]]*(") 1 font-lock-builtin-face)
      (,(concat "\\_<" (regexp-opt go-constants t) "\\_>") . font-lock-constant-face)
@@ -1256,6 +1267,36 @@ of last search.  Return t if search succeeded."
         (when regions
           (set-match-data (go--make-match-data regions))
           t)))))
+
+(defun go--match-ident-type-pair (end)
+  "Search for identifier + type-name pairs.
+
+For example, this looks for the \"foo bar\" in \"var foo bar\",
+yielding match-data for \"bar\" since that is a type name to be
+fontified. This approach matches type names in var and const
+decls, and in struct definitions. Return non-nil if search
+succeeds."
+  (let (type-names found-match)
+    ;; Find the starting ident, e.g. "foo" in "var foo bar".
+    (while (and
+            (not found-match)
+            (re-search-forward (concat "\\_<" go-identifier-regexp "\\_>") end t))
+      (cond
+       ;; Skip keywords, such as the "var" in "var foo bar".
+       ((member (match-string 0) go-mode-keywords))
+
+       ;; If our identifier is followed by a space.
+       ((> (skip-syntax-forward " ") 0)
+        (when (and
+               ;; And it looks like a type name.
+               (looking-at go-type-name-regexp)
+               ;; And it isn't a keyword.
+               (not (member (match-string 1) go-mode-keywords)))
+          (setq found-match t)))))
+
+    ;; Return whether we found an ident/type pair. match-data will be
+    ;; that of the final looking-at call.
+    found-match))
 
 (defun go--match-func-type-names (end)
   (cond
