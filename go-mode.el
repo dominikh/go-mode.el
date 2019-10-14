@@ -425,6 +425,10 @@ For mode=set, all covered lines will have this weight."
       ,@(mapcar (lambda (x) `(,x font-lock-type-face))
                 (number-sequence 1 go--font-lock-func-param-num-groups)))
 
+     (go--match-type-switch-case
+      ,@(mapcar (lambda (x) `(,x font-lock-type-face))
+                (number-sequence 1 go--font-lock-func-param-num-groups)))
+
      ;; Fontify types in e.g. "var foo string".
      (go--match-ident-type-pair 1 font-lock-type-face)
 
@@ -675,6 +679,18 @@ case keyword. It returns nil for the case line itself."
      ;; "interface" appears before opening curly
      (skip-syntax-backward " ")
      (looking-back "interface" (- (point) 9)))))
+
+(defun go--in-type-switch-p ()
+  "Return non-nil if point is inside a type switch statement."
+  (save-excursion
+    (and
+     ;; inside curlies
+     (go-goto-opening-parenthesis)
+     (eq (char-after) ?{)
+
+     ;; ".(type)" appears before opening curly
+     (progn (skip-syntax-backward " ") t)
+     (looking-back "\\.(type)" (- (point) 7)))))
 
 (defun go--fill-prefix ()
   "Return fill prefix for following comment paragraph."
@@ -1321,6 +1337,33 @@ declaration. Return non-nil if search succeeds."
         ;; declaration.
         (goto-char search-end)))
 
+    found-match))
+
+(defun go--match-type-switch-case (end)
+  "Search for \"case\" clauses of type switch statements.
+
+In type switch statements, each case contains one or more type
+names. Here we find the next case clause and turn its items into
+the corresponding match data. Return non-nil if search succeeds."
+  (let (found-match)
+    (while (and
+            (not found-match)
+
+            ;; Search for "case" statements.
+            (re-search-forward "^[[:space:]]*case " end t))
+
+      ;; Make sure we are in a type switch statement.
+      (when (go--in-type-switch-p)
+        (let (type-names)
+          ;; Loop over each comma separated item in the case.
+          (while (looking-at (concat "[[:space:]\n]*" go-type-name-regexp "[[:space:]]*,?"))
+            (setq type-names (nconc type-names (list (match-beginning 1) (match-end 1))))
+            (goto-char (match-end 0)))
+
+          (setq type-names (go--filter-match-data type-names end))
+          (when type-names
+            (set-match-data (go--make-match-data type-names))
+            (setq found-match t)))))
     found-match))
 
 (defun go--match-ident-type-pair (end)

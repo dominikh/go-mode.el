@@ -66,6 +66,19 @@ KmapK[TstringT]KinterfaceK{}{
   S`foo`S: foo.FbarF(baz),
 }"))
 
+
+(ert-deftest go--fontify-type-switch ()
+  (should-fontify "
+KswitchK foo.(KtypeK) {
+KcaseK TstringT, *Tfoo.ZebraT, [2]TbyteT:
+}")
+
+  (should-fontify "
+KswitchK 123 {
+KcaseK string:
+}"))
+
+
 (defun should-fontify (contents)
   "Verify fontification.
 
