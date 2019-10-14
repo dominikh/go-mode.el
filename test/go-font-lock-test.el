@@ -24,8 +24,8 @@
 (ert-deftest go--fontify-decls ()
   (should-fontify "KvarK foo TintT")
   (should-fontify "KvarK foo *[3]TintT")
-  (should-fontify "KvarK foo Tfmt.StringerT")
-  (should-fontify "KvarK foo, bar Tfmt.StringerT")
+  (should-fontify "KvarK foo Tfoo.ZebraT")
+  (should-fontify "KvarK foo, bar Tfoo.ZebraT")
 
   (should-fontify "
 KvarK (
@@ -47,7 +47,23 @@ KconstK (
   (should-fontify "
 KstructK {
   a TboolT
-  c KstructK { f *Tfmt.StringerT }
+  c KstructK { f *Tfoo.ZebraT }
+}"))
+
+(ert-deftest go--fontify-interface ()
+  (should-fontify "
+KinterfaceK {
+  FfooF(a, b TcT) *TstringT
+}")
+
+  (should-fontify "
+KinterfaceK {
+  FfooF(KinterfaceK { FaF() TintT }) (c TdT)
+}")
+
+  (should-fontify "
+KmapK[TstringT]KinterfaceK{}{
+  S`foo`S: foo.FbarF(baz),
 }"))
 
 (defun should-fontify (contents)
@@ -67,7 +83,7 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
     ;; First pass through buffer looks for the face tags. We delete
     ;; the tags and record the expected face ranges in `faces'.
     (let ((case-fold-search nil) faces start start-pos)
-      (while (re-search-forward "[TBKCF]" nil t)
+      (while (re-search-forward "[TBKCFS]" nil t)
         (let ((found-char (char-before)))
           (backward-delete-char 1)
           (if start
@@ -78,7 +94,8 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
                               (?B 'font-lock-builtin-face)
                               (?K 'font-lock-keyword-face)
                               (?C 'font-lock-constant-face)
-                              (?F 'font-lock-function-name-face))))
+                              (?F 'font-lock-function-name-face)
+                              (?S 'font-lock-string-face))))
                   (setq faces (append faces `((,face ,start-pos ,(point))))))
                 (setq start nil))
             (setq start found-char)
