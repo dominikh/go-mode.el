@@ -4,6 +4,9 @@
 ;; Use of this source code is governed by a BSD-style
 ;; license that can be found in the LICENSE file.
 
+(require 'ert)
+(require 'go-mode)
+
 (defun go--should-fill (got expected)
   "Run `fill-paragraph' against GOT and make sure it matches EXPECTED.
 
@@ -15,9 +18,11 @@ represents point and mark to test the region based fill-paragraph."
     (goto-char (point-min))
     (let ((beg (progn (search-forward "<") (delete-char -1) (point)))
           (end (progn (search-forward ">") (delete-char -1) (point))))
-      (when (/= beg end)
-        (set-mark beg))
-      (call-interactively 'fill-paragraph)
+      (if (/= beg end)
+          (progn
+            (set-mark beg)
+            (call-interactively 'fill-region))
+        (call-interactively 'fill-paragraph))
       (should (string= (buffer-string) expected)))))
 
 (ert-deftest go--fill-paragraph-no-comment ()
