@@ -12,7 +12,7 @@
     (with-temp-buffer
       (go-mode)
       (insert-file-contents file)
-      (let ((contents-before-indent (buffer-string)))
+      (let ((contents-before-indent (buffer-string)) (inhibit-message t))
         (indent-region (point-min) (point-max) nil)
         (should (string= contents-before-indent (buffer-string)))))))
 
@@ -20,7 +20,7 @@
   (with-temp-buffer
     (go-dot-mod-mode)
     (insert-file-contents "testdata/indentation_tests/go.mod")
-    (let ((contents-before-indent (buffer-string)))
+    (let ((contents-before-indent (buffer-string)) (inhibit-message t))
       (indent-region (point-min) (point-max) nil)
       (should (string= contents-before-indent (buffer-string))))))
 
@@ -29,8 +29,9 @@
   (with-temp-buffer
     (go-mode)
     (insert input)
-    (indent-region (point-min) (point-max))
-    (should (string= (buffer-string) expected))))
+    (let ((inhibit-message t))
+      (indent-region (point-min) (point-max))
+      (should (string= (buffer-string) expected)))))
 
 (ert-deftest go--indent-top-level ()
   (go--should-indent
