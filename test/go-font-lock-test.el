@@ -78,6 +78,11 @@ KswitchK 123 {
 KcaseK string:
 }"))
 
+(ert-deftest go--fontify-composite-literal ()
+  (should-fontify "TfooT{")
+  (should-fontify "[]TfooT{")
+  (should-fontify "Tfoo.ZarT{")
+  (should-fontify "[]Tfoo.ZarT{"))
 
 (defun should-fontify (contents)
   "Verify fontification.
