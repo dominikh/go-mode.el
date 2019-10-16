@@ -2635,11 +2635,11 @@ If BUFFER, return the number of characters in that buffer instead."
 
 (defconst go-dot-mod-mode-keywords
   '("module" "go" "require" "replace" "exclude")
-  "All keywords in the Go language.  Used for font locking.")
+  "All keywords for go.mod files.  Used for font locking.")
 
 (defvar go-dot-mod-font-lock-keywords
   `(
-    (,(concat "\\_<" (regexp-opt go-dot-mod-mode-keywords t) "\\_>") . font-lock-keyword-face))
+    (,(concat "^\\s-*" (regexp-opt go-dot-mod-mode-keywords t) "\\s-") . font-lock-keyword-face))
   "Keyword highlighting specification for `go-dot-mod-mode'.")
 
 ;;;###autoload
