@@ -84,6 +84,19 @@ KcaseK string:
   (should-fontify "Tfoo.ZarT{")
   (should-fontify "[]Tfoo.ZarT{"))
 
+(ert-deftest go--fontify-slices-arrays-maps ()
+  (should-fontify "[]TfooT")
+  (should-fontify "[]Tfoo.ZarT")
+  (should-fontify "[]*Tfoo.ZarT")
+
+  (should-fontify "[123]TfooT")
+  (should-fontify "[...]TfooT")
+  (should-fontify "[foo.Zar]TfooT")
+
+  (should-fontify "KmapK[*Tfoo.ZarT]*Tbar.ZarT")
+  (should-fontify "[]KmapK[TfooT]TbarT")
+  (should-fontify "KmapK[[1][2][three]*Tfoo.ZarT][four][]*Tbar.ZarT"))
+
 (defun should-fontify (contents)
   "Verify fontification.
 
