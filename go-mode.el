@@ -646,16 +646,19 @@ case keyword. It returns nil for the case line itself."
      (eq (char-after) ?{)
 
      (or
-      ;; Curly is preceded by non space (e.g. "Foo|{").
-      (not (looking-back "[[:space:]]" (1- (point))))
+      ;; Curly is preceded by non space (e.g. "Foo{"), definitely
+      ;; composite literal.
+      (zerop (skip-syntax-backward " "))
 
-      (and
-       (progn (skip-syntax-backward " ") t)
+      ;; Curly preceded by comma or semicolon. This is a composite
+      ;; literal with implicit type name.
+      (looking-back "[,:]" (1- (point)))
 
-       ;; Curly looks like a composite literal with implicit type
-       ;; name. In particular, the curly is the first character on the
-       ;; line or the previous character is a comma or colon.
-       (or (bolp) (looking-back "[,:]" (1- (point)))))))))
+      ;; If we made it to the beginning of line we are either a naked
+      ;; block or a composite literal with implict type name. If we
+      ;; are the latter, we must be contained in another composite
+      ;; literal.
+      (and (bolp) (go--in-composite-literal-p))))))
 
 (defun go--fill-prefix ()
   "Return fill prefix for following comment paragraph."
