@@ -13,4 +13,8 @@ Label3: // Comments!
 	Label4:
 		// code
 	}
+
+	{
+	Label5:
+	}
 }
