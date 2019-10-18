@@ -429,6 +429,11 @@ For mode=set, all covered lines will have this weight."
       ,@(mapcar (lambda (x) `(,x font-lock-type-face))
                 (number-sequence 1 go--font-lock-func-param-num-groups)))
 
+     (go--match-split-func-return-values
+      ,@(mapcar (lambda (x) `(,x font-lock-type-face))
+                (number-sequence 1 go--font-lock-func-param-num-groups)))
+
+
      ;; Fontify types in e.g. "var foo string".
      (go--match-ident-type-pair 1 font-lock-type-face)
 
@@ -1368,6 +1373,32 @@ the corresponding match data. Return non-nil if search succeeds."
             (setq found-match t)))))
     found-match))
 
+
+(defun go--match-split-func-return-values (end)
+  "Search for split signature return values.
+
+This handles the special case of split signature return values:
+
+func foo(
+  a int,
+) (b bool, c string) {
+."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            ;; Look for potential beginning of return values.
+            (re-search-forward ")[[:space:]]+" end t))
+
+      (let ((type-names (go--match-function-result end)))
+        ;; Avoid false positives by making sure we are looking at the
+        ;; "{" that opens the func block.
+        (when (looking-at-p "[[:space:]]+{")
+          (setq type-names (go--filter-match-data type-names end))
+          (when type-names
+            (set-match-data (go--make-match-data type-names))
+            (setq found-match t)))))
+    found-match))
+
 (defun go--match-ident-type-pair (end)
   "Search for identifier + type-name pairs.
 
@@ -1540,13 +1571,16 @@ names in a function result, assuming point is at the beginning of
 a result.
 
 Function result is a unparenthesized type or a parameter list."
-  (cond ((and (looking-at (concat "[[:space:]*]*\\(" go-type-name-no-prefix-regexp "\\)"))
-              (not (member (match-string 1) go-mode-keywords)))
-         (list (match-beginning 1) (match-end 1)))
-        ((looking-at "[[:space:]]*(")
-         (goto-char (match-end 0))
-         (go--match-parameter-list end))
-        (t nil)))
+  (cond
+   ((and
+     (looking-at (concat "[[:space:]*]*\\(" go-type-name-no-prefix-regexp "\\)"))
+     (not (member (match-string 1) go-mode-keywords)))
+    (goto-char (match-end 1))
+    (list (match-beginning 1) (match-end 1)))
+   ((looking-at "[[:space:]]*(")
+    (goto-char (match-end 0))
+    (go--match-parameter-list end))
+   (t nil)))
 
 (defun go--reset-dangling-cache-before-change (&optional _beg _end)
   "Reset `go-dangling-cache'.

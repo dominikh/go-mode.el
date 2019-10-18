@@ -9,95 +9,116 @@
 (require 'cl-lib)
 
 (ert-deftest go--fontify-signature ()
-  (should-fontify "KfuncK FfooF() { }")
-  (should-fontify "KfuncK FfooF(TaT) { }")
-  (should-fontify "KfuncK FfooF(TaT, TbT) { }")
-  (should-fontify "KfuncK FfooF(TaT) TaT { }")
-  (should-fontify "KfuncK FfooF(a TbT) (a TbT) { }")
-  (should-fontify "KfuncK FfooF(a, b TcT) (a TbT, c TdT) { }")
+  (go--should-fontify "KfuncK FfooF() { }")
+  (go--should-fontify "KfuncK FfooF(TaT) { }")
+  (go--should-fontify "KfuncK FfooF(TaT, TbT) { }")
+  (go--should-fontify "KfuncK FfooF(TaT) TaT { }")
+  (go--should-fontify "KfuncK FfooF(a TbT) (a TbT) { }")
+  (go--should-fontify "KfuncK FfooF(a, b TcT) (a TbT, c TdT) { }")
 
-  (should-fontify "KfuncK (TbT) FfooF(a, b TcT) TdT { }")
-  (should-fontify "KfuncK (a TbT) FfooF(a TbT) (TdT) { }")
+  (go--should-fontify "KfuncK (TbT) FfooF(a, b TcT) TdT { }")
+  (go--should-fontify "KfuncK (a TbT) FfooF(a TbT) (TdT) { }")
 
-  (should-fontify "foo := KfuncK(a TbT) TcT { }"))
+  (go--should-fontify "foo := KfuncK(a TbT) TcT { }")
+
+  (go--should-fontify "
+KfuncK FfooF(
+  i TintT,
+) TstringT {
+  bar
+}")
+
+  (go--should-fontify "
+KfuncK FfooF(
+  i TintT,
+  j Tfloat64T) (TstringT, TboolT) {
+  bar
+}")
+
+  (go--should-fontify "
+KfuncK FfooF(
+  i TintT,
+) (a TstringT, b *Tfoo.ZarT) {
+  bar
+}"))
 
 (ert-deftest go--fontify-decls ()
-  (should-fontify "KvarK foo TintT")
-  (should-fontify "KvarK foo *[3]TintT")
-  (should-fontify "KvarK foo Tfoo.ZebraT")
-  (should-fontify "KvarK foo, bar Tfoo.ZebraT")
+  (go--should-fontify "KvarK foo TintT")
+  (go--should-fontify "KvarK foo *[3]TintT")
+  (go--should-fontify "KvarK foo Tfoo.ZebraT")
+  (go--should-fontify "KvarK foo, bar Tfoo.ZebraT")
 
-  (should-fontify "
+  (go--should-fontify "
 KvarK (
   a TbT
   a, b TbT
   a KfuncK(b TcT)
 )")
 
-  (should-fontify "
+  (go--should-fontify "
 KconstK (
   a = 1
   a TintT = 1
 )"))
 
 (ert-deftest go--fontify-struct ()
-  (should-fontify "KstructK { i TintT }")
-  (should-fontify "KstructK { a, b TintT }")
+  (go--should-fontify "KstructK { i TintT }")
+  (go--should-fontify "KstructK { a, b TintT }")
 
-  (should-fontify "
+  (go--should-fontify "
 KstructK {
   a TboolT
   c KstructK { f *Tfoo.ZebraT }
 }"))
 
 (ert-deftest go--fontify-interface ()
-  (should-fontify "
+  (go--should-fontify "
 KinterfaceK {
   FfooF(a, b TcT) *TstringT
 }")
 
-  (should-fontify "
+  (go--should-fontify "
 KinterfaceK {
   FfooF(KinterfaceK { FaF() TintT }) (c TdT)
 }")
 
-  (should-fontify "
+  (go--should-fontify "
 KmapK[TstringT]KinterfaceK{}{
   S`foo`S: foo.FbarF(baz),
 }"))
 
 
 (ert-deftest go--fontify-type-switch ()
-  (should-fontify "
+  (go--should-fontify "
 KswitchK foo.(KtypeK) {
 KcaseK TstringT, *Tfoo.ZebraT, [2]TbyteT:
 }")
 
-  (should-fontify "
+  (go--should-fontify "
 KswitchK 123 {
 KcaseK string:
 }"))
 
 (ert-deftest go--fontify-composite-literal ()
-  (should-fontify "TfooT{")
-  (should-fontify "[]TfooT{")
-  (should-fontify "Tfoo.ZarT{")
-  (should-fontify "[]Tfoo.ZarT{"))
+  (go--should-fontify "TfooT{")
+  (go--should-fontify "[]TfooT{")
+  (go--should-fontify "Tfoo.ZarT{")
+  (go--should-fontify "[]Tfoo.ZarT{"))
 
 (ert-deftest go--fontify-slices-arrays-maps ()
-  (should-fontify "[]TfooT")
-  (should-fontify "[]Tfoo.ZarT")
-  (should-fontify "[]*Tfoo.ZarT")
+  (go--should-fontify "[]TfooT")
+  (go--should-fontify "[]Tfoo.ZarT")
+  (go--should-fontify "[]*Tfoo.ZarT")
 
-  (should-fontify "[123]TfooT")
-  (should-fontify "[...]TfooT")
-  (should-fontify "[foo.Zar]TfooT")
+  (go--should-fontify "[123]TfooT")
+  (go--should-fontify "[...]TfooT")
+  (go--should-fontify "[foo.Zar]TfooT")
 
-  (should-fontify "KmapK[*Tfoo.ZarT]*Tbar.ZarT")
-  (should-fontify "[]KmapK[TfooT]TbarT")
-  (should-fontify "KmapK[[1][2][three]*Tfoo.ZarT][four][]*Tbar.ZarT"))
+  (go--should-fontify "KmapK[*Tfoo.ZarT]*Tbar.ZarT")
+  (go--should-fontify "[]KmapK[TfooT]TbarT")
+  (go--should-fontify "KmapK[[1][2][three]*Tfoo.ZarT][four][]*Tbar.ZarT"))
 
-(defun should-fontify (contents)
+(defun go--should-fontify (contents)
   "Verify fontification.
 
 CONTENTS is a template that uses single capital letters to
