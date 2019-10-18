@@ -97,6 +97,17 @@ KcaseK string:
   (should-fontify "[]KmapK[TfooT]TbarT")
   (should-fontify "KmapK[[1][2][three]*Tfoo.ZarT][four][]*Tbar.ZarT"))
 
+(ert-deftest go--fontify-negation ()
+  ;; Fontify unary "!".
+  (should-fontify "N!Nfoo")
+
+  ;; Alternate fontification with multiple "!".
+  (should-fontify "N!N!foo")
+  (should-fontify "N!N!N!Nfoo")
+
+  ;; Don't fontify "!=" operator.
+  (should-fontify "foo != bar"))
+
 (defun should-fontify (contents)
   "Verify fontification.
 
@@ -114,7 +125,7 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
     ;; First pass through buffer looks for the face tags. We delete
     ;; the tags and record the expected face ranges in `faces'.
     (let ((case-fold-search nil) faces start start-pos)
-      (while (re-search-forward "[TBKCFS]" nil t)
+      (while (re-search-forward "[TBKCFSN]" nil t)
         (let ((found-char (char-before)))
           (backward-delete-char 1)
           (if start
@@ -126,7 +137,8 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
                               (?K 'font-lock-keyword-face)
                               (?C 'font-lock-constant-face)
                               (?F 'font-lock-function-name-face)
-                              (?S 'font-lock-string-face))))
+                              (?S 'font-lock-string-face)
+                              (?N 'font-lock-negation-char-face))))
                   (setq faces (append faces `((,face ,start-pos ,(point))))))
                 (setq start nil))
             (setq start found-char)
