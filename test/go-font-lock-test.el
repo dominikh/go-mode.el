@@ -13,25 +13,31 @@
   (should-fontify "KfuncK FfooF(TaT) { }")
   (should-fontify "KfuncK FfooF(TaT, TbT) { }")
   (should-fontify "KfuncK FfooF(TaT) TaT { }")
-  (should-fontify "KfuncK FfooF(a TbT) (a TbT) { }")
-  (should-fontify "KfuncK FfooF(a, b TcT) (a TbT, c TdT) { }")
+  (should-fontify "KfuncK FfooF(VaV TbT) (VaV TbT) { }")
+  (should-fontify "KfuncK FfooF(VaV, VbV TcT) (VaV TbT, VcV TdT) { }")
 
-  (should-fontify "KfuncK (TbT) FfooF(a, b TcT) TdT { }")
-  (should-fontify "KfuncK (a TbT) FfooF(a TbT) (TdT) { }")
+  (should-fontify "KfuncK (TbT) FfooF(VaV, VbV TcT) TdT { }")
+  (should-fontify "KfuncK (VaV TbT) FfooF(VaV TbT) (TdT) { }")
 
-  (should-fontify "foo := KfuncK(a TbT) TcT { }"))
+  (should-fontify "VfooV := KfuncK(VaV TbT) TcT { }")
+
+  (should-fontify "KfuncK(...TintT) { }")
+  (should-fontify "KfuncK(VaV ...TintT) { }")
+  (should-fontify "KfuncK(VaV ...KinterfaceK{}) { }")
+
+  (should-fontify "KfuncK(KinterfaceK { FfooF() }, TstringT) KinterfaceK{}"))
 
 (ert-deftest go--fontify-decls ()
-  (should-fontify "KvarK foo TintT")
-  (should-fontify "KvarK foo *[3]TintT")
-  (should-fontify "KvarK foo Tfoo.ZebraT")
-  (should-fontify "KvarK foo, bar Tfoo.ZebraT")
+  (should-fontify "KvarK VfooV TintT")
+  (should-fontify "KvarK VfooV *[3]TintT")
+  (should-fontify "KvarK VfooV Tfoo.ZebraT")
+  (should-fontify "KvarK VfooV, VbarV Tfoo.ZebraT")
 
   (should-fontify "
 KvarK (
-  a TbT
-  a, b TbT
-  a KfuncK(b TcT)
+  VaV TbT
+  VaV, VbV TbT
+  VaV KfuncK(VbV TcT)
 )")
 
   (should-fontify "
@@ -53,12 +59,12 @@ KstructK {
 (ert-deftest go--fontify-interface ()
   (should-fontify "
 KinterfaceK {
-  FfooF(a, b TcT) *TstringT
+  FfooF(VaV, VbV TcT) *TstringT
 }")
 
   (should-fontify "
 KinterfaceK {
-  FfooF(KinterfaceK { FaF() TintT }) (c TdT)
+  FfooF(KinterfaceK { FaF() TintT }) (VcV TdT)
 }")
 
   (should-fontify "
@@ -71,6 +77,11 @@ KmapK[TstringT]KinterfaceK{}{
   (should-fontify "
 KswitchK foo.(KtypeK) {
 KcaseK TstringT, *Tfoo.ZebraT, [2]TbyteT:
+}")
+
+  (should-fontify "
+KswitchK foo.(KtypeK) {
+KcaseK KinterfaceK { FfooF(TintT, TstringT) }, KstructK { i, j TintT }, TstringT:
 }")
 
   (should-fontify "
@@ -108,6 +119,46 @@ KcaseK string:
   ;; Don't fontify "!=" operator.
   (should-fontify "foo != bar"))
 
+(ert-deftest go--fontify-type-decl ()
+  (should-fontify "KtypeK TfooT TbarT")
+  (should-fontify "KtypeK TfooT Tbar.ZarT")
+  (should-fontify "KtypeK TfooT KstructK { }")
+  (should-fontify "KtypeK TfooT = Tbar.ZarT")
+  (should-fontify "KtypeK TfooT = KmapK[TstringT]TstringT"))
+
+(ert-deftest go--fontify-var-decl ()
+  (should-fontify "KvarK VfooV = bar")
+  (should-fontify "KvarK VfooV, VbarV = bar, baz")
+  (should-fontify "KvarK VfooV TbarT D// DQcoolQ")
+  (should-fontify "KvarK VfooV TbarT = baz")
+  (should-fontify "KvarK VfooV KstructK { i TintT } = baz")
+  (should-fontify "KvarK VfooV []*Tfoo.ZarT D// DQcoolQ")
+
+  (should-fontify "
+KvarK (
+  VfooV TbarT
+  VfooV KfuncK(ViV TintT)
+  VfooV = bar
+  VfooV TbarT = baz
+  VfooV, VbarV = baz, qux
+  VfooV, VbarV TbazT = qux, zorb
+)"))
+
+(ert-deftest go--fontify-assign ()
+  (should-fontify "VfooV := bar")
+  (should-fontify "foo = bar D// DQ:=Q")
+  (should-fontify "VfooV, VbarV := baz, qux")
+  (should-fontify "foo, bar = baz, qux")
+  (should-fontify "KfuncK FfooF(ViV TintT) { VbarV := baz }"))
+
+(defun go--should-match-face (want-face)
+  (let ((got-face (get-text-property (point) 'face)))
+    (if (not (eq got-face want-face))
+        (progn
+          (message "char '%s' (%s): wanted %s, got %s" (char-to-string (char-after)) (point) want-face got-face)
+          nil)
+      t)))
+
 (defun should-fontify (contents)
   "Verify fontification.
 
@@ -125,7 +176,7 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
     ;; First pass through buffer looks for the face tags. We delete
     ;; the tags and record the expected face ranges in `faces'.
     (let ((case-fold-search nil) faces start start-pos)
-      (while (re-search-forward "[TBKCFSN]" nil t)
+      (while (re-search-forward "[TBKCFSNVDQ]" nil t)
         (let ((found-char (char-before)))
           (backward-delete-char 1)
           (if start
@@ -138,7 +189,10 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
                               (?C 'font-lock-constant-face)
                               (?F 'font-lock-function-name-face)
                               (?S 'font-lock-string-face)
-                              (?N 'font-lock-negation-char-face))))
+                              (?N 'font-lock-negation-char-face)
+                              (?V 'font-lock-variable-name-face)
+                              (?D 'font-lock-comment-delimiter-face)
+                              (?Q 'font-lock-comment-face))))
                   (setq faces (append faces `((,face ,start-pos ,(point))))))
                 (setq start nil))
             (setq start found-char)
@@ -155,6 +209,6 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
           (while (and face (>= (point) (nth 2 face)))
             (setq face (pop faces)))
           (if (and face (>= (point) (nth 1 face)))
-              (should (eq (nth 0 face) (get-text-property (point) 'face)))
-            (should (eq nil (get-text-property (point) 'face))))
+              (should (go--should-match-face (nth 0 face)))
+            (should (go--should-match-face nil)))
           (forward-char))))))
