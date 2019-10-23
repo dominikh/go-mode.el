@@ -25,7 +25,16 @@
   (should-fontify "KfuncK(VaV ...TintT) { }")
   (should-fontify "KfuncK(VaV ...KinterfaceK{}) { }")
 
-  (should-fontify "KfuncK(KinterfaceK { FfooF() }, TstringT) KinterfaceK{}"))
+  (should-fontify "KfuncK(KinterfaceK { FfooF() }, TstringT) KinterfaceK{}")
+
+  (should-fontify "
+KfuncK FfooF(
+  VaV TcatT, VbV KinterfaceK { FbarkF() },
+  VcV TbananaT,
+) (
+  VwhyV TdothisT,
+  VjustV TstopT,
+) { }"))
 
 (ert-deftest go--fontify-decls ()
   (should-fontify "KvarK VfooV TintT")
