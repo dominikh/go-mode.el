@@ -1278,7 +1278,15 @@ func foo(i, j int) {}
 "
   (setq go--fontify-param-has-name (eq
                                     (go--parameter-list-type (point-max))
-                                    'present)))
+                                    'present))
+  ;; Return position of closing paren so we process the entire
+  ;; multiline param list.
+  (save-excursion
+    (let ((depth (go-paren-level)))
+      (while (and
+              (re-search-forward ")" nil t)
+              (> (go-paren-level) depth))))
+    (point)))
 
 (defun go--match-param-start (end)
   "Search for the starting of param lists.
@@ -1352,12 +1360,11 @@ the next comma or to the closing paren."
 
 (defun go--search-next-comma (end)
   "Search forward from point for a comma whose nesting level is
-the same as point. If it reaches the end of line or a closing
-parenthesis before a comma, it stops at it. Return non-nil if
-comma was found."
+the same as point. If it reaches a closing parenthesis before a
+comma, it stops at it. Return non-nil if comma was found."
   (let ((orig-level (go-paren-level)))
     (while (and (< (point) end)
-                (or (looking-at-p "[^,)\n]")
+                (or (looking-at-p "[^,)]")
                     (> (go-paren-level) orig-level)))
       (forward-char))
     (when (and (looking-at-p ",")
@@ -1575,8 +1582,8 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
 \(see URL `https://github.com/dominikh/yasnippet-go')"
 
   ;; Font lock
-  (set (make-local-variable 'font-lock-defaults)
-       '(go--build-font-lock-keywords))
+  (setq font-lock-defaults '(go--build-font-lock-keywords))
+  (setq font-lock-multiline t)
 
   ;; Indentation
   (set (make-local-variable 'indent-line-function) #'go-mode-indent-line)
