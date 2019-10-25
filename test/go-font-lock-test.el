@@ -36,25 +36,6 @@ KfuncK FfooF(
   VjustV TstopT,
 ) { }"))
 
-(ert-deftest go--fontify-decls ()
-  (should-fontify "KvarK VfooV TintT")
-  (should-fontify "KvarK VfooV *[3]TintT")
-  (should-fontify "KvarK VfooV Tfoo.ZebraT")
-  (should-fontify "KvarK VfooV, VbarV Tfoo.ZebraT")
-
-  (should-fontify "
-KvarK (
-  VaV TbT
-  VaV, VbV TbT
-  VaV KfuncK(VbV TcT)
-)")
-
-  (should-fontify "
-KconstK (
-  a = 1
-  a TintT = 1
-)"))
-
 (ert-deftest go--fontify-struct ()
   (should-fontify "KstructK { i TintT }")
   (should-fontify "KstructK { a, b TintT }")
@@ -128,12 +109,20 @@ KcaseK string:
   ;; Don't fontify "!=" operator.
   (should-fontify "foo != bar"))
 
+
 (ert-deftest go--fontify-type-decl ()
   (should-fontify "KtypeK TfooT TbarT")
   (should-fontify "KtypeK TfooT Tbar.ZarT")
   (should-fontify "KtypeK TfooT KstructK { }")
   (should-fontify "KtypeK TfooT = Tbar.ZarT")
-  (should-fontify "KtypeK TfooT = KmapK[TstringT]TstringT"))
+  (should-fontify "KtypeK TfooT = KmapK[TstringT]TstringT")
+
+  (should-fontify "
+KtypeK (
+  TfooT TbarT
+  TfooT KstructK {}
+  TfooT = *Tbar.ZarT
+)"))
 
 (ert-deftest go--fontify-var-decl ()
   (should-fontify "KvarK VfooV = bar")
@@ -151,6 +140,16 @@ KvarK (
   VfooV TbarT = baz
   VfooV, VbarV = baz, qux
   VfooV, VbarV TbazT = qux, zorb
+)"))
+
+(ert-deftest go--fontify-const-decl ()
+  (should-fontify "KconstK CfooC, CbarC = 123, 456 D// D")
+  (should-fontify "KconstK CfooC, CbarC TbazT = 123, 456")
+  (should-fontify "
+KconstK (
+  CaC = 1
+  CaC TintT = 1
+  CaC, CbC TintT = 1, 2
 )"))
 
 (ert-deftest go--fontify-assign ()
