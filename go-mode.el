@@ -433,8 +433,12 @@ For mode=set, all covered lines will have this weight."
      ;; An anchored matcher for type switch case clauses.
      (go--match-type-switch-case (go--fontify-type-switch-case nil nil (1 font-lock-type-face)))
 
-     ;; Match variable names in var decls.
-     (go--match-var-decl 1 font-lock-variable-name-face)
+     ;; Match variable names in var decls, constant names in const
+     ;; decls, and type names in type decls.
+     (go--match-decl
+      (1 font-lock-variable-name-face nil t)
+      (2 font-lock-constant-face nil t)
+      (3 font-lock-type-face nil t))
 
      (,(concat "\\_<" (regexp-opt go-mode-keywords t) "\\_>") . font-lock-keyword-face)
      (,(concat "\\(\\_<" (regexp-opt go-builtins t) "\\_>\\)[[:space:]]*(") 1 font-lock-builtin-face)
@@ -455,8 +459,8 @@ For mode=set, all covered lines will have this weight."
      ;; Raw string literal, needed for font-lock-syntactic-keywords
      ("\\(`[^`]*`\\)" 1 font-lock-multiline)
 
-     ;; Type decl
-     (,(concat "\\_<type\\_>[[:space:]]+\\(" go-identifier-regexp "\\)[[:space:]]*\\(?:=[[:space:]]*\\)?\\(?:" go-type-name-regexp "\\)?" ) (1 font-lock-type-face) (2 font-lock-type-face nil t))
+     ;; RHS of type alias.
+     (go--match-type-alias 2 font-lock-type-face)
 
      ;; Arrays/slices: []<type> | [123]<type> | [some.Const]<type> | [someConst]<type> | [...]<type>
      (,(concat "\\[\\(?:[[:digit:]]+\\|" go-qualified-identifier-regexp "\\|" go-identifier-regexp "\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 1 font-lock-type-face)
@@ -1401,57 +1405,96 @@ comma, it stops at it. Return non-nil if comma was found."
       (setq done (not (go--search-next-comma end))))
     found-match))
 
-(defun go--in-var-decl-p ()
-  "Return non-nil if insde a \"var\" decl."
-  (or
-   (go--in-paren-with-prefix-p ?\( "var")
-   (save-excursion
-     (let ((depth (go-paren-level)))
-       (beginning-of-line)
+(defun go--containing-decl ()
+  "Return containing decl kind var|const|type, if any."
+  (save-match-data
+    (or
+     (save-excursion
        (and
-        (= (go-paren-level) depth)
-        (looking-at-p "[[:space:]]*var[[:space:]]"))))))
+        (go-goto-opening-parenthesis)
+        (eq (char-after) ?\()
+        (skip-syntax-backward " ")
+        (skip-syntax-backward "w")
+        (looking-at "\\(var\\|const\\|type\\)[[:space:]]")
+        (match-string-no-properties 1)))
 
-(defconst go--match-var-re (concat "\\(?:^\\|[[:space:]]\\)\\(" go-identifier-regexp "\\)\\_>"))
+     (save-excursion
+       (let ((depth (go-paren-level)))
+         (beginning-of-line)
+         (and
+          (= (go-paren-level) depth)
+          (looking-at "[[:space:]]*\\(var\\|const\\|type\\)[[:space:]]")
+          (match-string-no-properties 1)))))))
 
-(defun go--match-var-decl (end)
-  "Match variable declarations inside \"var\" decls and \":=\"
-  assignments."
-  (let (found-match)
+(defconst go--decl-ident-re (concat "\\(?:^\\|[[:space:]]\\)\\(\\(\\(" go-identifier-regexp "\\)\\)\\)\\_>"))
+
+(defun go--match-decl (end)
+  "Match identifers in \"var\", \"type\" and \"const\" decls, as
+well as \":=\" assignments.
+
+In order to only scan once, the regex has three subexpressions
+that match the same identifier. Depending on the kind of
+containing decl we zero out the subexpressions so the right one
+gets highlighted by the font lock keyword."
+  (let (found-match decl)
     (while (and
             (not found-match)
-            (re-search-forward go--match-var-re end t))
+            (re-search-forward go--decl-ident-re end t))
 
-      (save-match-data
-        (save-excursion
-          (cond
+      (save-excursion
+        ;; Skip keywords.
+        (cond
          ((member (match-string 1) go-mode-keywords))
 
          ((and
-           ;; We are inside a "var" decl.
-           (go--in-var-decl-p)
+           ;; We are in a decl of some kind.
+           (setq decl (go--containing-decl))
+
+           ;; We aren't on right side of equals sign.
+           (not (go--looking-back-p "=")))
 
            (or
-            ;; We are followed directly by comma and aren't on right
-            ;; side of equals sign.
-            (and
-             (looking-at "[[:space:]]*,")
-             (not (looking-back "=.*" (line-beginning-position))))
+            ;; We are followed directly by comma.
+            (looking-at-p "[[:space:]]*,")
 
             ;; Or we are followed by a space and non-space (non-space
             ;; might be a type name or "=").
-            (looking-at "[[:space:]]+[^[:space:]]")))
-          (setq found-match t))
+            (looking-at-p "[[:space:]]+[^[:space:]]"))
 
-         ;; Left side of ":=" assignmnet.
-         ((looking-at ".*:=")
-          (let ((depth (go-paren-level)))
-            (goto-char (match-end 0))
-            ;; Make sure the ":=" isn't in a comment or a sub-block.
-            (setq found-match (and
-                               (not (go-in-string-or-comment-p))
-                               (= depth (go-paren-level))))))))))
+           (setq found-match t)
+
+           ;; Unset match data subexpressions that don't apply based on
+           ;; the decl kind.
+           (let ((md (match-data)))
+             (cond
+              ((string= decl "var")
+               (setf (nth 4 md) nil (nth 5 md) nil (nth 6 md) nil (nth 7 md) nil))
+              ((string= decl "const")
+               (setf (nth 2 md) nil (nth 3 md) nil (nth 6 md) nil (nth 7 md) nil))
+              ((string= decl "type")
+               (setf (nth 2 md) nil (nth 3 md) nil (nth 4 md) nil (nth 5 md) nil)))
+             (set-match-data md)))
+
+         (t
+          (save-match-data
+            ;; Left side of ":=" assignmnet.
+            (when (looking-at ".*:=")
+              (let ((depth (go-paren-level)))
+                (goto-char (match-end 0))
+                ;; Make sure the ":=" isn't in a comment or a sub-block.
+                (setq found-match (and
+                                   (not (go-in-string-or-comment-p))
+                                   (= depth (go-paren-level)))))))))))
     found-match))
+
+(defun go--looking-back-p (re)
+  "Return non-nil if RE matches beginning of line to point.
+
+RE is not anchored automatically."
+  (string-match-p
+   re
+   (buffer-substring-no-properties (point) (line-beginning-position))))
+
 
 (defconst go--ident-type-pair-re (concat "\\_<\\(" go-identifier-regexp "\\)[[:space:]]+" go-type-name-regexp))
 
@@ -1475,6 +1518,23 @@ succeeds."
             (goto-char (match-end 1))
           (setq found-match t))))
 
+    found-match))
+
+(defconst go--type-alias-re
+  (concat "^[[:space:]]*\\(type\\)?[[:space:]]*" go-identifier-regexp "[[:space:]]*=[[:space:]]*" go-type-name-regexp))
+
+(defun go--match-type-alias (end)
+  "Search for type aliases.
+
+We are looking for the right-hand-side of the type alias"
+  (let (found-match)
+    (while (and
+            (not found-match)
+            (re-search-forward go--type-alias-re end t))
+      ;; Either line started with "type", or we are in a "type" block.
+      (setq found-match (or
+                         (match-string 1)
+                         (go--in-paren-with-prefix-p ?\( "type"))))
     found-match))
 
 
