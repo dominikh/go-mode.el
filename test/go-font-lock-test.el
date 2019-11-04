@@ -27,6 +27,9 @@
 
   (should-fontify "KfuncK(KinterfaceK { FfooF() }, TstringT) KinterfaceK{}")
 
+  (should-fontify "KfuncK(VaV TbT, VcV KfuncK(VdV *TeT) TdT) TfT")
+  (should-fontify "KfuncK(VaV KfuncK() TbT, VcV TdT)")
+
   (should-fontify "
 KfuncK FfooF(
   VaV TcatT, VbV KinterfaceK { FbarkF() },

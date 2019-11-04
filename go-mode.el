@@ -416,7 +416,8 @@ For mode=set, all covered lines will have this weight."
       (go--fontify-param
        ;; Pre-match form that runs before the first sub-match.
        (go--fontify-param-pre)
-       nil ;; We don't use the post-match form.
+       ;; Post-match form that runs after last sub-match.
+       (go--fontify-param-post)
        ;; Subexp 1 is the param variable name, if any.
        (1 font-lock-variable-name-face)
        ;; Subexp 2 is the param type name, if any. We set the LAXMATCH
@@ -425,7 +426,7 @@ For mode=set, all covered lines will have this weight."
 
      ;; Special case to match non-parenthesized function results. For
      ;; example, "func(i int) string".
-     (,(concat ")[[:space:]]+" go-type-name-regexp "\\([[:space:]]\\|$\\)") 1 font-lock-type-face)
+     (go--match-single-func-result 1 font-lock-type-face)
 
      ;; Match name+type pairs, such as "foo bar" in "var foo bar".
      (go--match-ident-type-pair 2 font-lock-type-face)
@@ -1266,8 +1267,13 @@ INDENT is the normal indent of this line, i.e. that of the case body."
 
 This is used during fontification of function signatures.")
 
+(defvar go--fontify-param-beg nil
+  "Position of \"(\" starting param list.
+
+This is used during fontification of function signatures.")
+
 (defun go--fontify-param-pre ()
-  "Set `go--fontify-param-has-name' appropriately.
+  "Set `go--fontify-param-has-name' and `go--fontify-param-beg' appropriately.
 
 This is used as an anchored font lock keyword PRE-MATCH-FORM. We
 must set `go--fontify-param-has-name' ahead of time because you
@@ -1283,14 +1289,28 @@ func foo(i, j int) {}
   (setq go--fontify-param-has-name (eq
                                     (go--parameter-list-type (point-max))
                                     'present))
+
+  ;; Remember where our match started so we can continue our serach
+  ;; from here.
+  (setq go--fontify-param-beg (point))
+
   ;; Return position of closing paren so we process the entire
   ;; multiline param list.
   (save-excursion
     (let ((depth (go-paren-level)))
       (while (and
               (re-search-forward ")" nil t)
-              (> (go-paren-level) depth))))
+              (>= (go-paren-level) depth))))
     (point)))
+
+(defun go--fontify-param-post ()
+  "Move point back to opening paren.
+
+This is used as an anchored font lock keyword POST-MATCH-FORM. We
+move point back to the opening \"(\" so we find nested param
+lists.
+"
+  (goto-char go--fontify-param-beg))
 
 (defun go--match-param-start (end)
   "Search for the starting of param lists.
@@ -1518,6 +1538,25 @@ succeeds."
             (goto-char (match-end 1))
           (setq found-match t))))
 
+    found-match))
+
+(defconst go--single-func-result-re (concat ")[[:space:]]+" go-type-name-regexp "\\(?:$\\|[[:space:]),]\\)"))
+
+(defun go--match-single-func-result (end)
+  "Match single result types.
+
+Parenthetical result lists are handled by the param list keyword,
+so we need a separate keyword to handle singular reuslt types
+such as \"string\" in:
+
+func foo(i int) string"
+  (let (found-match)
+    (while (and
+            (not found-match)
+            (re-search-forward go--single-func-result-re end t))
+      (when (not (member (match-string 1) go-mode-keywords))
+        (setq found-match t)
+        (goto-char (match-end 1))))
     found-match))
 
 (defconst go--type-alias-re
