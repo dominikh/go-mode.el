@@ -9,28 +9,28 @@
 (require 'cl-lib)
 
 (ert-deftest go--fontify-signature ()
-  (should-fontify "KfuncK FfooF() { }")
-  (should-fontify "KfuncK FfooF(TaT) { }")
-  (should-fontify "KfuncK FfooF(TaT, TbT) { }")
-  (should-fontify "KfuncK FfooF(TaT) TaT { }")
-  (should-fontify "KfuncK FfooF(VaV TbT) (VaV TbT) { }")
-  (should-fontify "KfuncK FfooF(VaV, VbV TcT) (VaV TbT, VcV TdT) { }")
+  (go--should-fontify "KfuncK FfooF() { }")
+  (go--should-fontify "KfuncK FfooF(TaT) { }")
+  (go--should-fontify "KfuncK FfooF(TaT, TbT) { }")
+  (go--should-fontify "KfuncK FfooF(TaT) TaT { }")
+  (go--should-fontify "KfuncK FfooF(VaV TbT) (VaV TbT) { }")
+  (go--should-fontify "KfuncK FfooF(VaV, VbV TcT) (VaV TbT, VcV TdT) { }")
 
-  (should-fontify "KfuncK (TbT) FfooF(VaV, VbV TcT) TdT { }")
-  (should-fontify "KfuncK (VaV TbT) FfooF(VaV TbT) (TdT) { }")
+  (go--should-fontify "KfuncK (TbT) FfooF(VaV, VbV TcT) TdT { }")
+  (go--should-fontify "KfuncK (VaV TbT) FfooF(VaV TbT) (TdT) { }")
 
-  (should-fontify "VfooV := KfuncK(VaV TbT) TcT { }")
+  (go--should-fontify "VfooV := KfuncK(VaV TbT) TcT { }")
 
-  (should-fontify "KfuncK(...TintT) { }")
-  (should-fontify "KfuncK(VaV ...TintT) { }")
-  (should-fontify "KfuncK(VaV ...KinterfaceK{}) { }")
+  (go--should-fontify "KfuncK(...TintT) { }")
+  (go--should-fontify "KfuncK(VaV ...TintT) { }")
+  (go--should-fontify "KfuncK(VaV ...KinterfaceK{}) { }")
 
-  (should-fontify "KfuncK(KinterfaceK { FfooF() }, TstringT) KinterfaceK{}")
+  (go--should-fontify "KfuncK(KinterfaceK { FfooF() }, TstringT) KinterfaceK{}")
 
-  (should-fontify "KfuncK(VaV TbT, VcV KfuncK(VdV *TeT) TdT) TfT")
-  (should-fontify "KfuncK(VaV KfuncK() TbT, VcV TdT)")
+  (go--should-fontify "KfuncK(VaV TbT, VcV KfuncK(VdV *TeT) TdT) TfT")
+  (go--should-fontify "KfuncK(VaV KfuncK() TbT, VcV TdT)")
 
-  (should-fontify "
+  (go--should-fontify "
 KfuncK FfooF(
   VaV TcatT, VbV KinterfaceK { FbarkF() },
   VcV TbananaT,
@@ -40,87 +40,87 @@ KfuncK FfooF(
 ) { }"))
 
 (ert-deftest go--fontify-struct ()
-  (should-fontify "KstructK { i TintT }")
-  (should-fontify "KstructK { a, b TintT }")
+  (go--should-fontify "KstructK { i TintT }")
+  (go--should-fontify "KstructK { a, b TintT }")
 
-  (should-fontify "
+  (go--should-fontify "
 KstructK {
   a TboolT
   c KstructK { f *Tfoo.ZebraT }
 }"))
 
 (ert-deftest go--fontify-interface ()
-  (should-fontify "
+  (go--should-fontify "
 KinterfaceK {
   FfooF(VaV, VbV TcT) *TstringT
 }")
 
-  (should-fontify "
+  (go--should-fontify "
 KinterfaceK {
   FfooF(KinterfaceK { FaF() TintT }) (VcV TdT)
 }")
 
-  (should-fontify "
+  (go--should-fontify "
 KmapK[TstringT]KinterfaceK{}{
   S`foo`S: foo.FbarF(baz),
 }"))
 
 
 (ert-deftest go--fontify-type-switch ()
-  (should-fontify "
+  (go--should-fontify "
 KswitchK foo.(KtypeK) {
 KcaseK TstringT, *Tfoo.ZebraT, [2]TbyteT:
 }")
 
-  (should-fontify "
+  (go--should-fontify "
 KswitchK foo.(KtypeK) {
 KcaseK KinterfaceK { FfooF(TintT, TstringT) }, KstructK { i, j TintT }, TstringT:
 }")
 
-  (should-fontify "
+  (go--should-fontify "
 KswitchK 123 {
 KcaseK string:
 }"))
 
 (ert-deftest go--fontify-composite-literal ()
-  (should-fontify "TfooT{")
-  (should-fontify "[]TfooT{")
-  (should-fontify "Tfoo.ZarT{")
-  (should-fontify "[]Tfoo.ZarT{"))
+  (go--should-fontify "TfooT{")
+  (go--should-fontify "[]TfooT{")
+  (go--should-fontify "Tfoo.ZarT{")
+  (go--should-fontify "[]Tfoo.ZarT{"))
 
 (ert-deftest go--fontify-slices-arrays-maps ()
-  (should-fontify "[]TfooT")
-  (should-fontify "[]Tfoo.ZarT")
-  (should-fontify "[]*Tfoo.ZarT")
+  (go--should-fontify "[]TfooT")
+  (go--should-fontify "[]Tfoo.ZarT")
+  (go--should-fontify "[]*Tfoo.ZarT")
 
-  (should-fontify "[123]TfooT")
-  (should-fontify "[...]TfooT")
-  (should-fontify "[foo.Zar]TfooT")
+  (go--should-fontify "[123]TfooT")
+  (go--should-fontify "[...]TfooT")
+  (go--should-fontify "[foo.Zar]TfooT")
 
-  (should-fontify "KmapK[*Tfoo.ZarT]*Tbar.ZarT")
-  (should-fontify "[]KmapK[TfooT]TbarT")
-  (should-fontify "KmapK[[1][2][three]*Tfoo.ZarT][four][]*Tbar.ZarT"))
+  (go--should-fontify "KmapK[*Tfoo.ZarT]*Tbar.ZarT")
+  (go--should-fontify "[]KmapK[TfooT]TbarT")
+  (go--should-fontify "KmapK[[1][2][three]*Tfoo.ZarT][four][]*Tbar.ZarT"))
 
 (ert-deftest go--fontify-negation ()
   ;; Fontify unary "!".
-  (should-fontify "N!Nfoo")
+  (go--should-fontify "N!Nfoo")
 
   ;; Alternate fontification with multiple "!".
-  (should-fontify "N!N!foo")
-  (should-fontify "N!N!N!Nfoo")
+  (go--should-fontify "N!N!foo")
+  (go--should-fontify "N!N!N!Nfoo")
 
   ;; Don't fontify "!=" operator.
-  (should-fontify "foo != bar"))
+  (go--should-fontify "foo != bar"))
 
 
 (ert-deftest go--fontify-type-decl ()
-  (should-fontify "KtypeK TfooT TbarT")
-  (should-fontify "KtypeK TfooT Tbar.ZarT")
-  (should-fontify "KtypeK TfooT KstructK { }")
-  (should-fontify "KtypeK TfooT = Tbar.ZarT")
-  (should-fontify "KtypeK TfooT = KmapK[TstringT]TstringT")
+  (go--should-fontify "KtypeK TfooT TbarT")
+  (go--should-fontify "KtypeK TfooT Tbar.ZarT")
+  (go--should-fontify "KtypeK TfooT KstructK { }")
+  (go--should-fontify "KtypeK TfooT = Tbar.ZarT")
+  (go--should-fontify "KtypeK TfooT = KmapK[TstringT]TstringT")
 
-  (should-fontify "
+  (go--should-fontify "
 KtypeK (
   TfooT TbarT
   TfooT KstructK {}
@@ -128,14 +128,14 @@ KtypeK (
 )"))
 
 (ert-deftest go--fontify-var-decl ()
-  (should-fontify "KvarK VfooV = bar")
-  (should-fontify "KvarK VfooV, VbarV = bar, baz")
-  (should-fontify "KvarK VfooV TbarT D// DQcoolQ")
-  (should-fontify "KvarK VfooV TbarT = baz")
-  (should-fontify "KvarK VfooV KstructK { i TintT } = baz")
-  (should-fontify "KvarK VfooV []*Tfoo.ZarT D// DQcoolQ")
+  (go--should-fontify "KvarK VfooV = bar")
+  (go--should-fontify "KvarK VfooV, VbarV = bar, baz")
+  (go--should-fontify "KvarK VfooV TbarT D// DQcoolQ")
+  (go--should-fontify "KvarK VfooV TbarT = baz")
+  (go--should-fontify "KvarK VfooV KstructK { i TintT } = baz")
+  (go--should-fontify "KvarK VfooV []*Tfoo.ZarT D// DQcoolQ")
 
-  (should-fontify "
+  (go--should-fontify "
 KvarK (
   VfooV TbarT
   VfooV KfuncK(ViV TintT)
@@ -146,9 +146,9 @@ KvarK (
 )"))
 
 (ert-deftest go--fontify-const-decl ()
-  (should-fontify "KconstK CfooC, CbarC = 123, 456 D// D")
-  (should-fontify "KconstK CfooC, CbarC TbazT = 123, 456")
-  (should-fontify "
+  (go--should-fontify "KconstK CfooC, CbarC = 123, 456 D// D")
+  (go--should-fontify "KconstK CfooC, CbarC TbazT = 123, 456")
+  (go--should-fontify "
 KconstK (
   CaC = 1
   CaC TintT = 1
@@ -156,11 +156,22 @@ KconstK (
 )"))
 
 (ert-deftest go--fontify-assign ()
-  (should-fontify "VfooV := bar")
-  (should-fontify "foo = bar D// DQ:=Q")
-  (should-fontify "VfooV, VbarV := baz, qux")
-  (should-fontify "foo, bar = baz, qux")
-  (should-fontify "KfuncK FfooF(ViV TintT) { VbarV := baz }"))
+  (go--should-fontify "VfooV := bar")
+  (go--should-fontify "foo = bar D// DQ:=Q")
+  (go--should-fontify "VfooV, VbarV := baz, qux")
+  (go--should-fontify "foo, bar = baz, qux")
+  (go--should-fontify "KfuncK FfooF(ViV TintT) { VbarV := baz }"))
+
+(ert-deftest go--fontify-go-dot-mod ()
+  (go--should-fontify "
+KmoduleK foo
+
+KgoK 1.13
+
+KrequireK (
+  Nexample.com/require/go/bananaN Sv12.34.56SV-1234-456abcV D// DQindirect
+Q)
+" 'go-dot-mod-mode))
 
 (defun go--should-match-face (want-face)
   (let ((got-face (get-text-property (point) 'face)))
@@ -170,7 +181,7 @@ KconstK (
           nil)
       t)))
 
-(defun should-fontify (contents)
+(defun go--should-fontify (contents &optional mode)
   "Verify fontification.
 
 CONTENTS is a template that uses single capital letters to
@@ -180,7 +191,8 @@ BmakeB([]TintT, 0)
 
 expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
   (with-temp-buffer
-    (go-mode)
+    (setq mode (or mode 'go-mode))
+    (funcall mode)
     (insert contents)
     (goto-char (point-min))
 
@@ -199,9 +211,9 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
                               (?K 'font-lock-keyword-face)
                               (?C 'font-lock-constant-face)
                               (?F 'font-lock-function-name-face)
-                              (?S 'font-lock-string-face)
-                              (?N 'font-lock-negation-char-face)
-                              (?V 'font-lock-variable-name-face)
+                              (?S (if (eq mode 'go-mode) 'font-lock-string-face 'go-dot-mod-module-semver))
+                              (?N (if (eq mode 'go-mode) 'font-lock-negation-char-face 'go-dot-mod-module-name))
+                              (?V (if (eq mode 'go-mode) 'font-lock-variable-name-face 'go-dot-mod-module-version))
                               (?D 'font-lock-comment-delimiter-face)
                               (?Q 'font-lock-comment-face))))
                   (setq faces (append faces `((,face ,start-pos ,(point))))))
