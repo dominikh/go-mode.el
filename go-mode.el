@@ -2777,9 +2777,27 @@ If BUFFER, return the number of characters in that buffer instead."
   '("module" "go" "require" "replace" "exclude")
   "All keywords for go.mod files.  Used for font locking.")
 
+(defgroup go-dot-mod nil
+  "Options specific to `go-dot-mod-mode`."
+  :group 'go)
+
+(defface go-dot-mod-module-name '((t :inherit default))
+  "Face for module name in \"require\" list."
+  :group 'go-dot-mod)
+
+(defface go-dot-mod-module-version '((t :inherit default))
+  "Face for module version in \"require\" list."
+  :group 'go-dot-mod)
+
+(defface go-dot-mod-module-semver '((t :inherit go-dot-mod-module-version))
+  "Face for module semver in \"require\" list."
+  :group 'go-dot-mod)
+
+
 (defvar go-dot-mod-font-lock-keywords
   `(
-    (,(concat "^\\s-*" (regexp-opt go-dot-mod-mode-keywords t) "\\s-") . font-lock-keyword-face))
+    (,(concat "^\\s-*\\(" (regexp-opt go-dot-mod-mode-keywords t) "\\)\\s-") 1 font-lock-keyword-face)
+    ("^\\s-*\\([^[:space:]]+\\)\\s-+\\(v[0-9]+\\.[0-9]+\\.[0-9]+\\)\\([^[:space:]\n]*\\)" (1 'go-dot-mod-module-name) (2 'go-dot-mod-module-semver) (3 'go-dot-mod-module-version)))
   "Keyword highlighting specification for `go-dot-mod-mode'.")
 
 ;;;###autoload
