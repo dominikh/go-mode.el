@@ -2015,7 +2015,7 @@ code to the Playground. You can disable the confirmation by setting
 "
   (interactive "r")
   (if (and go-confirm-playground-uploads
-           (not (yes-or-no-p "Upload to public Go Playground?")))
+           (not (yes-or-no-p "Upload to public Go Playground? ")))
       (message "Upload aborted")
     (let* ((url-request-method "POST")
            (url-request-extra-headers
