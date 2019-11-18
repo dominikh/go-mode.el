@@ -2019,7 +2019,7 @@ code to the Playground. You can disable the confirmation by setting
       (message "Upload aborted")
     (let* ((url-request-method "POST")
            (url-request-extra-headers
-            '(("Content-Type" . "application/x-www-form-urlencoded")))
+            '(("Content-Type" . "text/plain; charset=UTF-8")))
            (url-request-data
             (encode-coding-string
              (buffer-substring-no-properties start end)
