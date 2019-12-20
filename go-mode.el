@@ -1422,7 +1422,8 @@ comma, it stops at it. Return non-nil if comma was found."
     (while (and (not found-match) (not done))
       (when (looking-at (concat "[[:space:]\n]*" go-type-name-regexp "[[:space:]]*[,:]"))
         (goto-char (match-end 1))
-        (setq found-match t))
+        (unless (member (match-string 1) go-constants)
+          (setq found-match t)))
       (setq done (not (go--search-next-comma end))))
     found-match))
 

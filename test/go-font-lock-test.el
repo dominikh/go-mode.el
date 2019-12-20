@@ -76,6 +76,8 @@ KmapK[TstringT]KinterfaceK{}{
   (go--should-fontify "
 KswitchK foo.(KtypeK) {
 KcaseK TstringT, *Tfoo.ZebraT, [2]TbyteT:
+KcaseK CnilC:
+KdefaultK:
 }")
 
   (go--should-fontify "
