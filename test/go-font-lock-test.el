@@ -37,7 +37,13 @@ KfuncK FfooF(
 ) (
   VwhyV TdothisT,
   VjustV TstopT,
-) { }"))
+) { }")
+
+  (go--should-fontify "
+D// DQ
+QD// DQ(
+QKfuncK (VfV TintT) {}
+"))
 
 (ert-deftest go--fontify-struct ()
   (go--should-fontify "KstructK { i TintT }")
