@@ -94,7 +94,13 @@ KcaseK string:
   (go--should-fontify "TfooT{")
   (go--should-fontify "[]TfooT{")
   (go--should-fontify "Tfoo.ZarT{")
-  (go--should-fontify "[]Tfoo.ZarT{"))
+  (go--should-fontify "[]Tfoo.ZarT{")
+
+  (go--should-fontify "TfooT{CbarC:baz, CquxC: 123}")
+
+  (go--should-fontify "TfooT{
+CbarC: baz,
+}"))
 
 (ert-deftest go--fontify-slices-arrays-maps ()
   (go--should-fontify "[]TfooT")
@@ -162,6 +168,16 @@ KconstK (
   CaC TintT = 1
   CaC, CbC TintT = 1, 2
 )"))
+
+(ert-deftest go--fontify-labels ()
+  (go--should-fontify "
+CfooC:
+KforK {
+  KcontinueK CfooC
+  KbreakK CfooC
+  KgotoK CfooC
+}
+"))
 
 (ert-deftest go--fontify-assign ()
   (go--should-fontify "VfooV := bar")
