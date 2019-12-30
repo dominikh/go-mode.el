@@ -487,8 +487,8 @@ For mode=set, all covered lines will have this weight."
      ;; Type assertion
      (,(concat "\\.\\s *(" go-type-name-regexp) 1 font-lock-type-face)
 
-     ;; Labels and compound literal fields
-     (,(concat "^[[:space:]]*\\(" go-label-regexp "\\)[[:space:]]*:\\(\\S.\\|$\\)") 1 font-lock-constant-face)
+     ;; Composite literal field names and label definitions.
+     (go--match-ident-colon 1 font-lock-constant-face)
 
      ;; Labels in goto/break/continue
      (,(concat "\\_<\\(?:goto\\|break\\|continue\\)\\_>[[:space:]]*\\(" go-label-regexp "\\)") 1 font-lock-constant-face))))
@@ -684,7 +684,7 @@ case keyword. It returns nil for the case line itself."
       (looking-back "[,:]" (1- (point)))
 
       ;; If we made it to the beginning of line we are either a naked
-      ;; block or a composite literal with implict type name. If we
+      ;; block or a composite literal with implicit type name. If we
       ;; are the latter, we must be contained in another composite
       ;; literal.
       (and (bolp) (go--in-composite-literal-p))))))
@@ -1570,6 +1570,29 @@ We are looking for the right-hand-side of the type alias"
                          (go--in-paren-with-prefix-p ?\( "type"))))
     found-match))
 
+
+(defconst go--label-re (concat "\\(" go-label-regexp "\\):"))
+
+(defun go--match-ident-colon (end)
+  "Search for composite literal field names and label definitions."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            (re-search-forward go--label-re end t))
+
+      (setq found-match (or
+                         ;; Composite literal field names, e.g. "Foo{Bar:". Note
+                         ;; that this gives false positives for literal maps,
+                         ;; arrays, and slices.
+                         (go--in-composite-literal-p)
+
+                         ;; We are a label definition if we are at the beginning
+                         ;; of the line.
+                         (save-excursion
+                           (goto-char (match-beginning 1))
+                           (skip-syntax-backward " ")
+                           (bolp)))))
+    found-match))
 
 (defun go--parameter-list-type (end)
   "Return `present' if the parameter list has names, or `absent' if not.
