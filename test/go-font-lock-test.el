@@ -1,4 +1,4 @@
-;;; go-indentation-test.el
+;;; go-font-lock-test.el
 
 ;; Copyright 2019 The go-mode Authors. All rights reserved. Use of
 ;; this source code is governed by a BSD-style license that can be
