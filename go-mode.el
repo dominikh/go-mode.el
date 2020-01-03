@@ -1633,6 +1633,23 @@ This is intended to be called from `before-change-functions'."
      (eq (char-before (- (point) 3)) ?a)
      (eq (char-before (- (point) 4)) ?c)))))
 
+(defun go--comment-region (beg end &optional arg)
+  "Switch to block comment when commenting a partial line."
+  (save-excursion
+    (goto-char beg)
+    (let ((beg-bol (line-beginning-position)))
+      (goto-char end)
+      (if (and
+           ;; beg and end are on the same line
+           (eq (line-beginning-position) beg-bol)
+           ;; end is not at end of line
+           (not (eq end (line-end-position))))
+          (let ((comment-start "/* ")
+                (comment-end " */")
+                (comment-padding ""))
+            (comment-region-default beg end arg))
+        (comment-region-default beg end arg)))))
+
 ;;;###autoload
 (define-derived-mode go-mode prog-mode "Go"
   "Major mode for editing Go source text.
@@ -1692,7 +1709,7 @@ If you're looking for even more integration with Go, namely
 on-the-fly syntax checking, auto-completion and snippets, it is
 recommended that you look at flycheck
 \(see URL `https://github.com/flycheck/flycheck') or flymake in combination
-with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
+with goflymake (see URL `https://github.com/dougm/goflymake'), gocode
 \(see URL `https://github.com/nsf/gocode'), go-eldoc
 \(see URL `github.com/syohex/emacs-go-eldoc') and yasnippet-go
 \(see URL `https://github.com/dominikh/yasnippet-go')"
@@ -1709,6 +1726,7 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   (set (make-local-variable 'comment-end)   "")
   (set (make-local-variable 'comment-use-syntax) t)
   (set (make-local-variable 'comment-start-skip) "\\(//+\\|/\\*+\\)\\s *")
+  (set (make-local-variable 'comment-region-function) 'go--comment-region)
 
   (set (make-local-variable 'beginning-of-defun-function) #'go-beginning-of-defun)
   (set (make-local-variable 'end-of-defun-function) #'go-end-of-defun)

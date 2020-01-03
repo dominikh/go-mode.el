@@ -14,15 +14,15 @@
 represents point and mark to test the region based fill-paragraph."
   (with-temp-buffer
     (go-mode)
+    (transient-mark-mode)
     (insert got)
     (goto-char (point-min))
     (let ((beg (progn (search-forward "<") (delete-char -1) (point)))
           (end (progn (search-forward ">") (delete-char -1) (point))))
-      (if (/= beg end)
-          (progn
-            (set-mark beg)
-            (call-interactively 'fill-region))
-        (call-interactively 'fill-paragraph))
+      (when (/= beg end)
+        (set-mark beg))
+      (goto-char end)
+      (call-interactively 'fill-paragraph)
       (should (string= (buffer-string) expected)))))
 
 (ert-deftest go--fill-paragraph-no-comment ()
