@@ -260,8 +260,7 @@ any identifier.  It provides better results than
 
 Due to a limitation in godoc, it is not possible to differentiate
 between functions and methods, which may cause `godoc-at-point'
-to display more documentation than desired.  Furthermore, it
-doesn't work on package names or variables.
+to display more documentation than desired.
 
 Consider using ‘godoc-gogetdoc’ instead for more accurate results."
   (condition-case nil
@@ -271,12 +270,18 @@ Consider using ‘godoc-gogetdoc’ instead for more accurate results."
              (first (car name-parts)))
         (if (not (godef--successful-p file))
             (message "%s" (godef--error file))
-          (go--godoc (format "%s %s"
-                         (file-name-directory file)
-                         (if (or (string= first "type") (string= first "const"))
-                             (cadr name-parts)
-                           (car name-parts)))
-                    godoc-and-godef-command)))
+          (go--godoc (mapconcat #'identity
+                      (pcase first
+                        ("import" (split-string-and-unquote
+                                   (string-remove-suffix ")" (caddr name-parts))))
+                        ((or "const" "type") (list
+                                              (file-name-directory file)
+                                              (cadr name-parts)))
+                        (_ (list
+                            (file-name-directory file)
+                            (car name-parts))))
+                      " ")
+                     godoc-and-godef-command)))
     (file-error (message "Could not run godef binary"))))
 
 (defun godoc-gogetdoc (point)
