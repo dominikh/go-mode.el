@@ -270,18 +270,16 @@ Consider using ‘godoc-gogetdoc’ instead for more accurate results."
              (first (car name-parts)))
         (if (not (godef--successful-p file))
             (message "%s" (godef--error file))
-          (go--godoc (mapconcat #'identity
-                      (pcase first
-                        ("import" (split-string-and-unquote
-                                   (string-remove-suffix ")" (caddr name-parts))))
-                        ((or "const" "type") (list
-                                              (file-name-directory file)
-                                              (cadr name-parts)))
-                        (_ (list
-                            (file-name-directory file)
-                            (car name-parts))))
-                      " ")
-                     godoc-and-godef-command)))
+          (go--godoc (pcase first
+                       ("import" (split-string-and-unquote
+                                  (string-remove-suffix ")"
+                                                        (caddr name-parts))))
+                       (_ (file-name-directory file)))
+                     godoc-and-godef-command
+                     (pcase first
+                       ("import" nil)
+                       ((or "const" "type") (cadr name-parts))
+                       (_ (car name-parts))))))
     (file-error (message "Could not run godef binary"))))
 
 (defun godoc-gogetdoc (point)
@@ -1937,12 +1935,26 @@ you save any file, kind of defeating the point of autoloading."
   (interactive (list (godoc--read-query)))
   (go--godoc query godoc-command))
 
-(defun go--godoc (query command)
-  (unless (string= query "")
-    (set-process-sentinel
-     (start-process-shell-command "godoc" (godoc--get-buffer query)
-                                  (concat command " " query))
-     'godoc--buffer-sentinel)
+(defun go--godoc (package command &optional symbol)
+  "Show Go documentation for PACKAGE and SYMBOL, by running COMMAND."
+  (unless (string= package "")
+    (let* ((case-fold-search nil)
+           (unexported (unless (or (null symbol)
+                                   (string= "" symbol)
+                                   (null (get-char-code-property (elt symbol 0)
+                                                                 'uppercase)))
+                         "-u")))
+      (set-process-sentinel
+       (start-process-shell-command "godoc" (godoc--get-buffer package)
+                                    (mapconcat #'identity
+                                               (remove nil
+                                                       (list command
+                                                             "-c"
+                                                             unexported
+                                                             package
+                                                             symbol))
+                                               " "))
+       'godoc--buffer-sentinel))
     nil))
 
 (defun godoc-at-point (point)
