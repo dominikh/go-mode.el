@@ -61,4 +61,20 @@ func _() {
 		1,
 	),
 	)
+
+	foo.
+		bar(func(i int) (a b) {
+
+		})
+
+	foo ||
+		bar &&
+			baz(func() {
+				X
+			})
+
+	foo &&
+		func() bool {
+			return X
+		}()
 }

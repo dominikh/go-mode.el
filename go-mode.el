@@ -865,7 +865,7 @@ is done."
           (first t)
 
           ;; Whether we start in a block (i.e. our first line is not a
-          ;; continuation line and is in an "if", "for", "func" etc. block).
+          ;; continuation line and is in an "if", "for", etc. block).
           (in-block)
 
           ;; Our desired indent relative to our ending line's indent.
@@ -942,10 +942,7 @@ is done."
             ;; If we aren't a continuation line and we have an enclosing paren
             ;; or brace, jump to opener and increment our indent.
             (when (go-goto-opening-parenthesis)
-              ;; We started in a child block if our opener is a curly brace.
-              (setq in-block (and
-                              (eq (char-after) ?{)
-                              (looking-back "[^[:space:]][[:space:]]" (- (point) 2))))
+              (setq in-block (go--flow-block-p))
               (cl-incf indent tab-width))))
 
         ;; If we started in a child block we must follow dangling lines
@@ -959,7 +956,8 @@ is done."
         ;; There can be an arbitrary number of indents, so we must go back to
         ;; the "if" to determine the indent of "X".
         (when (and in-block (bolp) (go-previous-line-has-dangling-op-p))
-          (goto-char (go-previous-line-has-dangling-op-p))))
+          (goto-char (go-previous-line-has-dangling-op-p)))
+        )
 
       ;; If our ending line is a continuation line but doesn't open
       ;; an extra indent, reduce indent. We tentatively gave indents to all
@@ -1007,6 +1005,32 @@ are loose binding expression separators."
     (|| 1)
     (t 0)))
 
+(defun go--flow-block-p ()
+  "Return whether looking at a { that opens a control flow block.
+
+We check for a { that is preceded by a space and is not a func
+literal opening brace."
+  (save-excursion
+    (when (and
+           (eq (char-after) ?{)
+           (not (zerop (skip-syntax-backward " "))))
+
+      (let ((eol (line-end-position))
+            (level (go-paren-level))
+            (found-func-literal))
+
+        (beginning-of-line)
+
+        ;; See if we find any "func" keywords on this line at the same paren
+        ;; level as the curly.
+        (while (and
+                (not found-func-literal)
+                (re-search-forward "\\_<func\\_>" eol t))
+          (setq found-func-literal (and
+                                    (= level (go-paren-level))
+                                    (not (go-in-string-or-comment-p)))))
+        (not found-func-literal)))))
+
 (defun go--continuation-line-indents-p ()
   "Return non-nil if the current continuation line opens an additional indent.
 
@@ -1037,8 +1061,19 @@ foo ||
       (when (or
              ;; We can only open indent if we have a dangling operator, or
              (go--current-line-has-dangling-op-p)
-             ;; we end in an opening paren/brace or comma.
-             (go--line-suffix-p "[(,]\\|[^[:space:]]{"))
+
+             (save-excursion
+               (go--end-of-line)
+               (backward-char)
+               (or
+                ;; Line ends in a "(" or ",", or
+                (eq (char-after) ?\()
+                (eq (char-after) ?,)
+
+                ;; Line ends in a "{" that isn't a control block.
+                (and
+                 (eq (char-after) ?{)
+                 (not (go--flow-block-p))))))
 
         (let ((prev-precedence (go--operator-precedence prev-op))
               (start-depth (go-paren-level))
