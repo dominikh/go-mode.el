@@ -1333,9 +1333,15 @@ func foo(i, j int) {}
   ;; multiline param list.
   (save-excursion
     (let ((depth (go-paren-level)))
-      (while (and
-              (re-search-forward ")" nil t)
-              (>= (go-paren-level) depth))))
+      ;; First check that our paren is closed by the end of the file. This
+      ;; avoids expanding the fontification region to the entire file when you
+      ;; have an unclosed paren at file scope.
+      (when (save-excursion
+              (goto-char (1+ (buffer-size)))
+              (< (go-paren-level) depth))
+        (while (and
+                (re-search-forward ")" nil t)
+                (>= (go-paren-level) depth)))))
     (point)))
 
 (defun go--fontify-param-post ()
