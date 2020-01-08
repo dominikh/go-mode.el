@@ -100,7 +100,13 @@ KcaseK string:
 
   (go--should-fontify "TfooT{
 CbarC: baz,
-}"))
+}")
+
+  (go--should-fontify "[]TfooT{{
+CbarC: baz,
+}, {
+CbarC: baz,
+}}"))
 
 (ert-deftest go--fontify-slices-arrays-maps ()
   (go--should-fontify "[]TfooT")

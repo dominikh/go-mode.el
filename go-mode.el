@@ -668,26 +668,27 @@ case keyword. It returns nil for the case line itself."
 (defun go--in-composite-literal-p ()
   "Return non-nil if point is in a composite literal."
   (save-excursion
-    (and
-     (go-goto-opening-parenthesis)
+    (save-match-data
+      (and
+       (go-goto-opening-parenthesis)
 
-     ;; Opening paren-like character is a curly.
-     (eq (char-after) ?{)
+       ;; Opening paren-like character is a curly.
+       (eq (char-after) ?{)
 
-     (or
-      ;; Curly is preceded by non space (e.g. "Foo{"), definitely
-      ;; composite literal.
-      (zerop (skip-syntax-backward " "))
+       (or
+        ;; Curly is preceded by non space (e.g. "Foo{"), definitely
+        ;; composite literal.
+        (zerop (skip-syntax-backward " "))
 
-      ;; Curly preceded by comma or semicolon. This is a composite
-      ;; literal with implicit type name.
-      (looking-back "[,:]" (1- (point)))
+        ;; Curly preceded by comma or semicolon. This is a composite
+        ;; literal with implicit type name.
+        (looking-back "[,:]" (1- (point)))
 
-      ;; If we made it to the beginning of line we are either a naked
-      ;; block or a composite literal with implicit type name. If we
-      ;; are the latter, we must be contained in another composite
-      ;; literal.
-      (and (bolp) (go--in-composite-literal-p))))))
+        ;; If we made it to the beginning of line we are either a naked
+        ;; block or a composite literal with implicit type name. If we
+        ;; are the latter, we must be contained in another composite
+        ;; literal.
+        (and (bolp) (go--in-composite-literal-p)))))))
 
 (defun go--in-paren-with-prefix-p (paren prefix)
   (save-excursion
@@ -956,8 +957,7 @@ is done."
         ;; There can be an arbitrary number of indents, so we must go back to
         ;; the "if" to determine the indent of "X".
         (when (and in-block (bolp) (go-previous-line-has-dangling-op-p))
-          (goto-char (go-previous-line-has-dangling-op-p)))
-        )
+          (goto-char (go-previous-line-has-dangling-op-p))))
 
       ;; If our ending line is a continuation line but doesn't open
       ;; an extra indent, reduce indent. We tentatively gave indents to all
