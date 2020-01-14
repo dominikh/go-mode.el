@@ -106,7 +106,13 @@ CbarC: baz,
 CbarC: baz,
 }, {
 CbarC: baz,
-}}"))
+}}")
+
+  (go--should-fontify "TsomeMapT{
+foo.Zar: baz,
+a + b: 3,
+a-b: 4,
+}"))
 
 (ert-deftest go--fontify-slices-arrays-maps ()
   (go--should-fontify "[]TfooT")

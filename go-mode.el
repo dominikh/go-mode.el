@@ -1621,18 +1621,22 @@ We are looking for the right-hand-side of the type alias"
             (not found-match)
             (re-search-forward go--label-re end t))
 
-      (setq found-match (or
-                         ;; Composite literal field names, e.g. "Foo{Bar:". Note
-                         ;; that this gives false positives for literal maps,
-                         ;; arrays, and slices.
-                         (go--in-composite-literal-p)
+      (save-excursion
+        (goto-char (match-beginning 1))
+        (skip-syntax-backward " ")
 
-                         ;; We are a label definition if we are at the beginning
-                         ;; of the line.
-                         (save-excursion
-                           (goto-char (match-beginning 1))
-                           (skip-syntax-backward " ")
-                           (bolp)))))
+        (setq found-match (or
+                           ;; We are a label/field name if we are at the
+                           ;; beginning of the line.
+                           (bolp)
+
+                           ;; Composite literal field names, e.g. "Foo{Bar:". Note
+                           ;; that this gives false positives for literal maps,
+                           ;; arrays, and slices.
+                           (and
+                            (or (eq (char-before) ?,) (eq (char-before) ?{))
+                            (go--in-composite-literal-p))))))
+
     found-match))
 
 (defun go--parameter-list-type (end)
