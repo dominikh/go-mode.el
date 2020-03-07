@@ -130,6 +130,11 @@ constant is changed.")
   :type 'boolean
   :group 'go)
 
+(defcustom go-fontify-variables t
+  "Fontify variable declarations if this is non-nil."
+  :type 'boolean
+  :group 'go)
+
 (defcustom go-mode-hook nil
   "Hook called by `go-mode'."
   :type 'hook
@@ -402,6 +407,9 @@ For mode=set, all covered lines will have this weight."
     st)
   "Syntax table for Go mode.")
 
+(defvar go--default-face 'default
+  "A variable to refer to `default' face for use in font lock rules.")
+
 (defun go--build-font-lock-keywords ()
   ;; we cannot use 'symbols in regexp-opt because GNU Emacs <24
   ;; doesn't understand that
@@ -419,7 +427,7 @@ For mode=set, all covered lines will have this weight."
        ;; Post-match form that runs after last sub-match.
        (go--fontify-param-post)
        ;; Subexp 1 is the param variable name, if any.
-       (1 font-lock-variable-name-face)
+       (1 ,(if go-fontify-variables 'font-lock-variable-name-face 'go--default-face))
        ;; Subexp 2 is the param type name, if any. We set the LAXMATCH
        ;; flag to allow optional regex groups.
        (2 font-lock-type-face nil t)))
@@ -437,7 +445,7 @@ For mode=set, all covered lines will have this weight."
      ;; Match variable names in var decls, constant names in const
      ;; decls, and type names in type decls.
      (go--match-decl
-      (1 font-lock-variable-name-face nil t)
+      (1 ,(if go-fontify-variables 'font-lock-variable-name-face 'go--default-face) nil t)
       (2 font-lock-constant-face nil t)
       (3 font-lock-type-face nil t))
 
