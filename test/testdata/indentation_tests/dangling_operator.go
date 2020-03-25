@@ -284,6 +284,11 @@ lol` +
 				},
 			}
 
+	foo.
+		bar.
+		baz.
+		qux
+
 	return 123,
 		456
 }

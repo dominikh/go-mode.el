@@ -994,23 +994,26 @@ is done."
           indent
         (+ indent (current-indentation))))))
 
-(defconst go--operator-chars "*/%<>&\\^+\\-|=!,"
+(defconst go--operator-chars "*/%<>&\\^+\\-|=!,."
   "Individual characters that appear in operators.
-Comma is included because it is sometimes a dangling operator, so
-needs to be considered by `go--continuation-line-indents-p'")
+Comma and period are included because they can be dangling operators, so
+they need to be considered by `go--continuation-line-indents-p'")
 
 (defun go--operator-precedence (op)
   "Go operator precedence (higher binds tighter).
 
-Comma gets the default 0 precedence which is appropriate because commas
-are loose binding expression separators."
+Comma and period are present because they can be dangling
+operators that affect indentation, although they aren't
+technically operators."
   (cl-case (intern op)
+    (\. 7) ; "." in "foo.bar", binds tightest
     (! 6)
     ((* / % << >> & &^) 5)
     ((+ - | ^) 4)
     ((== != < <= > >=) 3)
     (&& 2)
     (|| 1)
+    (, 0) ; loose binding expression separator
     (t 0)))
 
 (defun go--flow-block-p ()
