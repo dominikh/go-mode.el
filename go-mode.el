@@ -1000,11 +1000,7 @@ Comma and period are included because they can be dangling operators, so
 they need to be considered by `go--continuation-line-indents-p'")
 
 (defun go--operator-precedence (op)
-  "Go operator precedence (higher binds tighter).
-
-Comma and period are present because they can be dangling
-operators that affect indentation, although they aren't
-technically operators."
+  "Go operator precedence (higher binds tighter)."
   (cl-case (intern op)
     (\. 7) ; "." in "foo.bar", binds tightest
     (! 6)
@@ -1013,7 +1009,6 @@ technically operators."
     ((== != < <= > >=) 3)
     (&& 2)
     (|| 1)
-    (, 0) ; loose binding expression separator
     (t 0)))
 
 (defun go--flow-block-p ()
