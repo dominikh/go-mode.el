@@ -91,6 +91,10 @@ constant is changed.")
                                go-identifier-regexp
                                "\\)("))
 
+(defconst go--comment-start-regexp "[[:space:]]*\\(?:/[/*]\\)")
+(defconst go--case-regexp "\\([[:space:]]*case\\([[:space:]]\\|$\\)\\)")
+(defconst go--case-or-default-regexp (concat "\\(" go--case-regexp "\\|"  "[[:space:]]*default:\\)"))
+
 (defconst go-builtins
   '("append" "cap"   "close"   "complex" "copy"
     "delete" "imag"  "len"     "make"    "new"
@@ -1181,8 +1185,6 @@ Return non-nil if point changed lines."
       (setq count (if (and count (< count 0 )) -1 1)))
     moved))
 
-(defconst go--comment-start-regexp "[[:space:]]*\\(?:/[/*]\\)")
-
 (defun go--case-comment-p (indent)
   "Return non-nil if looking at a comment attached to a case statement.
 
@@ -1237,9 +1239,6 @@ INDENT is the normal indent of this line, i.e. that of the case body."
         ;; other cases are ambiguous, so if comment is currently
         ;; aligned with "case", leave it that way
         (= (current-indentation) (- indent tab-width)))))))
-
-(defconst go--case-regexp "\\([[:space:]]*case\\([[:space:]]\\|$\\)\\)")
-(defconst go--case-or-default-regexp (concat "\\(" go--case-regexp "\\|"  "[[:space:]]*default:\\)"))
 
 (defun go-mode-indent-line ()
   (interactive)
