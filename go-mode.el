@@ -410,6 +410,20 @@ For mode=set, all covered lines will have this weight."
 (defvar go--default-face 'default
   "A variable to refer to `default' face for use in font lock rules.")
 
+(defun go--fontify-type-switch-case-pre ()
+  "Move point to line following the end of case statement.
+
+This is used as an anchored font lock keyword PRE-MATCH-FORM. We
+expand the font lock region to include multiline type switch case
+statements."
+  (save-excursion
+    (beginning-of-line)
+    (while (or (looking-at "[[:space:]]*\\($\\|//\\)") (go--line-suffix-p ","))
+      (forward-line))
+    (when (go--line-suffix-p ":")
+      (forward-line))
+    (point)))
+
 (defun go--build-font-lock-keywords ()
   ;; we cannot use 'symbols in regexp-opt because GNU Emacs <24
   ;; doesn't understand that
@@ -440,7 +454,11 @@ For mode=set, all covered lines will have this weight."
      (go--match-ident-type-pair 2 font-lock-type-face)
 
      ;; An anchored matcher for type switch case clauses.
-     (go--match-type-switch-case (go--fontify-type-switch-case nil nil (1 font-lock-type-face)))
+     (go--match-type-switch-case
+      (go--fontify-type-switch-case
+       (go--fontify-type-switch-case-pre)
+       nil
+       (1 font-lock-type-face)))
 
      ;; Match variable names in var decls, constant names in const
      ;; decls, and type names in type decls.
@@ -1467,7 +1485,7 @@ comma, it stops at it. Return non-nil if comma was found."
     ;; Loop until we find a match because we must skip types we don't
     ;; handle, such as "interface { foo() }".
     (while (and (not found-match) (not done))
-      (when (looking-at (concat "[[:space:]\n]*" go-type-name-regexp "[[:space:]]*[,:]"))
+      (when (looking-at (concat "\\(?:[[:space:]]*\\|//.*\\|\n\\)*" go-type-name-regexp "[[:space:]]*[,:]"))
         (goto-char (match-end 1))
         (unless (member (match-string 1) go-constants)
           (setq found-match t)))
