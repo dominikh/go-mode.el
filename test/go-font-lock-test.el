@@ -77,6 +77,10 @@ KmapK[TstringT]KinterfaceK{}{
 KswitchK foo.(KtypeK) {
 KcaseK TstringT, *Tfoo.ZebraT, [2]TbyteT:
 KcaseK CnilC:
+KcaseK TfooT, TbarT, D// DQhi
+Q
+  D// DQthere
+Q  TbazT, TquxT:
 KdefaultK:
 }")
 
