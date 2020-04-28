@@ -325,6 +325,17 @@ See `go-play-region' for more details."
           (function :tag "Call function"))
   :group 'go)
 
+(defcustom go-mode-add-package-line nil
+  "Should `go-mode' attempt to add a package line to empty files.
+See function `go-mode-add-package-line' for more details."
+  :type 'boolean
+  :set (lambda (sym val)
+         (if val
+             (add-hook 'go-mode-hook #'go-mode-add-package-line)
+           (remove-hook 'go-mode-hook #'go-mode-add-package-line))
+         (set-default sym val))
+  :group 'go)
+
 (defcustom go-coverage-display-buffer-func 'display-buffer-reuse-window
   "How `go-coverage' should display the coverage buffer.
 See `display-buffer' for a list of possible functions."
@@ -1823,6 +1834,9 @@ with goflymake (see URL `https://github.com/dougm/goflymake'), gocode
           ("func" "^func *\\(.*\\) {" 1)))
   (imenu-add-to-menubar "Index")
 
+  (when go-mode-add-package-line
+    (add-hook 'go-mode-hook #'go-mode-add-package-line))
+
   ;; Go style
   (setq indent-tabs-mode t)
 
@@ -2870,6 +2884,30 @@ current buffer in the format specified by guru's -modified flag."
 If BUFFER, return the number of characters in that buffer instead."
   (with-current-buffer (or buffer (current-buffer))
     (1- (position-bytes (point-max)))))
+
+(defun go-mode-add-package-line ()
+  "Scan all files with \".go\" extensions, to guess a package.
+Unless all files have the same package, nothing will be changed.
+This function will do nothing if the current buffer isn't empty."
+  (let ((testp (string-match-p "_test\\.go\\'" (buffer-file-name)))
+	name)
+    (save-excursion
+      (goto-char (point-min))
+      (when (looking-at-p "\\`\\(?:[[:space:]]\\|\n\\)*\\'")
+        (catch 'differ
+          (with-temp-buffer
+            (dolist (file (directory-files "." nil "\\.go\\'" t))
+              (insert-file-contents-literally file nil 0 4096)
+              (when (search-forward-regexp "^package \\([[:alnum:]]+\\)$" nil t)
+                (cond ((not name)
+                       (setq name (match-string 1)))
+                      ((not (string= name (match-string 1)))
+                       (setq name nil)
+                       (throw 'differ nil))))
+              (erase-buffer))))))
+    (when name
+      (goto-char (point-min))
+      (insert "package " name (if testp "_test" "") "\n\n"))))
 
 (defvar go-dot-mod-mode-map
   (let ((map (make-sparse-keymap)))
