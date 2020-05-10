@@ -1841,8 +1841,16 @@ with goflymake (see URL `https://github.com/dougm/goflymake'), gocode
   (when (and (boundp 'compilation-error-regexp-alist)
              (boundp 'compilation-error-regexp-alist-alist))
     (add-to-list 'compilation-error-regexp-alist 'go-test)
-    (add-to-list 'compilation-error-regexp-alist-alist
-                 '(go-test . ("^\\s-+\\([^()\t\n]+\\):\\([0-9]+\\):? .*$" 1 2)) t)))
+    (add-to-list
+     'compilation-error-regexp-alist-alist
+     `(go-test . (,(concat "^[ \t]+"  ; prefix
+                           ;; Optional test name (for go test -v):
+                           "\\(?:[./_[:alpha:]][-./_+%@[:alnum:]]*: \\)?"
+                           "\\([./_[:alpha:]][-./_+%@[:alnum:]]*\\):"  ; file
+                           "\\([0-9]+\\):?"  ; line
+                           " .*$")
+                  1 2))
+     t)))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist (cons "\\.go\\'" 'go-mode))
