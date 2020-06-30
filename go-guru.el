@@ -180,6 +180,7 @@ Parse and return the resulting JSON object."
     (unwind-protect
 	;; Run guru, feeding it the input buffer (modified files).
 	(with-current-buffer input-buffer
+	  (set-buffer-file-coding-system 'raw-text)
 	  (go-guru--insert-modified-files)
 	  (unless (buffer-file-name buf)
 	    (go-guru--insert-modified-file filename buf))
