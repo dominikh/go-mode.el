@@ -1842,7 +1842,16 @@ with goflymake (see URL `https://github.com/dougm/goflymake'), gocode
              (boundp 'compilation-error-regexp-alist-alist))
     (add-to-list 'compilation-error-regexp-alist 'go-test)
     (add-to-list 'compilation-error-regexp-alist-alist
-                 '(go-test . ("^\\s-+\\([^()\t\n]+\\):\\([0-9]+\\):? .*$" 1 2)) t)))
+                 '(go-test . ("^\\s-+\\([^()\t\n]+\\):\\([0-9]+\\):? .*$" 1 2)) t)
+    (add-to-list 'compilation-error-regexp-alist 'go-compilation)
+    (add-to-list 'compilation-error-regexp-alist-alist
+                 '(go-compilation
+                   . ("^\\(\\([^\n]+\\):\\([0-9]+\\):\\([0-9]+\\)\\): " 2 3 4 nil 1)))
+    (add-to-list 'compilation-error-regexp-alist 'go-compilation-info)
+    (add-to-list 'compilation-error-regexp-alist-alist
+                 '(go-compilation-info
+                   . ("^\tprevious declaration at \\(\\([^\n]+\\):\\([0-9]+\\):\\([0-9]+\\)\\)"
+                      2 3 4 0 1)))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist (cons "\\.go\\'" 'go-mode))
