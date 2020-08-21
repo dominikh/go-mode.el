@@ -411,9 +411,6 @@ For mode=set, all covered lines will have this weight."
     st)
   "Syntax table for Go mode.")
 
-(defvar go--default-face 'default
-  "A variable to refer to `default' face for use in font lock rules.")
-
 (defun go--fontify-type-switch-case-pre ()
   "Move point to line following the end of case statement.
 
@@ -445,7 +442,7 @@ statements."
        ;; Post-match form that runs after last sub-match.
        (go--fontify-param-post)
        ;; Subexp 1 is the param variable name, if any.
-       (1 ,(if go-fontify-variables 'font-lock-variable-name-face 'go--default-face))
+       (1 font-lock-variable-name-face nil t)
        ;; Subexp 2 is the param type name, if any. We set the LAXMATCH
        ;; flag to allow optional regex groups.
        (2 font-lock-type-face nil t)))
@@ -467,7 +464,7 @@ statements."
      ;; Match variable names in var decls, constant names in const
      ;; decls, and type names in type decls.
      (go--match-decl
-      (1 ,(if go-fontify-variables 'font-lock-variable-name-face 'go--default-face) nil t)
+      (1 font-lock-variable-name-face nil t)
       (2 font-lock-constant-face nil t)
       (3 font-lock-type-face nil t))
 
@@ -1439,6 +1436,10 @@ the next comma or to the closing paren."
     (while (and (not found-match) (not done))
       (if go--fontify-param-has-name
           (when (looking-at go--named-param-re)
+            (when (not go-fontify-variables)
+              (let ((md (match-data)))
+                (setf (nth 2 md) nil (nth 3 md) nil)
+                (set-match-data md)))
             (setq found-match t))
         (when (looking-at go--unnamed-param-re)
           (setq found-match t)))
@@ -1546,14 +1547,16 @@ gets highlighted by the font lock keyword."
           (let ((md (match-data)))
             (cond
              ((string= decl "var")
-              (setf (nth 4 md) nil (nth 5 md) nil (nth 6 md) nil (nth 7 md) nil))
+              (setf (nth 4 md) nil (nth 5 md) nil (nth 6 md) nil (nth 7 md) nil)
+              (when (not go-fontify-variables)
+                (setf (nth 2 md) nil (nth 3 md) nil)))
              ((string= decl "const")
               (setf (nth 2 md) nil (nth 3 md) nil (nth 6 md) nil (nth 7 md) nil))
              ((string= decl "type")
               (setf (nth 2 md) nil (nth 3 md) nil (nth 4 md) nil (nth 5 md) nil)))
             (set-match-data md)))
 
-         (t
+         (go-fontify-variables
           (save-match-data
             ;; Left side of ":=" assignmnet.
             (when (looking-at ".*:=")
