@@ -873,7 +873,80 @@ The return value is the position of the opening paren."
        (point)))))
 
 (defun go-indentation-at-point ()
-  "Return the appropriate indentation for the current line.
+  "Return the appropriate indentation for the current line."
+  (save-excursion
+    (beginning-of-line)
+
+    (if (go-in-comment-p)
+        (go--multiline-comment-indent)
+      (go--indentation-at-point))))
+
+(defun go--multiline-comment-indent ()
+  "Return the appropriate indent inside multiline comment.
+
+Assumes point is at beginning of line within comment. This
+function has basic logic to indent as you add new lines to a
+multiline comment, and to line up all the `*' if each line starts
+with `*'. The gofmt behavior for multiline comments is
+suprisingly complex and strange/buggy, so we just aim to do
+something simple rather than encode all the subtle behavior."
+  (let* (;; Indent of current line.
+         (indent (current-indentation))
+         ;; Indent of opening "/*".
+         start-indent
+         ;; Default indent to use based on preceding context.
+         natural-indent
+         ;; Non-nil means keep existing indent and give up calculating indent.
+         give-up
+         ;; Whether all comment lines (except first) begin with "*".
+         (all-star t))
+
+    (save-excursion
+      (go-goto-beginning-of-string-or-comment)
+
+      (setq start-indent (current-indentation))
+
+      ;; If other stuff precedes start of multiline comment, give up.
+      (setq give-up (/= (current-column) start-indent))
+
+      ;; Skip "/*".
+      (forward-char 2)
+
+      (skip-syntax-forward " ")
+
+      (if (not (eolp))
+          ;; If we aren't at EOL, we have content on the first line.
+          ;; Base our natural indent on that.
+          (setq natural-indent (current-column))
+        ;; Otherwise default to 1 space beyond "/*".
+        (setq natural-indent (+ start-indent 3)))
+
+      (let (done)
+        (while (not done)
+          (setq done (or (looking-at ".*\\*/") (not (zerop (forward-line)))))
+          (setq all-star (and all-star (looking-at "[[:space:]]*\\*"))))))
+
+    ;; If previous line has comment content, use its indent as our
+    ;; natural indent.
+    (save-excursion
+      (when (zerop (forward-line -1))
+        (beginning-of-line)
+        (when (and (go-in-comment-p) (> (current-indentation) 0))
+          (setq natural-indent (current-indentation)))))
+
+    (cond
+     (give-up indent)
+
+     (all-star (1+ start-indent))
+
+     ;; Closing "*/" with no preceding content always lines up with "/*".
+     ((looking-at "[[:space:]]*\\*/") start-indent)
+
+     ;; If the line is already indented, leave it.
+     (t (if (zerop indent) natural-indent indent)))))
+
+(defun go--indentation-at-point ()
+  "Return the appropriate indentation for the current non-comment line.
 
 This function works by walking a line's characters backwards. When it
 encounters a closing paren or brace it bounces to the corresponding
@@ -1242,14 +1315,14 @@ INDENT is the normal indent of this line, i.e. that of the case body."
 (defun go-mode-indent-line ()
   (interactive)
   (let (indent
-        shift-amt
         ;; case sensitively match "case", "default", etc.
         (case-fold-search nil)
         (pos (- (point-max) (point)))
         (point (point))
-        (beg (line-beginning-position)))
+        (beg (line-beginning-position))
+        (non-tab-indents 0))
     (back-to-indentation)
-    (if (go-in-string-or-comment-p)
+    (if (go-in-string-p)
         (goto-char point)
       (setq indent (go-indentation-at-point))
       (when (or
@@ -1263,11 +1336,22 @@ INDENT is the normal indent of this line, i.e. that of the case body."
              ;; comment attached above a "case" statement
              (go--case-comment-p indent))
         (cl-decf indent tab-width))
-      (setq shift-amt (- indent (current-column)))
-      (if (zerop shift-amt)
-          nil
+
+      ;; Don't do anything if current indent is correct.
+      (when (/= indent (current-column))
+        ;; Don't use tabs for indenting beyond "/*" in multiline
+        ;; comments. They don't play well with gofmt.
+        (when (go-in-comment-p)
+          (save-excursion
+            (go-goto-beginning-of-string-or-comment)
+            (when (> indent (current-indentation))
+              (setq non-tab-indents (- indent (current-indentation)))
+              (setq indent (current-indentation)))))
+
         (delete-region beg (point))
-        (indent-to indent))
+        (indent-to indent)
+        (insert-char ?  non-tab-indents))
+
       ;; If initial point was within line's indentation,
       ;; position after the indentation.  Else stay at same point in text.
       (if (> (- (point-max) pos) (point))
@@ -1692,19 +1776,28 @@ This is intended to be called from `before-change-functions'."
   (setq go-dangling-cache (make-hash-table :test 'eql)))
 
 (defun go--electric-indent-function (inserted-char)
-  (cond
-   ;; Indent after starting a "//" or "/*" comment.
-   ;; This is handy for comments above "case" statements.
-   ((or (eq inserted-char ?/) (eq inserted-char ?*))
-    (when (eq (char-before (1- (point))) ?/)
-      'do-indent))
+  (let ((prev (char-before (1- (point)))))
+    (cond
+     ;; Indent after starting/ending a comment. This is handy for
+     ;; comments above "case" statements and closing multiline
+     ;; comments.
+     ((or
+       (and (eq inserted-char ?/) (eq prev ?/))
+       (and (eq inserted-char ?/) (eq prev ?*))
+       (and (eq inserted-char ?*) (eq prev ?/)))
+      'do-indent)
 
-   ((eq inserted-char ? )
-    (and
-     (eq (char-before (- (point) 1)) ?e)
-     (eq (char-before (- (point) 2)) ?s)
-     (eq (char-before (- (point) 3)) ?a)
-     (eq (char-before (- (point) 4)) ?c)))))
+     ((eq inserted-char ? )
+      (and
+       (eq prev ?e)
+       (eq (char-before (- (point) 2)) ?s)
+       (eq (char-before (- (point) 3)) ?a)
+       (eq (char-before (- (point) 4)) ?c)))
+
+     ;; Trick electric-indent-mode into indenting inside multiline
+     ;; comments.
+     ((and (eq inserted-char ?\n) (go-in-comment-p))
+      'do-indent))))
 
 (defun go--comment-region (beg end &optional arg)
   "Switch to block comment when commenting a partial line."

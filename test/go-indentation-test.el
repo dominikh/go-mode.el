@@ -49,3 +49,76 @@ var foo = 123 +
 	789
 "
    ))
+
+(ert-deftest go--indent-multiline-comment ()
+  (go--should-indent
+   "
+{
+	/*
+a
+	*/
+}
+"
+
+   "
+{
+	/*
+	   a
+	*/
+}
+")
+
+  (go--should-indent
+   "
+{
+	/*   LISTEN
+a
+	*/
+}
+"
+
+   "
+{
+	/*   LISTEN
+	     a
+	*/
+}
+")
+
+  (go--should-indent
+   "
+{
+	/* c
+	c
+c
+	*/
+}
+"
+
+   "
+{
+	/* c
+	c
+	c
+	*/
+}
+")
+
+  (go--should-indent
+   "
+{
+	/* cool
+	*  cat
+	 *
+	*/
+}
+"
+
+   "
+{
+	/* cool
+	 *  cat
+	 *
+	 */
+}
+"))
