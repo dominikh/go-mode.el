@@ -845,9 +845,11 @@ thing for comments."
               (when mark-active
                 (setq arg (forward-paragraph arg)))
               (setq done t))
-          ;; If we are going backwards, back up one more line so
-          ;; we are on the line before the comment.
-          (when (= single -1)
+          ;; If we are going backwards, move forward one line so we
+          ;; are on the first interesting line of the comment. Note
+          ;; that the current line may already be interesting if we
+          ;; are at the beginning of the buffer.
+          (when (and (= single -1) (not (go--interesting-comment-p)))
             (forward-line 1))
           (cl-decf arg single))))
     arg))

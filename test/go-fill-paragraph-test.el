@@ -218,3 +218,21 @@ func main() {
 	if something() { somethingElse() }
 }"
    ))
+
+
+(ert-deftest go--fill-paragraph-bob ()
+  (go--should-fill
+   "<>// Lorem
+// ipsum."
+   "// Lorem ipsum."
+   )
+
+  (go--should-fill
+   "<>/*
+   Lorem
+   ipsum.
+*/"
+   "/*
+   Lorem ipsum.
+*/"
+   ))
