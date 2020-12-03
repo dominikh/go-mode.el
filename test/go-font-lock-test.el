@@ -210,7 +210,13 @@ KgoK 1.13
 
 KrequireK (
   Nexample.com/require/go/bananaN Sv12.34.56SV-1234-456abcV D// DQindirect
-Q)
+Q	Nnoslash.devN Sv1.2.3S
+)
+
+KreplaceK (
+	Nfoo.example.com/barN Sv1.2.3S => Nfoo.example.com/barN Sv1.2.3S
+	Nexample.com/foo/barN => Nexample.com/baz/barN Sv0.0.0SV-20201112005413-933910cbaea0V
+)
 " 'go-dot-mod-mode))
 
 (defun go--should-match-face (want-face)
