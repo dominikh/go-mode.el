@@ -294,7 +294,7 @@ Consider using ‘godoc-gogetdoc’ instead for more accurate results."
 You can install gogetdoc with 'go get -u github.com/zmb3/gogetdoc'."
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
       ;; TODO: gogetdoc supports unsaved files, but not introducing
-      ;; new artifical files, so this limitation will stay for now.
+      ;; new artificial files, so this limitation will stay for now.
       (error "Cannot use gogetdoc on a buffer without a file name"))
   (let ((posn (format "%s:#%d" (file-truename buffer-file-name) (1- (position-bytes point))))
         (out (godoc--get-buffer "<at point>")))
@@ -888,7 +888,7 @@ Assumes point is at beginning of line within comment. This
 function has basic logic to indent as you add new lines to a
 multiline comment, and to line up all the `*' if each line starts
 with `*'. The gofmt behavior for multiline comments is
-suprisingly complex and strange/buggy, so we just aim to do
+surprisingly complex and strange/buggy, so we just aim to do
 something simple rather than encode all the subtle behavior."
   (let* (;; Indent of current line.
          (indent (current-indentation))
@@ -1431,7 +1431,7 @@ func foo(i, j int) {}
                                     (go--parameter-list-type (point-max))
                                     'present))
 
-  ;; Remember where our match started so we can continue our serach
+  ;; Remember where our match started so we can continue our search
   ;; from here.
   (setq go--fontify-param-beg (point))
 
@@ -1602,7 +1602,7 @@ comma, it stops at it. Return non-nil if comma was found."
 (defconst go--decl-ident-re (concat "\\(?:^\\|[[:space:]]\\)\\(\\(\\(" go-identifier-regexp "\\)\\)\\)\\_>"))
 
 (defun go--match-decl (end)
-  "Match identifers in \"var\", \"type\" and \"const\" decls, as
+  "Match identifiers in \"var\", \"type\" and \"const\" decls, as
 well as \":=\" assignments.
 
 In order to only scan once, the regex has three subexpressions
@@ -1644,7 +1644,7 @@ gets highlighted by the font lock keyword."
 
          (go-fontify-variables
           (save-match-data
-            ;; Left side of ":=" assignmnet.
+            ;; Left side of ":=" assignment.
             (when (looking-at ".*:=")
               (let ((depth (go-paren-level)))
                 (goto-char (match-end 0))
@@ -1693,7 +1693,7 @@ succeeds."
   "Match single result types.
 
 Parenthetical result lists are handled by the param list keyword,
-so we need a separate keyword to handle singular reuslt types
+so we need a separate keyword to handle singular result types
 such as \"string\" in:
 
 func foo(i int) string"
@@ -1935,7 +1935,7 @@ with goflymake (see URL `https://github.com/dougm/goflymake'), gocode
   ;; leading whitespace in the file name.
   ;;
   ;; http://lists.gnu.org/archive/html/bug-gnu-emacs/2001-12/msg00674.html
-  ;; documents the old, reverseed order.
+  ;; documents the old, reversed order.
   (when (and (boundp 'compilation-error-regexp-alist)
              (boundp 'compilation-error-regexp-alist-alist))
     (add-to-list 'compilation-error-regexp-alist 'go-test)
@@ -2620,7 +2620,7 @@ for."
           (display-buffer (current-buffer) `(,go-coverage-display-buffer-func))))))
 
 (defun go-goto-function (&optional arg)
-  "Go to the function defintion (named or anonymous) surrounding point.
+  "Go to the function definition (named or anonymous) surrounding point.
 
 If we are on a docstring, follow the docstring down.
 If no function is found, assume that we are at the top of a file
