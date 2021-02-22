@@ -126,6 +126,7 @@ a-b: 4,
   (go--should-fontify "[123]TfooT")
   (go--should-fontify "[...]TfooT")
   (go--should-fontify "[foo.Zar]TfooT")
+  (go--should-fontify "D/*DQhi*/Q[1]*TfooT")
 
   (go--should-fontify "KmapK[*Tfoo.ZarT]*Tbar.ZarT")
   (go--should-fontify "[]KmapK[TfooT]TbarT")
@@ -201,6 +202,10 @@ KforK {
   (go--should-fontify "VfooV, VbarV := baz, qux")
   (go--should-fontify "foo, bar = baz, qux")
   (go--should-fontify "KfuncK FfooF(ViV TintT) { VbarV := baz }"))
+
+(ert-deftest go--fontify-index-multiply ()
+  (go--should-fontify "foo[1]*10 + 1")
+  (go--should-fontify "foo[1]*foo[2] + 1"))
 
 (ert-deftest go--fontify-go-dot-mod ()
   (go--should-fontify "
