@@ -500,7 +500,7 @@ statements."
      (,(concat go-type-name-regexp "{") 1 font-lock-type-face)
 
      ;; Map value type
-     (,(concat "\\_<map\\_>\\[[^]]+\\]" go-type-name-regexp) 1 font-lock-type-face)
+     (go--match-map-value 1 font-lock-type-face)
 
      ;; Map key type
      (,(concat "\\_<map\\_>\\[" go-type-name-regexp) 1 font-lock-type-face)
@@ -1723,6 +1723,17 @@ We are looking for the right-hand-side of the type alias"
                          (go--in-paren-with-prefix-p ?\( "type"))))
     found-match))
 
+
+(defconst go--map-value-re
+  (concat "\\_<map\\_>\\[\\(?:\\[[^]]*\\]\\)*[^]]*\\]" go-type-name-regexp))
+
+(defun go--match-map-value (end)
+  "Search for map value types."
+  (when (re-search-forward go--map-value-re end t)
+    ;; Move point to beginning of map value in case value itself is
+    ;; also a map (we will match it next iteration).
+    (goto-char (match-beginning 1))
+    t))
 
 (defconst go--label-re (concat "\\(" go-label-regexp "\\):"))
 

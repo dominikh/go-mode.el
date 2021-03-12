@@ -130,7 +130,9 @@ a-b: 4,
 
   (go--should-fontify "KmapK[*Tfoo.ZarT]*Tbar.ZarT")
   (go--should-fontify "[]KmapK[TfooT]TbarT")
-  (go--should-fontify "KmapK[[1][2][three]*Tfoo.ZarT][four][]*Tbar.ZarT"))
+  (go--should-fontify "KmapK[[1][2][three]*Tfoo.ZarT][four][]*Tbar.ZarT")
+  (go--should-fontify "KmapK[TstringT]KmapK[TstringT]Tfloat64T")
+  (go--should-fontify "KmapK[[2][c]*TintT]TboolT"))
 
 (ert-deftest go--fontify-negation ()
   ;; Fontify unary "!".
