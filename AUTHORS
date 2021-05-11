@@ -6,6 +6,7 @@ Austin Clements <aclements@csail.mit.edu>
 Ben Fried <ben.fried@gmail.com>
 Bobby Powers <bobbypowers@gmail.com>
 Charles Lee <zombie.fml@gmail.com>
+Craig McDaniel <craigmcd@gmail.com>
 Daniel Morsing <daniel.morsing@gmail.com>
 Dominik Honnef <dominik.honnef@gmail.com>
 Dominik Honnef <dominik@honnef.co>
@@ -14,20 +15,31 @@ Erin Keenan <erinok@gmail.com>
 Evan Martin <evan.martin@gmail.com>
 Felix Lange <fjl@twurst.com>
 Florian Weimer <fw@deneb.enyo.de>
+Hemant Kumar <hekumar@redhat.com>
+Ingo Lohmar <il@labcognition.com>
 Istvan Marko <mi-git@kismala.com>
 Iwasaki Yudai <yudai.iwasaki@ntti3.com>
 James Aguilar <jaguilar@google.com>
 Jan Newmarch <jan.newmarch@gmail.com>
 Jean-Marc Eurin <jmeurin@google.com>
 Jeff Hodges <jeff@somethingsimilar.com>
+John Shahid <jvshahid@gmail.com>
+Jonas Helgemo <jonas.helgemo@gmail.com>
 Juergen Hoetzel <juergen@archlinux.org>
 Kevin Ballard <kevin@sb.org>
 Konstantin Shaposhnikov <k.shaposhnikov@gmail.com>
+Kris <krismolendyke@users.noreply.github.com>
+Kristoffer Grönlund <krig@koru.se>
 Lowe Thiderman <lowe.thiderman@gmail.com>
 Mark Petrovic <mark.petrovic@xoom.com>
 Mats Lidell <mats.lidell@cag.se>
 Matt Armstrong <marmstrong@google.com>
+Miciah Masters <miciah.masters@gmail.com>
+Muir Manders <muir@mnd.rs>
+Muir Manders <muir@retailnext.net>
+Peter Gardfjäll <peter.gardfjall.work@gmail.com>
 Peter Kleiweg <pkleiweg@xs4all.nl>
+Peter Sanford <psanford@sanford.io>
 Philipp Stephani <phst@google.com>
 Quan Yong Zhai <qyzhai@gmail.com>
 Robert Zaremba <robert.zaremba@zoho.com>
@@ -37,14 +49,18 @@ Ryan Barrett <ryanb@google.com>
 Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 Sameer Ajmani <sameer@golang.org>
 Scott Lawrence <bytbox@gmail.com>
+Serghei Iakovlev <sergeyklay@users.noreply.github.com>
+Simon Frei <freisim93@gmail.com>
 Steven Elliot Harris <seharris@gmail.com>
 Syohei YOSHIDA <syohex@gmail.com>
 Taiki Sugawara <buzz.taiki@gmail.com>
 Viacheslav Chimishuk <vchimishuk@yandex-team.ru>
+Wilfred Hughes <whughes@ahl.com>
 Will <will@glozer.net>
 Yasuyuki Oka <yasuyk@gmail.com>
 Yutian Li <hotpxless@gmail.com>
 Zac Bergquist <zbergquist99@gmail.com>
 kostya-sh <kostya-sh@users.noreply.github.com>
+mschuldt <mbschuldt@gmail.com>
 nverno <noah.v.peart@gmail.com>
 nwidger <niels.widger@gmail.com>

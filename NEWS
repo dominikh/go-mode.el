@@ -1,3 +1,40 @@
+go-mode-1.6.0 (2019/09/19)
+
+* Various indentation fixes to match gofmt style.
+
+* Update default for `go-packages-function` to use
+  `go-packages-go-list`.
+
+* Add option to use a single buffer for `godoc'.
+
+* Fix `fill-paragraph' for comment blocks.
+
+* Update default for `godoc-and-godef-command' to use `go doc'.
+
+* Fix go-remove-unused-imports for the Go tool >= 1.9.
+
+* Fix filename handling in `godoc-godetdoc'.
+
+* Add confirmation prompt for Playground uploads.
+
+* Support remote files in `gofmt'.
+
+* Fix gofmt to not move the cursor if the current line changed.
+
+* Fix off by one error in godef--call.
+
+go-mode-1.5.0 (2017/03/09)
+
+* Add locations in `godef-jump' to xref marker stack if available.
+
+* Better support `subword-mode'.
+
+* Remove support for Emacs 23.
+
+* Remove support for XEmacs.
+
+* Update gofmt flags to better support goimports.
+
 go-mode-1.4.0 (2016/05/12)
 
  * Fix minor bugs in fontification.
