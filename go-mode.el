@@ -2392,7 +2392,8 @@ You should use `go-packages-go-list' instead."
                                              (concat " build -o " null-device))
                                            " -gcflags=-e"
                                            " "
-                                           (shell-quote-argument (file-truename buffer-file-name)))) "\n")))))
+                                           (shell-quote-argument (or (file-remote-p (file-truename buffer-file-name) 'localname)
+                                                                     (file-truename buffer-file-name))))) "\n")))))
 
 (defun go-remove-unused-imports (arg)
   "Remove all unused imports.
