@@ -2440,24 +2440,26 @@ description at POINT."
       (error "Cannot use godef on a buffer without a file name")
     (let ((outbuf (generate-new-buffer "*godef*"))
           (coding-system-for-read 'utf-8)
-          (coding-system-for-write 'utf-8))
-      (prog2
-          (call-process-region (point-min)
-                               (point-max)
-                               godef-command
-                               nil
-                               outbuf
-                               nil
-                               "-i"
-                               "-t"
-                               "-f"
-                               (file-truename (buffer-file-name (go--coverage-origin-buffer)))
-                               "-o"
-                               ;; Emacs point and byte positions are 1-indexed.
-                               (number-to-string (1- (position-bytes point))))
-          (with-current-buffer outbuf
-            (split-string (buffer-substring-no-properties (point-min) (point-max)) "\n"))
-        (kill-buffer outbuf)))))
+          (coding-system-for-write 'utf-8)
+          (filename (file-truename (buffer-file-name (go--coverage-origin-buffer))))
+          (token-position (number-to-string (1- (position-bytes point)))))
+      (if (tramp-tramp-file-p filename)
+          (with-parsed-tramp-file-name filename nil
+            (process-file godef-command nil outbuf nil
+                          "-f" localname
+                          "-o" token-position)
+            (with-current-buffer outbuf
+              (let ((r (buffer-substring-no-properties (point-min) (point-max))))
+                (setq result (if (godef--successful-p (car (split-string r "\n")))
+                                 (tramp-make-tramp-file-name method user domain host port r)
+                               r)))))    
+        (progn (process-file godef-command nil outbuf nil
+                             "-f" filename
+                             "-o" token-position)
+               (with-current-buffer outbuf
+                 (setq result (buffer-substring-no-properties (point-min) (point-max))))))
+      (kill-buffer outbuf)
+      (split-string result "\n"))))
 
 (defun godef--successful-p (output)
   (not (or (string= "-" output)
