@@ -762,97 +762,6 @@ case keyword. It returns nil for the case line itself."
           (replace-regexp-in-string "/\\*" "  "
                                     (match-string-no-properties 0))))))
 
-(defun go--fill-paragraph (&rest args)
-  "Wrap fill-paragraph to set custom fill-prefix."
-  (let ((fill-prefix (go--fill-prefix))
-        (fill-paragraph-function nil))
-    (apply 'fill-paragraph args)))
-
-(defun go--empty-line-p ()
-  (looking-at "[[:space:]]*$"))
-
-(defun go--boring-comment-p ()
-  "Return non-nil if we are looking at a boring comment.
-
-A boring comment is a comment with no content. For example:
-
-////////  ; boring
-// hello
-////////  ; boring
-
-/*        ; boring
-  hello
-*/        ; boring
-"
-  (or
-   (looking-at-p "[[:space:]]*//+[[:space:]]*$")
-   (looking-at-p "[[:space:]]*\\(?:/\\*+\\|\\*/+\\)[[:space:]]*$")))
-
-(defun go--interesting-comment-p ()
-  "Return non-nil if we are looking at an interesting comment.
-
-An interesting comment is one that contains content other than
-comment starter/closer characters."
-
-  (if (go-in-comment-p)
-      (and
-       (not (go--empty-line-p))
-       (not (looking-at-p "[[:space:]]*\\*/")))
-    (and
-     (looking-at go--comment-start-regexp)
-     (not (go--boring-comment-p)))))
-
-(defun go--fill-forward-paragraph (&optional arg)
-  "forward-paragraph like function used for fill-paragraph.
-
-This function is key for making fill-paragraph do the right
-thing for comments."
-  (beginning-of-line)
-  (let* ((arg (or arg 1))
-         (single (if (> arg 0) 1 -1))
-         (done nil))
-    (while (and (not done) (not (zerop arg)))
-      ;; If we are moving backwards and aren't currently looking at a
-      ;; comment, move back one line. This is to make sure
-      ;; (go--fill-forward-paragraph -1) always works properly as the
-      ;; inverse of (go--fill-forward-paragraph 1).
-      (when (and
-             (= single -1)
-             (not (go-in-comment-p))
-             (not (looking-at-p go--comment-start-regexp)))
-        (forward-line -1))
-
-      ;; Skip empty lines and comment lines with no content.
-      (while (and
-              (or (go--empty-line-p) (go--boring-comment-p))
-              (zerop (forward-line single))))
-
-      (let (saw-comment)
-        ;; Skip comment lines that have content.
-        (while (and
-                (go--interesting-comment-p)
-                (zerop (forward-line single)))
-          (setq saw-comment t))
-
-        (if (not saw-comment)
-            (progn
-              ;; In fill-region case user may have selected a region
-              ;; with non-comments. fill-region will loop forever
-              ;; until it makes it to the end of the region, so just
-              ;; fall back to `forward-paragraph' so we make progress.
-              (when mark-active
-                (setq arg (forward-paragraph arg)))
-              (setq done t))
-          ;; If we are going backwards, move forward one line so we
-          ;; are on the first interesting line of the comment. Note
-          ;; that the current line may already be interesting if we
-          ;; are at the beginning of the buffer.
-          (when (and (= single -1) (not (go--interesting-comment-p)))
-            (forward-line 1))
-          (cl-decf arg single))))
-    arg))
-
-
 (defun go--open-paren-position ()
   "Return non-nil if point is between '(' and ')'.
 
@@ -879,6 +788,10 @@ The return value is the position of the opening paren."
         (go--multiline-comment-indent)
       (go--indentation-at-point))))
 
+;; It's unfortunate that the user cannot reindent the current line to
+;; align with the previous line; however, if they could, then people
+;; who use reindent-then-newline-and-indent wouldn't be able to
+;; explicitly indent lines inside comments.
 (defun go--multiline-comment-indent ()
   "Return the appropriate indent inside multiline comment.
 
@@ -1901,10 +1814,25 @@ with goflymake (see URL `https://github.com/dougm/goflymake'), gocode
   (set (make-local-variable 'comment-end)   "")
   (set (make-local-variable 'comment-use-syntax) t)
   (set (make-local-variable 'comment-start-skip) "\\(//+\\|/\\*+\\)\\s *")
-  (set (make-local-variable 'comment-region-function) 'go--comment-region)
+  (set (make-local-variable 'comment-region-function) #'go--comment-region)
+  ;; Set comment-multi-line to t so that comment-indent-new-line
+  ;; doesn't use one /* */ per line. Thanks to comment-use-syntax,
+  ;; Emacs is smart enough to still insert new // for single-line
+  ;; comments.
+  (set (make-local-variable 'comment-multi-line) t)
 
   (set (make-local-variable 'beginning-of-defun-function) #'go-beginning-of-defun)
   (set (make-local-variable 'end-of-defun-function) #'go-end-of-defun)
+  (setq-local paragraph-start
+              (concat "[[:space:]]*\\(?:"
+                      comment-start-skip
+                      "\\|\\*/?[[:space:]]*\\|\\)$"))
+  (setq-local paragraph-separate paragraph-start)
+  (setq-local fill-paragraph-function #'go-fill-paragraph)
+  (setq-local fill-forward-paragraph-function #'go--fill-forward-paragraph)
+  (setq-local adaptive-fill-function #'go--find-fill-prefix)
+  (setq-local adaptive-fill-first-line-regexp "")
+  (setq-local comment-line-break-function #'go--comment-indent-new-line)
 
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'syntax-propertize-function) #'go-propertize-syntax)
@@ -1917,10 +1845,6 @@ with goflymake (see URL `https://github.com/dougm/goflymake'), gocode
 
   (set (make-local-variable 'go-dangling-cache) (make-hash-table :test 'eql))
   (add-hook 'before-change-functions #'go--reset-dangling-cache-before-change t t)
-
-  (set (make-local-variable 'adaptive-fill-function) #'go--fill-prefix)
-  (set (make-local-variable 'fill-paragraph-function) #'go--fill-paragraph)
-  (set (make-local-variable 'fill-forward-paragraph-function) #'go--fill-forward-paragraph)
 
   ;; ff-find-other-file
   (setq ff-other-file-alist 'go-other-file-alist)
@@ -3062,6 +2986,141 @@ If BUFFER, return the number of characters in that buffer instead."
             ;; This won’t work on Windows.
             (concat remote "/tmp")
           temporary-file-directory)))))
+
+
+;; The following functions were copied (and modified) from rust-mode.el.
+;;
+;; Copyright (c) 2015 The Rust Project Developers
+;;
+;; Permission is hereby granted, free of charge, to any
+;; person obtaining a copy of this software and associated
+;; documentation files (the "Software"), to deal in the
+;; Software without restriction, including without
+;; limitation the rights to use, copy, modify, merge,
+;; publish, distribute, sublicense, and/or sell copies of
+;; the Software, and to permit persons to whom the Software
+;; is furnished to do so, subject to the following
+;; conditions:
+;;
+;; The above copyright notice and this permission notice
+;; shall be included in all copies or substantial portions
+;; of the Software.
+
+(defun go--fill-prefix-for-comment-start (line-start)
+  "Determine what to use for `fill-prefix' based on the text at LINE-START."
+  (let ((result
+         ;; Replace /* with same number of spaces
+         (replace-regexp-in-string
+          "\\(?:/\\*+?\\)[!*]?"
+          (lambda (s)
+            (let ((offset (if (eq t
+                                  (compare-strings "/*" nil nil
+                                                   s
+                                                   (- (length s) 2)
+                                                   (length s)))
+                              1 2)))
+              (make-string (1+ (- (length s) offset)) ?\x20)))
+          line-start)))
+    ;; Make sure we've got at least one space at the end
+    (if (not (= (aref result (- (length result) 1)) ?\x20))
+        (setq result (concat result " ")))
+    result))
+
+(defun go--in-comment-paragraph (body)
+  ;; We might move the point to fill the next comment, but we don't want it
+  ;; seeming to jump around on the user
+  (save-excursion
+    ;; If we're outside of a comment, with only whitespace and then a comment
+    ;; in front, jump to the comment and prepare to fill it.
+    (when (not (go-in-comment-p))
+      (beginning-of-line)
+      (when (looking-at (concat "[[:space:]\n]*" comment-start-skip))
+        (goto-char (match-end 0))))
+
+    ;; If we're at the beginning of a comment paragraph with nothing but
+    ;; whitespace til the next line, jump to the next line so that we use the
+    ;; existing prefix to figure out what the new prefix should be, rather than
+    ;; inferring it from the comment start.
+    (while (save-excursion
+             (end-of-line)
+             (and (go-in-comment-p)
+                  (save-excursion
+                    (beginning-of-line)
+                    (looking-at paragraph-start))
+                  (looking-at "[[:space:]]*$")
+                  (nth 4 (syntax-ppss (line-beginning-position 2)))))
+      (goto-char (line-beginning-position 2)))
+
+    ;; If we're on the last line of a multiline-style comment that started
+    ;; above, back up one line so we don't mistake the * of the */ that ends
+    ;; the comment for a prefix.
+    (when (save-excursion
+            (and (nth 4 (syntax-ppss (line-beginning-position 1)))
+                 (looking-at "[[:space:]]*\\*/")))
+      (goto-char (line-end-position 0)))
+    (funcall body)))
+
+(defun go--with-comment-fill-prefix (body)
+  (let*
+      ((line-string (buffer-substring-no-properties
+                     (line-beginning-position) (line-end-position)))
+       (line-comment-start
+        (when (go-in-comment-p)
+          (cond
+           ;; If we're inside the comment and see a * prefix, use it
+           ((string-match "^\\([[:space:]]*\\*+[[:space:]]*\\)"
+                          line-string)
+            (match-string 1 line-string))
+           ;; If we're at the start of a comment, figure out what prefix
+           ;; to use for the subsequent lines after it
+           ((string-match (concat "[[:space:]]*" comment-start-skip) line-string)
+            (go--fill-prefix-for-comment-start
+             (match-string 0 line-string))))))
+       (fill-prefix
+        (or line-comment-start
+            fill-prefix)))
+    (funcall body)))
+
+(defun go--find-fill-prefix ()
+  (go--in-comment-paragraph
+   (lambda ()
+     (go--with-comment-fill-prefix
+      (lambda ()
+        fill-prefix)))))
+
+(defun go-fill-paragraph (&rest args)
+  "Special wrapping for `fill-paragraph'.
+This handles multi-line comments with a * prefix on each line."
+  (go--in-comment-paragraph
+   (lambda ()
+     (go--with-comment-fill-prefix
+      (lambda ()
+        (let
+            ((fill-paragraph-function
+              (if (not (eq fill-paragraph-function 'go-fill-paragraph))
+                  fill-paragraph-function))
+             (fill-paragraph-handle-comment t))
+          (apply 'fill-paragraph args)
+          t))))))
+
+(defun go--do-auto-fill (&rest args)
+  "Special wrapping for `do-auto-fill'.
+This handles multi-line comments with a * prefix on each line."
+  (go--with-comment-fill-prefix
+   (lambda ()
+     (apply 'do-auto-fill args)
+     t)))
+
+(defun go--fill-forward-paragraph (arg)
+  ;; This is to work around some funny behavior when a paragraph separator is
+  ;; at the very top of the file and there is a fill prefix.
+  (let ((fill-prefix nil)) (forward-paragraph arg)))
+
+(defun go--comment-indent-new-line (&optional arg)
+  (go--with-comment-fill-prefix
+   (lambda () (comment-indent-new-line arg))))
+
+
 
 (provide 'go-mode)
 

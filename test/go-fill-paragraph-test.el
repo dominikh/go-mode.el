@@ -25,21 +25,6 @@ represents point and mark to test the region based fill-paragraph."
       (call-interactively 'fill-paragraph)
       (should (string= (buffer-string) expected)))))
 
-(ert-deftest go--fill-paragraph-no-comment ()
-  (go--should-fill
-   "
-func main() {
-<>
-  reallyLongLineButThereAreNoCommentsHere() + reallyLongLineButThereAreNoCommentsHere()
-}"
-
-   "
-func main() {
-
-  reallyLongLineButThereAreNoCommentsHere() + reallyLongLineButThereAreNoCommentsHere()
-}"
-   ))
-
 (ert-deftest go--fill-paragraph-single ()
   (go--should-fill
    "
@@ -148,7 +133,8 @@ func main() {
 func main() {
   /*
        Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed
-       do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+         do eiusmod tempor incididunt ut labore et dolore magna
+         aliqua.
   */
 }"
    ))
@@ -171,8 +157,8 @@ func main() {
   (go--should-fill
    "
 func main() {
-<>  /////////////////////
-  // Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+  /////////////////////
+<>  // Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
   /////////////////////
 }"
 
