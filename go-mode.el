@@ -203,18 +203,13 @@ the Go build cache or Go modules."
   :package-version '(go-mode . 1.4.0)
   :group 'go)
 
-(defcustom go-guess-gopath-functions (list #'go-godep-gopath
-                                           #'go-wgo-gopath
-                                           #'go-gb-gopath
-                                           #'go-plain-gopath)
+(defcustom go-guess-gopath-functions (list #'go-plain-gopath)
   "Functions to call in sequence to detect a project's GOPATH.
 
 The functions in this list will be called one after another,
 until a function returns non-nil.  The order of the functions in
 this list is important, as some project layouts may superficially
-look like others.  For example, a subset of wgo projects look like
-gb projects.  That's why we need to detect wgo first, to avoid
-mis-identifying them as gb projects."
+look like others."
   :type '(repeat function)
   :group 'go)
 
@@ -2785,10 +2780,7 @@ returned."
     (looking-at "\\<func(")))
 
 (defun go-guess-gopath (&optional buffer)
-  "Determine a suitable GOPATH for BUFFER, or the current buffer if BUFFER is nil.
-
-This function supports gb-based projects as well as Godep, in
-addition to ordinary uses of GOPATH."
+  "Determine a suitable GOPATH for BUFFER, or the current buffer if BUFFER is nil."
   (with-current-buffer (or buffer (current-buffer))
     (let ((gopath (cl-some (lambda (el) (funcall el))
                            go-guess-gopath-functions)))
@@ -2804,55 +2796,6 @@ directory up the directory tree."
   (let ((d (locate-dominating-file buffer-file-name "src")))
     (if d
         (list d))))
-
-(defun go-godep-gopath ()
-  "Detect a Godeps workspace by looking for Godeps/_workspace up
-the directory tree. The result is combined with that of
-`go-plain-gopath'."
-  (let* ((d (locate-dominating-file buffer-file-name "Godeps"))
-         (workspace (concat d
-                            (file-name-as-directory "Godeps")
-                            (file-name-as-directory "_workspace"))))
-    (if (and d
-             (file-exists-p workspace))
-        (list workspace
-              (locate-dominating-file buffer-file-name "src")))))
-
-(defun go-gb-gopath ()
-  "Detect a gb project."
-  (or (go--gb-vendor-gopath)
-      (go--gb-vendor-gopath-reverse)))
-
-(defun go--gb-vendor-gopath ()
-  (let* ((d (locate-dominating-file buffer-file-name "src"))
-         (vendor (concat d (file-name-as-directory "vendor"))))
-    (if (and d
-             (file-exists-p vendor))
-        (list d vendor))))
-
-(defun go--gb-vendor-gopath-reverse ()
-  (let* ((d (locate-dominating-file buffer-file-name "vendor"))
-         (src (concat d (file-name-as-directory "src"))))
-    (if (and d
-             (file-exists-p src))
-        (list d (concat d
-                        (file-name-as-directory "vendor"))))))
-
-(defun go-wgo-gopath ()
-  "Detect a wgo project."
-  (or (go--wgo-gocfg "src")
-      (go--wgo-gocfg "vendor")))
-
-(defun go--wgo-gocfg (needle)
-  (let* ((d (locate-dominating-file buffer-file-name needle))
-         (gocfg (concat d (file-name-as-directory ".gocfg"))))
-    (if (and d
-             (file-exists-p gocfg))
-        (with-temp-buffer
-          (insert-file-contents (concat gocfg "gopaths"))
-          (append
-           (mapcar (lambda (el) (concat d (file-name-as-directory el))) (split-string (buffer-string) "\n" t))
-           (list (go-original-gopath)))))))
 
 (defun go-set-project (&optional buffer)
   "Set GOPATH based on `go-guess-gopath' for BUFFER, or the current buffer if BUFFER is nil.
