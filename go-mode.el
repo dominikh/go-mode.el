@@ -22,7 +22,7 @@
 (require 'find-file)
 (require 'ring)
 (require 'url)
-(require 'xref nil :noerror)  ; xref is new in Emacs 25.1
+(require 'xref)
 
 
 (eval-when-compile
@@ -2406,16 +2406,14 @@ description at POINT."
   "Jump to the definition of the expression at POINT."
   (interactive "d")
   (condition-case nil
-      (let ((file (car (godef--call point))))
-        (if (not (godef--successful-p file))
-            (message "%s" (godef--error file))
-          (push-mark)
-          (if (eval-when-compile (fboundp 'xref-push-marker-stack))
-              ;; TODO: Integrate this facility with XRef.
-              (xref-push-marker-stack)
-            (ring-insert find-tag-marker-ring (point-marker)))
-          (godef--find-file-line-column file other-window)))
-    (file-error (message "Could not run godef binary"))))
+	  (let ((file (car (godef--call point))))
+		(if (not (godef--successful-p file))
+			(message "%s" (godef--error file))
+		  (push-mark)
+		  ;; TODO: Integrate this facility with XRef.
+		  (xref-push-marker-stack)
+		  (godef--find-file-line-column file other-window)))
+	(file-error (message "Could not run godef binary"))))
 
 (defun godef-jump-other-window (point)
   (interactive "d")
