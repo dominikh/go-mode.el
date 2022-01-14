@@ -2625,7 +2625,7 @@ If ARG is non-nil, anonymous functions are ignored."
   (backward-char))
 
 (defun go--in-function-p (compare-point)
-  "Return t if COMPARE-POINT lies inside the function immediately surrounding point."
+  "Return t if COMPARE-POINT is inside the function immediately surrounding point."
   (save-excursion
     (when (not (looking-at "\\<func\\>"))
       (go-goto-function))
@@ -2796,7 +2796,8 @@ directory up the directory tree."
         (list d))))
 
 (defun go-set-project (&optional buffer)
-  "Set GOPATH based on `go-guess-gopath' for BUFFER, or the current buffer if BUFFER is nil.
+  "Set GOPATH based on `go-guess-gopath' for BUFFER.
+Set it to the current buffer if BUFFER is nil.
 
 If go-guess-gopath returns nil, that is if it couldn't determine
 a valid value for GOPATH, GOPATH will be set to the initial value
