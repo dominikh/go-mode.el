@@ -53,6 +53,14 @@ QKfuncK (VfV TintT) {}
   (go--should-fontify "KfuncK FfooF[a TintT | TstringT | KstructK{} | *Tfoo.ZebraT](TintT) { }")
   (go--should-fontify "KinterfaceK { TintT | Tfloat64T }"))
 
+(ert-deftest go--fontify-type-instantiation ()
+  ;; ambiguous - leave it unfontified
+  (go--should-fontify "foo[int]")
+
+  (go--should-fontify "KvarK VvV TfooT[TintT]")
+  (go--should-fontify "KvarK VvV TfooT[TbarT[TintT]]")
+  (go--should-fontify "foo[TintT, KstructK{}, *Tfoo.ZebraT]"))
+
 (ert-deftest go--fontify-struct ()
   (go--should-fontify "KstructK { i TintT }")
   (go--should-fontify "KstructK { a, b TintT }")

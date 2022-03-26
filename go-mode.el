@@ -453,6 +453,16 @@ statements."
       (1 font-lock-type-face nil t)
       (2 font-lock-type-face nil t))
 
+     ;; Match type params in instantiation such as "foo[int, string]".
+     (go--match-type-param-start
+      ;; Sub-matcher that matches individual type params in the list.
+      (go--fontify-type-param
+       nil
+       ;; Post-matcher that moves point back to "[" so next match can find
+       ;; nested param lists.
+       (go--fontify-type-param-post)
+       (1 font-lock-type-face nil t)))
+
      ;; An anchored matcher for type switch case clauses.
      (go--match-type-switch-case
       (go--fontify-type-switch-case
@@ -1452,19 +1462,19 @@ the next comma or to the closing paren."
           (setq found-match t)))
 
       ;; Advance to next comma. We are done if there are no more commas.
-      (setq done (not (go--search-next-comma end))))
+      (setq done (not (go--search-next-comma end ?\)))))
     found-match))
 
-(defun go--search-next-comma (end)
+(defun go--search-next-comma (end closer)
   "Search forward from point for a comma whose nesting level is
 the same as point. If it reaches a closing parenthesis before a
 comma, it stops at it. Return non-nil if comma was found."
   (let ((orig-level (go-paren-level)))
     (while (and (< (point) end)
-                (or (looking-at-p "[^,)]")
+                (or (not (member (char-after) `(?, ,closer)))
                     (> (go-paren-level) orig-level)))
       (forward-char))
-    (when (and (looking-at-p ",")
+    (when (and (eq (char-after) ?,)
                (< (point) (1- end)))
       (forward-char)
       t)))
@@ -1496,7 +1506,7 @@ comma, it stops at it. Return non-nil if comma was found."
         (goto-char (match-end 1))
         (unless (member (match-string 1) go-constants)
           (setq found-match t)))
-      (setq done (not (go--search-next-comma end))))
+      (setq done (not (go--search-next-comma end ?\)))))
     found-match))
 
 (defun go--containing-decl ()
@@ -1632,6 +1642,56 @@ succeeds."
                             (go--in-interface-p)
                             (go--in-type-params-p))))))
     found-match))
+
+
+(defvar go--fontify-type-param-beg nil)
+
+(defun go--match-type-param-start (end)
+  "Search for [ that starts a type instantiation param list."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            (search-forward "[" end t))
+      (when (not (go-in-string-or-comment-p))
+        (setq go--fontify-type-param-beg (point))
+
+        ;; In general an index expression is ambiguous, but there are some
+        ;; things we can look for to be certain it is a type param list.
+        (setq found-match
+              (save-excursion
+                (or
+                 ;; If we have more than one comma, or a composite literal "{"
+                 ;; follows the param list.
+                 (let ((commas 0))
+                   (save-excursion
+                     (while (go--search-next-comma end ?\])
+                       (cl-incf commas))
+                     (or (> commas 0)
+                         (eq (char-after (1+ (point))) ?{))))
+
+                 ;; If we are preceded by a space and an identifer then we are
+                 ;; in type name (e.g. preceded be "foo " in "var foo bar[int]").
+                 (and (not (zerop (skip-syntax-backward "^ ")))
+                      (not (zerop (skip-syntax-backward " " (line-beginning-position))))
+                      (let ((word (thing-at-point 'word 'no-properties)))
+                        (and word (not (member word go-mode-keywords))))))))))
+    found-match))
+
+(defun go--fontify-type-param (end)
+  "Advance through each type param in a type instantion param list."
+  (let (found-match done)
+    (while (and (not found-match) (not done))
+      (skip-syntax-forward " ")
+      (setq found-match (and
+                         (looking-at go-type-name-regexp)
+                         (not (member (match-string 1) go-mode-keywords))))
+      ;; Advance to next comma. We are done if there are no more commas.
+      (setq done (not (go--search-next-comma end ?\]))))
+    found-match))
+
+(defun go--fontify-type-param-post ()
+  "Move point back to opening bracket to allow matching nested param lists."
+  (goto-char go--fontify-type-param-beg))
 
 (defconst go--single-func-result-re (concat ")[[:space:]]+" go-type-name-regexp "\\(?:$\\|[[:space:]),]\\)"))
 
