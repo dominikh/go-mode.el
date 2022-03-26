@@ -448,6 +448,11 @@ statements."
      ;; Match name+type pairs, such as "foo bar" in "var foo bar".
      (go--match-ident-type-pair 2 font-lock-type-face)
 
+     ;; Match type unions such as "int | string" in "interface { int | string }".
+     (go--match-type-union
+      (1 font-lock-type-face nil t)
+      (2 font-lock-type-face nil t))
+
      ;; An anchored matcher for type switch case clauses.
      (go--match-type-switch-case
       (go--fontify-type-switch-case
@@ -732,6 +737,16 @@ case keyword. It returns nil for the case line itself."
 (defun go--in-type-switch-p ()
   "Return non-nil if point is inside a type switch statement."
   (go--in-paren-with-prefix-p ?{ ".(type)"))
+
+(defun go--in-type-params-p ()
+  "Return non-nil if point is inside a type param list."
+  (save-excursion
+    (and
+     (go-goto-opening-parenthesis)
+     (eq (char-after) ?\[)
+     (backward-word)
+     (skip-syntax-backward " ")
+     (member (thing-at-point 'word 'no-properties) '("type" "func")))))
 
 (defun go--fill-prefix ()
   "Return fill prefix for following comment paragraph."
@@ -1591,6 +1606,31 @@ succeeds."
             (goto-char (match-end 1))
           (setq found-match t))))
 
+    found-match))
+
+(defconst go--type-union-re (concat go-type-name-regexp "\\s-*|\\||\\s-*" go-type-name-regexp))
+
+(defun go--match-type-union (end)
+  "Search for type unions in interfaces and constraints."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            ;; Look for "foo |" or "| foo" (i.e. a type name before or
+            ;; after a pipe).
+            (re-search-forward go--type-union-re end t))
+
+      (let ((match (match-string 1)))
+        ;; If we matched "foo |", move back one char so we can see the
+        ;; pipe again on the next iteration.
+        (if match
+            (backward-char)
+          (setq match (match-string 2)))
+
+        (setq found-match (and
+                           (not (member match go-mode-keywords))
+                           (or
+                            (go--in-interface-p)
+                            (go--in-type-params-p))))))
     found-match))
 
 (defconst go--single-func-result-re (concat ")[[:space:]]+" go-type-name-regexp "\\(?:$\\|[[:space:]),]\\)"))
