@@ -1350,24 +1350,23 @@ declarations are also included."
   (let (found-match)
     (while (and
             (not found-match)
-            (re-search-forward (concat "\\(\\_<" go-identifier-regexp "\\)?(") end t))
+            (search-forward "(" end t))
       (when (not (go-in-string-or-comment-p))
         (save-excursion
-          (goto-char (match-beginning 0))
+          (backward-char)
 
-          (let ((name (match-string 1)))
-            (when name
-              ;; We are in a param list if "func" preceded the "(" (i.e.
-              ;; func literal), or if we are in an interface
-              ;; declaration, e.g. "interface { foo(i int) }".
-              (setq found-match (or (string= name "func") (go--in-interface-p))))
+          ;; If we see a type param list, jump backwards over it.
+          (when (eq (char-before) ?\])
+            (backward-char)
+            (go-goto-opening-parenthesis))
 
-            ;; Otherwise we are in a param list if our "(" is preceded
-            ;; by ") " or "func ".
-            (when (and (not found-match) (not (zerop (skip-syntax-backward " "))))
-              (setq found-match (or
-                                 (eq (char-before) ?\))
-                                 (looking-back "\\_<func" (- (point) 4)))))))))
+          (setq found-match
+                (or
+                 (looking-back
+                  ;; We are either preceeded by "func", "func foo", ") ", or ") foo".
+                  (concat "\\(\\_<func\\s-*\\|)\\s-+\\)\\(?:" go-identifier-regexp "\\)?")
+                  (line-beginning-position))
+                 (go--in-interface-p))))))
     found-match))
 
 

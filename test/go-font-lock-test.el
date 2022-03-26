@@ -45,6 +45,10 @@ QD// DQ(
 QKfuncK (VfV TintT) {}
 "))
 
+(ert-deftest go--fontify-generic-signature ()
+  (go--should-fontify "KfuncK FfooF[a TintT](VaV TintT) { }")
+  (go--should-fontify "KfuncK FfooF[a TintT](TintT) { }"))
+
 (ert-deftest go--fontify-struct ()
   (go--should-fontify "KstructK { i TintT }")
   (go--should-fontify "KstructK { a, b TintT }")
