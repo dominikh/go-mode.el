@@ -486,9 +486,9 @@ statements."
 
    (if go-fontify-function-calls
        ;; Function call/method name
-       `((,(concat "\\(" go-identifier-regexp "\\)[[:space:]]*(") 1 font-lock-function-name-face)
-         ;; Bracketed function call
-         (,(concat "[^[:word:][:multibyte:]](\\(" go-identifier-regexp "\\))[[:space:]]*(") 1 font-lock-function-name-face))
+       `((go--match-func-name
+          (1 font-lock-function-name-face nil t)
+          (2 font-lock-function-name-face nil t)))
      ;; Method name
      `((,go-func-meth-regexp 2 font-lock-function-name-face)))
 
@@ -1727,6 +1727,35 @@ We are looking for the right-hand-side of the type alias"
       (setq found-match (or
                          (match-string 1)
                          (go--in-paren-with-prefix-p ?\( "type"))))
+    found-match))
+
+
+(defconst go--match-func-name-re
+  (concat "\\(?:^\\|[^)]\\)(\\(" go-identifier-regexp "\\))(\\|\\(" go-identifier-regexp "\\)[[(]"))
+
+(defun go--match-func-name (end)
+  "Search for func names in decls and invocations."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            ;; Match "(foo)(" or "foo[" or "foo(".
+            (re-search-forward go--match-func-name-re end t))
+      (if (eq (char-before) ?\()
+          ;; Followed directly by "(" is a match.
+          (setq found-match t)
+        ;; Followed by "[". We are a match if there is at least one
+        ;; comma between the "[" and "]", and if "]" is followed by
+        ;; "(".
+        (let ((commas 0))
+          (while (go--search-next-comma end ?\])
+            (cl-incf commas))
+          (forward-char)
+          (setq found-match (and
+                             ;; We found a comma (so we are sure these are type
+                             ;; params), or we are at file level (so we are sure
+                             ;; it is a func decl).
+                             (or (> commas 0) (= 0 (go-paren-level)))
+                             (eq (char-after) ?\())))))
     found-match))
 
 

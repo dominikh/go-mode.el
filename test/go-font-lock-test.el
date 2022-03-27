@@ -61,6 +61,16 @@ QKfuncK (VfV TintT) {}
   (go--should-fontify "KvarK VvV TfooT[TbarT[TintT]]")
   (go--should-fontify "foo[TintT, KstructK{}, *Tfoo.ZebraT]"))
 
+(ert-deftest go--fontify-func ()
+  (go--should-fontify "KfuncK FfooF()")
+  (go--should-fontify "KfuncK FfooF[A TanyT]()")
+  (go--should-fontify "KfuncK (VfV TfooT) FfooF[A TanyT]()")
+  (go--should-fontify "FfooF(bar)")
+  (go--should-fontify "foo.FfooF(bar)")
+  (go--should-fontify "(FfooF)(foo)(foo)")
+  (go--should-fontify "{ foo[int](123) }")
+  (go--should-fontify "FfooF[TintT, TstringT](123)"))
+
 (ert-deftest go--fontify-struct ()
   (go--should-fontify "KstructK { i TintT }")
   (go--should-fontify "KstructK { a, b TintT }")
