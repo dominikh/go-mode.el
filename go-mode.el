@@ -484,9 +484,9 @@ statements."
 
    (if go-fontify-function-calls
        ;; Function call/method name
-       `((,(concat "\\(" go-identifier-regexp "\\)[[:space:]]*(") 1 font-lock-function-name-face)
-         ;; Bracketed function call
-         (,(concat "[^[:word:][:multibyte:]](\\(" go-identifier-regexp "\\))[[:space:]]*(") 1 font-lock-function-name-face))
+       `((go--match-func-name
+          (1 font-lock-function-name-face nil t)
+          (2 font-lock-function-name-face nil t)))
      ;; Method name
      `((,go-func-meth-regexp 2 font-lock-function-name-face)))
 
@@ -1435,10 +1435,10 @@ the next comma or to the closing paren."
           (setq found-match t)))
 
       ;; Advance to next comma. We are done if there are no more commas.
-      (setq done (not (go--search-next-comma end))))
+      (setq done (not (go--search-next-comma end ?\)))))
     found-match))
 
-(defun go--search-next-comma (end &optional closer)
+(defun go--search-next-comma (end closer)
   "Search forward from point for a comma whose nesting level is
 the same as point. If it reaches a closing parenthesis before a
 comma, it stops at it. Return non-nil if comma was found."
@@ -1480,7 +1480,7 @@ comma, it stops at it. Return non-nil if comma was found."
         (goto-char (match-end 1))
         (unless (member (match-string 1) go-constants)
           (setq found-match t)))
-      (setq done (not (go--search-next-comma end))))
+      (setq done (not (go--search-next-comma end ?\)))))
     found-match))
 
 (defun go--containing-decl ()
@@ -1658,6 +1658,36 @@ We are looking for the right-hand-side of the type alias"
       (setq found-match (or
                          (match-string 1)
                          (go--in-paren-with-prefix-p ?\( "type"))))
+    found-match))
+
+
+(defconst go--match-func-name-re
+  (concat "\\(?:^\\|[^)]\\)(\\(" go-identifier-regexp "\\))(\\|\\(" go-identifier-regexp "\\)[[(]"))
+
+(defun go--match-func-name (end)
+  "Search for func names in decls and invocations."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            ;; Match "(foo)(" or "foo[" or "foo(".
+            (re-search-forward go--match-func-name-re end t))
+      (if (eq (char-before) ?\()
+          ;; Followed directly by "(" is a match.
+          (setq found-match t)
+        ;; Followed by "[". We are a match if there is at least one
+        ;; comma between the "[" and "]", and if "]" is followed by
+        ;; "(".
+        (let ((commas 0))
+          (save-excursion
+            (while (go--search-next-comma end ?\])
+              (cl-incf commas))
+            (forward-char)
+            (setq found-match (and
+                               ;; We found a comma (so we are sure these are type
+                               ;; params), or we are at file level (so we are sure
+                               ;; it is a func decl).
+                               (or (> commas 0) (= 0 (go-paren-level)))
+                               (eq (char-after) ?\()))))))
     found-match))
 
 
