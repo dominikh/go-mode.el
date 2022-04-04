@@ -41,8 +41,8 @@ the following extra features to provide an improved experience:
   - `godef-describe` (`C-c C-d`) to describe expressions
   - `godef-jump` (`C-c C-j`) and `godef-jump-other-window` (`C-x 4 C-c
     C-j`) to jump to declarations
-  - This requires you to install godef via `go get
-  github.com/rogpeppe/godef`.
+  - This requires you to install godef via `go install
+  github.com/rogpeppe/godef@latest`.
 - Basic support for imenu (functions and variables)
 - Built-in support for displaying code coverage as calculated by `go
   test` (`go-coverage`)
@@ -117,7 +117,7 @@ longer be supported.
 Gopls is a supported backend for
 [lsp-mode](https://github.com/emacs-lsp/lsp-mode). It will be used
 automatically by lsp-mode if `gopls` is found in your PATH. You can
-install gopls via: `go get golang.org/x/tools/gopls@latest`. To enable
+install gopls via: `go install golang.org/x/tools/gopls@latest`. To enable
 lsp-mode for go buffers:
 
     (add-hook 'go-mode-hook 'lsp-deferred)
