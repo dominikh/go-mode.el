@@ -158,7 +158,9 @@ KtypeK (
   TfooT TbarT
   TfooT KstructK {}
   TfooT = *Tbar.ZarT
-)"))
+)")
+
+  (go--should-fontify "typeName = abc"))
 
 (ert-deftest go--fontify-var-decl ()
   (go--should-fontify "KvarK VfooV = bar")

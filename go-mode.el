@@ -1614,7 +1614,7 @@ func foo(i int) string"
     found-match))
 
 (defconst go--type-alias-re
-  (concat "^[[:space:]]*\\(type\\)?[[:space:]]*" go-identifier-regexp "[[:space:]]*=[[:space:]]*" go-type-name-regexp))
+  (concat "^[[:space:]]*\\(type[[:space:]]+\\)?" go-identifier-regexp "[[:space:]]*=[[:space:]]*" go-type-name-regexp))
 
 (defun go--match-type-alias (end)
   "Search for type aliases.
