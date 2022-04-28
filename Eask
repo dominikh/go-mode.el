@@ -1,4 +1,4 @@
-(package "go-mode.el"
+(package "go-mode"
          "1.6.0"
          "Major mode for the Go programming language")
 
