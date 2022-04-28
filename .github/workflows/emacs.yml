@@ -1,7 +1,12 @@
 name: Emacs CI
-on: [push, pull_request]
-jobs:
 
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
   test:
     name: Test
     runs-on: ${{ matrix.os }}
