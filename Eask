@@ -5,5 +5,6 @@
 (package-file "go-mode.el")
 
 (source "gnu")
+(source "melpa")
 
 (depends-on "emacs" "26.1")
