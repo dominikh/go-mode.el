@@ -8,7 +8,7 @@
 (require 'go-mode)
 
 (ert-deftest go--indent-line ()
-  (dolist (file (directory-files (expand-file-name "testdata/indentation_tests/") t ".*\\.go$"))
+  (dolist (file (directory-files (expand-file-name "test/testdata/indentation_tests/") t ".*\\.go$"))
     (with-temp-buffer
       (go-mode)
       (insert-file-contents file)
@@ -19,7 +19,7 @@
 (ert-deftest go-dot-mod--indent-line ()
   (with-temp-buffer
     (go-dot-mod-mode)
-    (insert-file-contents "testdata/indentation_tests/go.mod")
+    (insert-file-contents "test/testdata/indentation_tests/go.mod")
     (let ((contents-before-indent (buffer-string)) (inhibit-message t))
       (indent-region (point-min) (point-max) nil)
       (should (string= contents-before-indent (buffer-string))))))
