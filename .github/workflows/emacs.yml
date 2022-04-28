@@ -4,14 +4,33 @@ jobs:
 
   test:
     name: Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+    runs-on: ${{ matrix.os }}
+      strategy:
+      fail-fast: false
+        matrix:
+          os: [ubuntu-latest, macos-latest, windows-latest]
+          emacs-version:
+            - 26.3
+            - 27.2
+            - 28.1
+            - snapshot
+
     steps:
     - name: Install emacs
-      run: sudo apt-get update && sudo apt-get install -y emacs
+      uses: jcs090218/setup-emacs@master
+      with:
+        version: ${{ matrix.emacs-version }}
+
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '16'
+
+    - uses: emacs-eask/setup-eask@master
+      with:
+        version: 'snapshot'
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
 
     - name: Test
-      run: cd test; emacs --batch -q -l ert -l ../go-mode.el $(for t in *-test.el; do echo -n "-l $t "; done) -f ert-run-tests-batch-and-exit
+      run: make ci
