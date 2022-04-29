@@ -4,6 +4,8 @@
 
 (package-file "go-mode.el")
 
+(files "*.el")
+
 (source "gnu")
 (source "melpa")
 
