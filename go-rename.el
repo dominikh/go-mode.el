@@ -5,7 +5,8 @@
 ;; license that can be found in the LICENSE file.
 
 ;; Version: 0.1
-;; Package-Requires: ((go-mode "1.3.1"))
+;; Package-Requires: ((emacs "26.1") (go-mode "1.3.1"))
+;; URL: https://github.com/dominikh/go-mode.el
 ;; Keywords: tools
 
 ;;; Commentary:
@@ -80,7 +81,7 @@ the `gorename' tool. With FORCE, call `gorename' with the
       ;; and hide the *go-rename* buffer.
       (if success
           (progn
-            (message "%s" (go--buffer-string-no-trailing-space))
+            (message "%s" (go-rename--buffer-string-no-trailing-space))
             (gofmt--kill-error-buffer (current-buffer)))
         ;; failure
         (let ((w (display-buffer (current-buffer))))
@@ -100,7 +101,7 @@ the `gorename' tool. With FORCE, call `gorename' with the
     (forward-char col)))
 
 
-(defun go--buffer-string-no-trailing-space ()
+(defun go-rename--buffer-string-no-trailing-space ()
   (replace-regexp-in-string "[\t\n ]*\\'"
                             ""
                             (buffer-substring (point-min) (point-max))))

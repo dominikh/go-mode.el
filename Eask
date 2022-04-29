@@ -2,7 +2,10 @@
          "1.6.0"
          "Major mode for the Go programming language")
 
-(package-file "go-mode.el")
+;; XXX: this is multiple-packages-in-on-repository
+;;
+;; Ignore this to get the package-lint to work
+;;(package-file "go-mode.el")
 
 (files "*.el")
 
