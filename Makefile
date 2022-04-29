@@ -1,9 +1,3 @@
-##
-# Eask generated template Makefile
-#
-# File located in https://github.com/emacs-eask/template-elisp/blob/master/Makefile
-##
-
 SHELL := /usr/bin/env bash
 
 EMACS ?= emacs
