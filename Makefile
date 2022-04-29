@@ -8,7 +8,7 @@ EASK ?= eask
 # CI entry point
 #
 # You can add or remove any commands here
-ci: clean package install compile checkdoc test
+ci: clean package install compile checkdoc lint test
 
 # Build an package artefact, default to `dist` folder
 #
