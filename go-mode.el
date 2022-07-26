@@ -2908,6 +2908,33 @@ If BUFFER, return the number of characters in that buffer instead."
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("go\\.mod\\'" . go-dot-mod-mode))
 
+(defconst go-dot-work-mode-keywords
+  '("go" "replace" "use")
+  "All keywords for go.work files.  Used for font locking.")
+
+;;;###autoload
+(define-derived-mode go-dot-work-mode fundamental-mode "Go Work"
+  "A major mode for editor go.work files."
+  :syntax-table go-dot-mod-mode-syntax-table
+  (set (make-local-variable 'comment-start) "// ")
+  (set (make-local-variable 'comment-end)   "")
+  (set (make-local-variable 'comment-use-syntax) t)
+  (set (make-local-variable 'comment-start-skip) "\\(//+\\)\\s *")
+
+  (set (make-local-variable 'font-lock-defaults)
+       '(go-dot-work-mode-keywords))
+  (set (make-local-variable 'indent-line-function) 'go-mode-indent-line)
+
+  ;; Go style
+  (setq indent-tabs-mode t)
+
+  ;; we borrow the go-mode-indent function so we need this buffer cache
+  (set (make-local-variable 'go-dangling-cache) (make-hash-table :test 'eql))
+  (add-hook 'before-change-functions #'go--reset-dangling-cache-before-change t t))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("go\\.work\\'" . go-dot-work-mode))
+
 ;; The following functions were copied (and modified) from rust-mode.el.
 ;;
 ;; Copyright (c) 2015 The Rust Project Developers
