@@ -504,7 +504,7 @@ statements."
      ("\\(!\\)[^=]" 1 font-lock-negation-char-face)
 
      ;; Composite literal type
-     (,(concat go-type-name-regexp "{") 1 font-lock-type-face)
+     (eval . (go--make-type-matcher 'go--match-composite-literal))
 
      ;; Map value type
      (eval . (go--make-type-matcher 'go--match-map-value))
@@ -1708,6 +1708,28 @@ We are looking for the right-hand-side of the type alias"
           (go-goto-opening-parenthesis)
           (backward-word)
           (setq found-match (looking-at-p "map")))))
+    found-match))
+
+(defconst go--match-composite-literal-re (concat go-type-name-regexp "[[{]"))
+
+(defun go--match-composite-literal (end)
+  "Search for composite literals."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            ;; Match "foo{" or "foo[".
+            (re-search-forward go--match-composite-literal-re end t))
+
+      (setq found-match
+            (if (eq (char-before) ?\[)
+                ;; In "foo[" case, skip to closing "]".
+                (progn
+                  (while (go--search-next-comma end ?\]))
+                  ;; See if closing "]" is followed by "{".
+                  (eq (char-after (1+ (point))) ?{))
+              ;; The "foo{" case (definitely composite literal).
+              (eq (char-before) ?{))))
+
     found-match))
 
 (defconst go--label-re (concat "\\(" go-label-regexp "\\):"))

@@ -143,6 +143,7 @@ KcaseK string:
   (go--should-fontify "TfooT{")
   (go--should-fontify "[]TfooT{")
   (go--should-fontify "Tfoo.ZarT{")
+  (go--should-fontify "Tfoo.ZarT[TintT]{")
   (go--should-fontify "[]Tfoo.ZarT{")
 
   (go--should-fontify "TfooT{CbarC:baz, CquxC: 123}")
