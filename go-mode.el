@@ -513,7 +513,7 @@ statements."
      (,(concat "\\_<map\\_>\\[" go-type-name-regexp) 1 font-lock-type-face)
 
      ;; Channel type
-     (,(concat "\\_<chan\\_>[[:space:]]*\\(?:<-[[:space:]]*\\)?" go-type-name-regexp) 1 font-lock-type-face)
+     (eval . (go--make-type-matcher (concat "\\_<chan\\_>[[:space:]]*\\(?:<-[[:space:]]*\\)?" go-type-name-regexp)))
 
      ;; "new()"/"make()" type
      (eval . (go--make-type-matcher (concat "\\_<\\(?:new\\|make\\)\\_>\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp)))
