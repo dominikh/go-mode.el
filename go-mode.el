@@ -507,10 +507,10 @@ statements."
      (,(concat go-type-name-regexp "{") 1 font-lock-type-face)
 
      ;; Map value type
-     (go--match-map-value 1 font-lock-type-face)
+     (eval . (go--make-type-matcher 'go--match-map-value))
 
      ;; Map key type
-     (,(concat "\\_<map\\_>\\[" go-type-name-regexp) 1 font-lock-type-face)
+     (eval . (go--make-type-matcher (concat "\\_<map\\_>\\[" go-type-name-regexp)))
 
      ;; Channel type
      (eval . (go--make-type-matcher (concat "\\_<chan\\_>[[:space:]]*\\(?:<-[[:space:]]*\\)?" go-type-name-regexp)))
@@ -1690,17 +1690,25 @@ We are looking for the right-hand-side of the type alias"
                                (eq (char-after) ?\()))))))
     found-match))
 
-
-(defconst go--map-value-re
-  (concat "\\_<map\\_>\\[\\(?:\\[[^]]*\\]\\)*[^]]*\\]" go-type-name-regexp))
+(defconst go--map-value-re (concat "\\]" go-type-name-regexp))
 
 (defun go--match-map-value (end)
   "Search for map value types."
-  (when (re-search-forward go--map-value-re end t)
-    ;; Move point to beginning of map value in case value itself is
-    ;; also a map (we will match it next iteration).
-    (goto-char (match-beginning 1))
-    t))
+  (let (found-match)
+    ;; search for "]someType", then bounce to opening "[" and check if
+    ;; preceded by "map".
+    (while (and
+            (not found-match)
+            (search-forward-regexp go--map-value-re end t))
+      (goto-char (match-beginning 0))
+      (forward-char)
+      (save-excursion
+        (save-match-data
+          (backward-char)
+          (go-goto-opening-parenthesis)
+          (backward-word)
+          (setq found-match (looking-at-p "map")))))
+    found-match))
 
 (defconst go--label-re (concat "\\(" go-label-regexp "\\):"))
 
@@ -3232,6 +3240,7 @@ type param list, if present."
           (if (and
                found-match
                (not go--type-list-has-names)
+               (match-string 2)
                (goto-char (match-end 2))
                (eq (char-after) ?\[))
               ;; If there is "[" after match, recurse into the nested
