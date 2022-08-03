@@ -83,6 +83,10 @@ QKfuncK (VfV TintT) {}
   (go--should-fontify "{ foo[int](123) }")
   (go--should-fontify "FfooF[int, string](123)"))
 
+(ert-deftest go--fontify-type-instantiation ()
+  (go--should-fontify "BnewB(TfooT[TbarT])")
+  (go--should-fontify "foo.(*TbarT[TbazT])"))
+
 (ert-deftest go--fontify-struct ()
   (go--should-fontify "KstructK { i TintT }")
   (go--should-fontify "KstructK { a, b TintT }")

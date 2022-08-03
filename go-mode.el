@@ -519,7 +519,7 @@ statements."
      (eval . (go--make-type-matcher (concat "\\_<\\(?:new\\|make\\)\\_>\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp)))
 
      ;; Type assertion
-     (,(concat "\\.\\s *(" go-type-name-regexp) 1 font-lock-type-face)
+     (eval . (go--make-type-matcher (concat "\\.\\s *(" go-type-name-regexp)))
 
      ;; Composite literal field names and label definitions.
      (go--match-ident-colon 1 font-lock-constant-face)
