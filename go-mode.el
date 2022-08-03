@@ -495,7 +495,7 @@ statements."
      ("\\(`[^`]*`\\)" 1 font-lock-multiline)
 
      ;; RHS of type alias.
-     (go--match-type-alias 2 font-lock-type-face)
+     (eval . (go--make-type-matcher 'go--match-type-alias 2))
 
      ;; Arrays/slices: []<type> | [123]<type> | [some.Const]<type> | [someConst]<type> | [...]<type>
      (eval . (go--make-type-matcher (concat "\\(?:^\\|[^[:word:][:multibyte:]]\\)\\[\\(?:[[:digit:]]+\\|" go-qualified-identifier-regexp "\\|" go-identifier-regexp "\\|\\.\\.\\.\\)?\\]" go-type-name-regexp)))

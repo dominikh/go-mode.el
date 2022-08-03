@@ -55,7 +55,7 @@ QKfuncK (VfV TintT) {}
 	TfooT[VaV TbT] TbarT[c]
 )")
   (go--should-fontify "KtypeK (
-	TfooT = TbarT[c]
+	TfooT = TbarT[TcT]
 )")
 
   (go--should-fontify "KtypeK TfooT[VaV KfuncK(TbT[TcT])]")
@@ -89,7 +89,8 @@ QKfuncK (VfV TintT) {}
   (go--should-fontify "KchanK TfooT[TbarT]")
   (go--should-fontify "KmapK[TaT[TbT]]TcT[TdT]")
   (go--should-fontify "KmapK[TaT[TbT]]KmapK[TcT[TdT]]TeT[TfT]")
-  (go--should-fontify "[]TfooT[TbarT[TbazT]]"))
+  (go--should-fontify "[]TfooT[TbarT[TbazT]]")
+  (go--should-fontify "KtypeK TfooT = TbarT[TbazT]"))
 
 (ert-deftest go--fontify-struct ()
   (go--should-fontify "KstructK { i TintT }")
