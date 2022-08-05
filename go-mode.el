@@ -1387,7 +1387,7 @@ declarations are also included."
 func(i int, s *string) { }")
 
 (defconst go--unnamed-param-re
-  (concat "\\(\\)[[:space:]\n]*\\(?:\\.\\.\\.\\)?" go-type-name-regexp "[[:space:]]*[,)]")
+  (concat "\\(\\)[[:space:]\n]*\\(?:\\.\\.\\.\\)?" go-type-name-regexp "[[:space:]]*[,)[]")
   "Regexp to match unnamed param such as \"*string\" in:
 
 func(int, *string) { }
@@ -1666,7 +1666,7 @@ after '('."
            (goto-char (match-end 0))
            (go--parameter-list-type end))
           ((or (looking-at go-qualified-identifier-regexp)
-               (looking-at (concat go-type-name-no-prefix-regexp "[[:space:]\n]*\\(?:)\\|\\'\\)"))
+               (looking-at (concat go-type-name-no-prefix-regexp "[[:space:]\n]*\\(?:)\\|\\[\\|\\'\\)"))
                (go--looking-at-keyword)
                (looking-at "[*\\[]\\|\\.\\.\\.\\|\\'"))
            'absent)

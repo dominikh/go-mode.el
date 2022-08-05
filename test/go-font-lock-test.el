@@ -56,7 +56,10 @@ QKfuncK (VfV TintT) {}
 )")
   (go--should-fontify "KtypeK (
 	TfooT = TbarT[c]
-)"))
+)")
+
+  (go--should-fontify "KtypeK TfooT[VaV KfuncK(TbT[TcT])]")
+  (go--should-fontify "KtypeK TfooT[VaV KfuncK(VaV TbT[TcT])]"))
 
 (ert-deftest go--fontify-make-new ()
   (go--should-fontify "BmakeB(TfooT)")
