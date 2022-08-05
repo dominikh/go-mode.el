@@ -58,6 +58,12 @@ QKfuncK (VfV TintT) {}
 	TfooT = TbarT[c]
 )"))
 
+(ert-deftest go--fontify-make-new ()
+  (go--should-fontify "BmakeB(TfooT)")
+  (go--should-fontify "BmakeB(TfooT[TbarT])")
+  (go--should-fontify "BnewB(TfooT)")
+  (go--should-fontify "BnewB(TfooT[TbarT])"))
+
 (ert-deftest go--fontify-struct ()
   (go--should-fontify "KstructK { i TintT }")
   (go--should-fontify "KstructK { a, b TintT }")
@@ -257,7 +263,7 @@ represent expected font lock face names. For example:
 
 BmakeB([]TintT, 0)
 
-expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
+expects \"make\" to be a (B)uiltin and \"int\" to be a (T)ype."
   (with-temp-buffer
     (setq mode (or mode 'go-mode))
     (funcall mode)

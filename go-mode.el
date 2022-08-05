@@ -513,7 +513,7 @@ statements."
      (,(concat "\\_<chan\\_>[[:space:]]*\\(?:<-[[:space:]]*\\)?" go-type-name-regexp) 1 font-lock-type-face)
 
      ;; "new()"/"make()" type
-     (,(concat "\\_<\\(?:new\\|make\\)\\_>\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp) 1 font-lock-type-face)
+     (eval . (go--make-type-matcher (concat "\\_<\\(?:new\\|make\\)\\_>\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp)))
 
      ;; Type assertion
      (,(concat "\\.\\s *(" go-type-name-regexp) 1 font-lock-type-face)
@@ -3052,6 +3052,17 @@ This handles multi-line comments with a * prefix on each line."
   (go--with-comment-fill-prefix
    (lambda () (comment-indent-new-line arg))))
 
+(defun go--make-type-matcher (regex-or-func &optional match-idx)
+  "Wrap a simple type matcher so we automatically match an abutting
+type param list, if present."
+  (setq match-idx (or match-idx 1))
+  `(,regex-or-func
+    (,match-idx font-lock-type-face)
+    (go--match-type-list-item
+     (go--match-type-list-piggyback-pre ,match-idx)
+     nil
+     (2 font-lock-type-face nil t))))
+
 (defvar-local go--type-list-has-names nil)
 (defvar-local go--type-list-start nil)
 (defvar-local go--type-list-end nil)
@@ -3090,6 +3101,19 @@ This handles multi-line comments with a * prefix on each line."
             (setq go--type-list-has-names t)))))
     found-match))
 
+(defun go--match-type-list-piggyback-pre (match-idx)
+  ;; match-idx corresponds to a type, so if the next char is "[", we
+  ;; know it is a type list.
+  (if (and
+       (not (member (match-string match-idx) go-mode-keywords))
+       (eq (char-after (match-end match-idx)) ?\[))
+      (progn
+        (goto-char (match-end match-idx))
+        (forward-char)
+        (setq go--type-list-has-names nil)
+        (setq go--type-list-start (point)))
+    (setq go--type-list-start nil)))
+
 (defun go--match-type-list-post ()
   "Jump back to start of list so we can find nested lists"
   (setq go--type-list-end (point))
@@ -3105,7 +3129,7 @@ This handles multi-line comments with a * prefix on each line."
 (defun go--match-type-list-item (end)
   "Advance through each type param in a type instantion param list."
   (let (found-match done name type)
-    (while (and (not found-match) (not done))
+    (while (and go--type-list-start (not found-match) (not done))
       (skip-syntax-forward " ")
 
       (if go--type-list-has-names
