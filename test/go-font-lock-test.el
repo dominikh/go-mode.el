@@ -61,6 +61,7 @@ QKfuncK (VfV TintT) {}
 (ert-deftest go--fontify-make-new ()
   (go--should-fontify "BmakeB(TfooT)")
   (go--should-fontify "BmakeB(TfooT[TbarT])")
+  (go--should-fontify "BmakeB(TfooT[TbarT[TbazT]])")
   (go--should-fontify "BnewB(TfooT)")
   (go--should-fontify "BnewB(TfooT[TbarT])"))
 

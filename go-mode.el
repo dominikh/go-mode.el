@@ -3066,6 +3066,7 @@ type param list, if present."
 (defvar-local go--type-list-has-names nil)
 (defvar-local go--type-list-start nil)
 (defvar-local go--type-list-end nil)
+(defvar-local go--type-list-paren-level nil)
 
 (defun go--match-type-list-start (end)
   "Search for [ starting a type list"
@@ -3076,6 +3077,7 @@ type param list, if present."
       (when (not (go-in-string-or-comment-p))
         (if (and
              go--type-list-start
+             go--type-list-end
              (< go--type-list-start (point))
              (> go--type-list-end (point)))
             ;; A "[" within an outer type list is always a type list.
@@ -3111,7 +3113,8 @@ type param list, if present."
         (goto-char (match-end match-idx))
         (forward-char)
         (setq go--type-list-has-names nil)
-        (setq go--type-list-start (point)))
+        (setq go--type-list-start (point))
+        (setq go--type-list-paren-level (1+ (go-paren-level))))
     (setq go--type-list-start nil)))
 
 (defun go--match-type-list-post ()
@@ -3129,6 +3132,10 @@ type param list, if present."
 (defun go--match-type-list-item (end)
   "Advance through each type param in a type instantion param list."
   (let (found-match done name type)
+    ;; Make sure we are at the start of a list item.
+    (when (not (member (char-before) '(?, ?\[)))
+      (setq done t))
+
     (while (and go--type-list-start (not found-match) (not done))
       (skip-syntax-forward " ")
 
@@ -3146,7 +3153,22 @@ type param list, if present."
             (setf (nth 4 md) nil (nth 5 md) nil))
           (set-match-data md)))
 
-      (setq done (not (go--search-next-comma end ?\]))))
+      (if go--type-list-paren-level
+          (if (and
+               found-match
+               (not go--type-list-has-names)
+               (goto-char (match-end 2))
+               (eq (char-after) ?\[))
+              ;; If there is "[" after match, recurse into the nested
+              ;; param list.
+              (forward-char)
+            (when (not (go--search-next-comma end ?\]))
+              (while (eq (char-after) ?\])
+                (forward-char))
+              ;; We made it to the end of a "[]" list. Check if it was our
+              ;; starting paren depth.
+              (setq done (<= (go-paren-level) go--type-list-paren-level))))
+        (setq done (not (go--search-next-comma end ?\])))))
 
     found-match))
 
