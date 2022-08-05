@@ -46,8 +46,17 @@ QKfuncK (VfV TintT) {}
 "))
 
 (ert-deftest go--fontify-generic-signature ()
-  (go--should-fontify "KfuncK FfooF[a TintT](VaV TintT) { }")
-  (go--should-fontify "KfuncK FfooF[a TintT](TintT) { }"))
+  (go--should-fontify "KfuncK FfooF[VaV TintT](VaV TintT) { }")
+  (go--should-fontify "KfuncK FfooF[VaV TintT](TintT) { }"))
+
+(ert-deftest go--fontify-generic-type-decl ()
+  (go--should-fontify "KtypeK TfooT[VaV, VbV TcT[TdT]] TbarT[e]")
+  (go--should-fontify "KtypeK (
+	TfooT[VaV TbT] TbarT[c]
+)")
+  (go--should-fontify "KtypeK (
+	TfooT = TbarT[c]
+)"))
 
 (ert-deftest go--fontify-struct ()
   (go--should-fontify "KstructK { i TintT }")
@@ -257,7 +266,9 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
 
     ;; First pass through buffer looks for the face tags. We delete
     ;; the tags and record the expected face ranges in `faces'.
-    (let ((case-fold-search nil) faces start start-pos)
+    (let ((case-fold-search nil)
+          (go-fontify-variables t)
+          faces start start-pos)
       (while (re-search-forward "[TBKCFSNVDQ]" nil t)
         (let ((found-char (char-before)))
           (backward-delete-char 1)
