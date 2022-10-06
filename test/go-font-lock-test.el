@@ -77,6 +77,8 @@ QKfuncK (VfV TintT) {}
   (go--should-fontify "KfuncK FfooF()")
   (go--should-fontify "KfuncK FfooF[VAV TanyT]()")
   (go--should-fontify "KfuncK (VfV TfooT) FfooF[A TanyT]()")
+  (go--should-fontify "KfuncK FfooF[VAV TanyT]() TbarT")
+  (go--should-fontify "KfuncK FfooF[VAV TanyT]() TbarT[TbazT]")
   (go--should-fontify "FfooF(bar)")
   (go--should-fontify "foo.FfooF(bar)")
   (go--should-fontify "(FfooF)(foo)(foo)")
@@ -215,6 +217,7 @@ KtypeK (
   (go--should-fontify "KvarK VfooV, VbarV = bar, baz")
   (go--should-fontify "KvarK VfooV TbarT D// DQcoolQ")
   (go--should-fontify "KvarK VfooV TbarT = baz")
+  (go--should-fontify "KvarK VfooV TbarT[TbazT] = qux")
   (go--should-fontify "KvarK VfooV KstructK { i TintT } = baz")
   (go--should-fontify "KvarK VfooV []*Tfoo.ZarT D// DQcoolQ")
 

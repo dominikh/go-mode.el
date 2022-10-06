@@ -453,10 +453,10 @@ statements."
 
      ;; Special case to match non-parenthesized function results. For
      ;; example, "func(i int) string".
-     (go--match-single-func-result 1 font-lock-type-face)
+     (eval . (go--make-type-matcher 'go--match-single-func-result))
 
      ;; Match name+type pairs, such as "foo bar" in "var foo bar".
-     (go--match-ident-type-pair 2 font-lock-type-face)
+     (eval . (go--make-type-matcher 'go--match-ident-type-pair 2))
 
      ;; Match type unions such as "int | string" in "interface { int | string }".
      (eval . (go--make-type-matcher 'go--match-type-union))
@@ -1624,7 +1624,7 @@ succeeds."
                               (go--in-type-params-p)))))))
     found-match))
 
-(defconst go--single-func-result-re (concat ")[[:space:]]+" go-type-name-regexp "\\(?:$\\|[[:space:]),]\\)"))
+(defconst go--single-func-result-re (concat ")[[:space:]]+" go-type-name-regexp "\\(?:\\[.*\\]\\)?\\(?:$\\|[[:space:]),]\\)"))
 
 (defun go--match-single-func-result (end)
   "Match single result types.
