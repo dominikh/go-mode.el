@@ -3193,19 +3193,25 @@ type param list, if present."
           (setq go--type-list-start nil
                 go--type-list-end nil
                 go--type-list-has-names nil)
-
-          (when (save-excursion
-                  (backward-char)
-                  (or
-                   ;; Directly in a "type" or "func" type list
-                   (go--looking-back-p (concat "^[[:space:]]*\\(?:func\\|type\\)[[:space:]]+" go-identifier-regexp "$"))
-                   (and
-                    ;; Or on LHS of item in type decl
-                    (equal (go--containing-decl) "type")
-                    (go--looking-back-p (concat "^[[:space:]]*" go-identifier-regexp "$")))))
-            (setq found-match t)
-            (setq go--type-list-start (point))
-            (setq go--type-list-has-names t)))))
+            (if (save-excursion
+                    (backward-char)
+                    (or
+                     ;; Directly in a "type" or "func" type list
+                     (go--looking-back-p (concat "^[[:space:]]*\\(?:func\\|type\\)[[:space:]]+" go-identifier-regexp "$"))
+                     (and
+                      ;; Or on LHS of item in type decl
+                      (equal (go--containing-decl) "type")
+                      (go--looking-back-p (concat "^[[:space:]]*" go-identifier-regexp "$")))))
+            (setq found-match t
+                  go--type-list-start (point)
+                  go--type-list-has-names t)
+            (when (save-excursion (go--search-next-comma end ?\]))
+              ;; If we aren't in a "func" or "type" decl and there is
+              ;; more than one item in the list, it must be a type
+              ;; list.
+              (setq found-match t
+                    go--type-list-start (point)
+                    go--type-list-has-names nil))))))
     found-match))
 
 (defun go--match-type-list-piggyback-pre (match-idx)
