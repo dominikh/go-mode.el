@@ -1240,8 +1240,18 @@ INDENT is the normal indent of this line, i.e. that of the case body."
           (goto-char (- (point-max) pos))))))
 
 (defun go-beginning-of-defun (&optional count)
-  (unless (bolp)
-    (end-of-line))
+  (when (and (not (go-in-string-or-comment-p))
+			 (not (bolp))
+			 (save-excursion
+			   (beginning-of-line)
+			   (looking-at go-func-meth-regexp)))
+	;; Point is already somewhere on the function definition. Move to the end of line so that searching backwards finds
+	;; it. We don't go to the end of line unconditionally because that confuses evil-mode
+	;; (https://github.com/dominikh/go-mode.el/issues/186)
+	;;
+	;; If point is already at the beginning of line and looking at a function, then we want go-beginning-of-defun to
+	;; jump to the previous function instead.
+	(end-of-line))
   (setq count (or count 1))
   (let (first failure)
     (dotimes (i (abs count))
