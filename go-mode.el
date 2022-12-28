@@ -1753,7 +1753,7 @@ The following extra functions are defined:
 - `go-reset-gopath'
 
 If you want to automatically run `gofmt' before saving a file,
-add the following hook to your emacs configuration:
+add the following hook to your Emacs configuration:
 
 \(add-hook 'before-save-hook #'gofmt-before-save)
 
