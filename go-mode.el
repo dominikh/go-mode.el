@@ -217,8 +217,7 @@ look like others."
 (defcustom go-confirm-playground-uploads t
   "Ask before uploading code to the public Go Playground.
 
-Set this to nil to upload without prompting.
-"
+Set this to nil to upload without prompting."
   :type 'boolean
   :group 'go)
 
@@ -1024,8 +1023,7 @@ open paren, the next line will have an additional indent.
 For example:
 foo ||
   foo && // this continuation line opens another indent
-    foo
-"
+    foo"
   (save-excursion
     (let (prev-op (all-tighter t))
 
@@ -1317,8 +1315,7 @@ until you see the end. For example:
 func foo(int, string) {}
 
 // names and types (don't know so until you see the \"int\").
-func foo(i, j int) {}
-"
+func foo(i, j int) {}"
   (setq go--fontify-param-has-name (eq
                                     (go--parameter-list-type (point-max))
                                     'present))
@@ -1347,8 +1344,7 @@ func foo(i, j int) {}
 
 This is used as an anchored font lock keyword POST-MATCH-FORM. We
 move point back to the opening \"(\" so we find nested param
-lists.
-"
+lists."
   (goto-char go--fontify-param-beg))
 
 (defun go--match-param-start (end)
@@ -2126,8 +2122,7 @@ Playground URL.
 
 By default this function will prompt to confirm you want to upload
 code to the Playground. You can disable the confirmation by setting
-`go-confirm-playground-uploads' to nil.
-"
+`go-confirm-playground-uploads' to nil."
   (interactive "r")
   (if (and go-confirm-playground-uploads
            (not (yes-or-no-p "Upload to public Go Playground? ")))
