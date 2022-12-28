@@ -2206,18 +2206,18 @@ uncommented, otherwise a new import will be added."
       (if (re-search-forward (concat "^[[:space:]]*//[[:space:]]*import " line "$") nil t)
           (uncomment-region (line-beginning-position) (line-end-position))
         (cl-case (go-goto-imports)
-          ('fail (message "Could not find a place to add import."))
-          ('block-empty
+          (fail (message "Could not find a place to add import."))
+          (block-empty
            (insert "\n\t" line "\n"))
-          ('block
+          (block
               (save-excursion
                 (re-search-backward "^import (")
                 (setq import-start (point)))
             (if (re-search-backward (concat "^[[:space:]]*//[[:space:]]*" line "$")  import-start t)
                 (uncomment-region (line-beginning-position) (line-end-position))
               (insert "\n\t" line)))
-          ('single (insert "import " line "\n"))
-          ('none (insert "\nimport (\n\t" line "\n)\n")))))))
+          (single (insert "import " line "\n"))
+          (none (insert "\nimport (\n\t" line "\n)\n")))))))
 
 (defun go-root-and-paths ()
   (let* ((output (process-lines go-command "env" "GOROOT" "GOPATH"))
