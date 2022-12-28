@@ -2248,11 +2248,8 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
   (funcall go-packages-function))
 
 (defun go-packages-native ()
-  "Return a list of all installed Go packages. Obsolete.
-It looks for archive files in /pkg/. This strategy does not work
-well with the Go build cache or Go modules.
-
-You should use `go-packages-go-list' instead."
+  "Return a list of all installed Go packages."
+  (declare (obsolete "this function does not work well with modern versions of Go. You should use `go-packages-go-list' instead." "1.7.0"))
   (sort
    (delete-dups
     (cl-mapcan
