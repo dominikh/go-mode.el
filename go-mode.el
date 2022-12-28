@@ -214,6 +214,8 @@ look like others."
   :type '(repeat function)
   :group 'go)
 
+(make-obsolete-variable 'go-guess-gopath-functions "GOPATH has been deprecated in favour of Go modules." "1.7.0")
+
 (defcustom go-confirm-playground-uploads t
   "Ask before uploading code to the public Go Playground.
 
@@ -1749,8 +1751,6 @@ The following extra functions are defined:
 - `go-download-play'
 - `godef-describe' and `godef-jump'
 - `go-coverage'
-- `go-set-project'
-- `go-reset-gopath'
 
 If you want to automatically run `gofmt' before saving a file,
 add the following hook to your Emacs configuration:
@@ -2760,6 +2760,7 @@ returned."
 
 (defun go-guess-gopath (&optional buffer)
   "Determine a suitable GOPATH for BUFFER, or the current buffer if BUFFER is nil."
+  (declare (obsolete "GOPATH has been deprecated in favour of Go modules." "1.7.0"))
   (with-current-buffer (or buffer (current-buffer))
     (let ((gopath (cl-some (lambda (el) (funcall el))
                            go-guess-gopath-functions)))
@@ -2772,6 +2773,7 @@ returned."
 (defun go-plain-gopath ()
   "Detect a normal GOPATH, by looking for the first `src'
 directory up the directory tree."
+  (declare (obsolete "GOPATH has been deprecated in favour of Go modules." "1.7.0"))
   (let ((d (locate-dominating-file buffer-file-name "src")))
     (if d
         (list d))))
@@ -2787,6 +2789,7 @@ of when Emacs was started.
 This function can for example be used as a
 projectile-switch-project-hook, or simply be called manually when
 switching projects."
+  (declare (obsolete "GOPATH has been deprecated in favour of Go modules." "1.7.0"))
   (interactive)
   (let ((gopath (or (go-guess-gopath buffer)
                     (go-original-gopath))))
@@ -2795,6 +2798,7 @@ switching projects."
 
 (defun go-reset-gopath ()
   "Reset GOPATH to the value it had when Emacs started."
+  (declare (obsolete "GOPATH has been deprecated in favour of Go modules." "1.7.0"))
   (interactive)
   (let ((gopath (go-original-gopath)))
     (setenv "GOPATH" gopath)
@@ -2802,6 +2806,7 @@ switching projects."
 
 (defun go-original-gopath ()
   "Return the original value of GOPATH from when Emacs was started."
+  (declare (obsolete "GOPATH has been deprecated in favour of Go modules." "1.7.0"))
   (let ((process-environment initial-environment)) (getenv "GOPATH")))
 
 (defun go--insert-modified-files ()
