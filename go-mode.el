@@ -2470,7 +2470,7 @@ divisor for FILE-NAME."
       (insert-file-contents coverage-file)
       (go--goto-line 2) ;; Skip over mode
       (while (not (eobp))
-        (let* ((parts (split-string (buffer-substring (point-at-bol) (point-at-eol)) ":"))
+        (let* ((parts (split-string (buffer-substring (line-beginning-position) (line-end-position)) ":"))
                (file (car parts))
                (rest (split-string (nth 1 parts) "[., ]")))
 
