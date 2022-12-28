@@ -544,7 +544,6 @@ statements."
     ["Jump to Definition"    godef-jump t]
     "---"
     ["Add Import"            go-import-add t]
-    ["Remove Unused Imports" go-remove-unused-imports t]
     ["Go to Imports"         go-goto-imports t]
     "---"
     ("Playground"
@@ -1739,7 +1738,6 @@ The following extra functions are defined:
 - `gofmt'
 - `godoc' and `godoc-at-point'
 - `go-import-add'
-- `go-remove-unused-imports'
 - `go-goto-arguments'
 - `go-goto-docstring'
 - `go-goto-function'
@@ -2293,6 +2291,7 @@ If IGNORE-CASE is non-nil, the comparison is case-insensitive."
   "Remove all unused imports.
 If ARG is non-nil, unused imports will be commented, otherwise
 they will be removed completely."
+  (declare (obsolete "set `gofmt-command' to goimports instead, or use LSP and gopls's \"Organize Imports\" code action." "1.7.0"))
   (interactive "P")
   (save-excursion
     (let ((cur-buffer (current-buffer)) flymake-state lines)

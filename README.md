@@ -32,8 +32,6 @@ the following extra features to provide an improved experience:
     `C-c C-f i`)
   - A function for adding imports, including tab completion
     (`go-import-add`, bound to `C-c C-a`)
-  - A function for removing or commenting unused imports
-    (`go-remove-unused-imports`)
   - It is recommended that you use `goimports` or the
     `organize-imports` feature of `gopls` to manage
     adding/removing/organizing imports automatically.
