@@ -97,9 +97,10 @@ constant is changed.")
 (defconst go--case-or-default-regexp (concat "\\(" go--case-regexp "\\|"  "[[:space:]]*default:\\)"))
 
 (defconst go-builtins
-  '("append" "cap"   "close"   "complex" "copy"
-    "delete" "imag"  "len"     "make"    "new"
-    "panic"  "print" "println" "real"    "recover")
+  '("append"  "cap"    "clear"   "close" "complex"
+    "copy"    "delete" "imag"    "len"   "make"
+    "max"     "min"    "new"     "panic" "print"
+    "println" "real"   "recover")
   "All built-in functions in the Go language.  Used for font locking.")
 
 (defconst go-mode-keywords
