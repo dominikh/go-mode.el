@@ -147,8 +147,8 @@ constant is changed.")
   :group 'go)
 
 (defcustom go-command "go"
-  "The 'go' command.
-Some users have multiple Go development trees and invoke the 'go'
+  "The \\='go\\=' command.
+Some users have multiple Go development trees and invoke the \\=`go\\='
 tool via a wrapper that sets GOROOT and GOPATH based on the
 current directory.  Such users should customize this variable to
 point to the wrapper script."
@@ -156,8 +156,8 @@ point to the wrapper script."
   :group 'go)
 
 (defcustom gofmt-command "gofmt"
-  "The 'gofmt' command.
-Some users may replace this with 'goimports'
+  "The \\='gofmt\\=' command.
+Some users may replace this with \\='goimports\\='
 from https://golang.org/x/tools/cmd/goimports."
   :type 'string
   :group 'go)
@@ -181,7 +181,7 @@ a `before-save-hook'."
   :group 'go)
 
 (defcustom godef-command "godef"
-  "The 'godef' command."
+  "The \\='godef\\=' command."
   :type 'string
   :group 'go)
 
@@ -197,7 +197,7 @@ a `before-save-hook'."
 This is used in e.g. tab completion in `go-import-add'.
 
 This package provides two functions: `go-packages-go-list' uses
-'go list all' to determine all Go packages. `go-packages-native' uses
+\\='go list all\\=' to determine all Go packages. `go-packages-native' uses
 elisp to find all .a files in all /pkg/ directories.
 `go-packages-native' is obsolete as it doesn't behave correctly with
 the Go build cache or Go modules."
@@ -289,7 +289,7 @@ Consider using ‘godoc-gogetdoc’ instead for more accurate results."
 (defun godoc-gogetdoc (point)
   "Use the gogetdoc tool to find the documentation for an identifier at POINT.
 
-You can install gogetdoc with 'go get -u github.com/zmb3/gogetdoc'."
+You can install gogetdoc with \\='go get -u github.com/zmb3/gogetdoc\\='."
   (if (not (buffer-file-name (go--coverage-origin-buffer)))
       ;; TODO: gogetdoc supports unsaved files, but not introducing
       ;; new artificial files, so this limitation will stay for now.
@@ -735,7 +735,7 @@ case keyword. It returns nil for the case line itself."
   (go--in-paren-with-prefix-p ?{ ".(type)"))
 
 (defun go--open-paren-position ()
-  "Return non-nil if point is between '(' and ')'.
+  "Return non-nil if point is between \\='(\\=' and \\=')\\='.
 
 The return value is the position of the opening paren."
   (save-excursion
@@ -1655,7 +1655,7 @@ We are looking for the right-hand-side of the type alias"
 (defun go--parameter-list-type (end)
   "Return `present' if the parameter list has names, or `absent' if not.
 Assumes point is at the beginning of a parameter list, just
-after '('."
+after \\='(\\='."
   (save-excursion
     (skip-chars-forward "[:space:]\n" end)
     (cond ((> (point) end)
@@ -1754,14 +1754,14 @@ The following extra functions are defined:
 If you want to automatically run `gofmt' before saving a file,
 add the following hook to your Emacs configuration:
 
-\(add-hook 'before-save-hook #'gofmt-before-save)
+\(add-hook \\='before-save-hook #\\='gofmt-before-save)
 
 If you want to use `godef-jump' instead of etags (or similar),
 consider binding godef-jump to `M-.', which is the default key
 for `find-tag':
 
-\(add-hook 'go-mode-hook (lambda ()
-                          (local-set-key (kbd \"M-.\") #'godef-jump)))
+\(add-hook \\='go-mode-hook (lambda ()
+                           (local-set-key (kbd \"M-.\") #\\='godef-jump)))
 
 Please note that godef is an external dependency. You can install
 it with
@@ -1997,7 +1997,7 @@ arguments can be set as a list via ‘gofmt-args’."
 ;;;###autoload
 (defun gofmt-before-save ()
   "Add this to .emacs to run gofmt on the current buffer when saving:
-\(add-hook 'before-save-hook 'gofmt-before-save).
+\(add-hook \\='before-save-hook \\='gofmt-before-save).
 
 Note that this will cause ‘go-mode’ to get loaded the first time
 you save any file, kind of defeating the point of autoloading."
@@ -2619,8 +2619,8 @@ If ARG is non-nil, anonymous functions are ignored."
 (defun go-goto-function-name (&optional arg)
   "Go to the name of the current function.
 
-If the function is a test, place point after 'Test'.
-If the function is anonymous, place point on the 'func' keyword.
+If the function is a test, place point after \\='Test\\='.
+If the function is anonymous, place point on the \\='func\\=' keyword.
 
 If ARG is non-nil, anonymous functions are skipped."
   (interactive "P")

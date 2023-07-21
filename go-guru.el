@@ -396,7 +396,7 @@ function containing the current point."
 
 ;;;###autoload
 (defun go-guru-implements ()
-  "Describe the 'implements' relation for types in the package
+  "Describe the \\='implements\\=' relation for types in the package
 containing the current point."
   (interactive)
   (go-guru--start "implements"))
@@ -425,19 +425,19 @@ identifier."
 ;;;###autoload
 (defun go-guru-whicherrs ()
   "Show globals, constants and types to which the selected
-expression (of type 'error') may refer."
+expression (of type \\='error\\=') may refer."
   (interactive)
   (go-guru--set-scope-if-empty)
   (go-guru--start "whicherrs"))
 
 (defun go-guru-what ()
-  "Run a 'what' query and return the parsed JSON response as an
+  "Run a \\='what\\=' query and return the parsed JSON response as an
 association list."
   (go-guru--json "what"))
 
 (defun go-guru--hl-symbols (posn face id)
   "Highlight the symbols at the positions POSN by creating
-overlays with face FACE. The attribute 'go-guru-overlay on the
+overlays with face FACE. The attribute \\='go-guru-overlay on the
 overlays will be set to ID."
   (save-excursion
     (mapc (lambda (pos)
