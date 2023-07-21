@@ -318,7 +318,7 @@ If BUFFER, return the number of characters in that buffer instead."
 
 (defun go-guru--goto-byte-column (offset)
   "Go to the OFFSETth byte in the current line."
-  (goto-char (byte-to-position (+ (position-bytes (point-at-bol)) (1- offset)))))
+  (goto-char (byte-to-position (+ (position-bytes (line-beginning-position)) (1- offset)))))
 
 (defun go-guru--goto-pos (posn other-window)
   "Find the file containing the position POSN (of the form `file:line:col')
