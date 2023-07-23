@@ -1241,17 +1241,17 @@ INDENT is the normal indent of this line, i.e. that of the case body."
 
 (defun go-beginning-of-defun (&optional count)
   (when (and (not (go-in-string-or-comment-p))
-			 (not (bolp))
-			 (save-excursion
-			   (beginning-of-line)
-			   (looking-at go-func-meth-regexp)))
-	;; Point is already somewhere on the function definition. Move to the end of line so that searching backwards finds
-	;; it. We don't go to the end of line unconditionally because that confuses evil-mode
-	;; (https://github.com/dominikh/go-mode.el/issues/186)
-	;;
-	;; If point is already at the beginning of line and looking at a function, then we want go-beginning-of-defun to
-	;; jump to the previous function instead.
-	(end-of-line))
+             (not (bolp))
+             (save-excursion
+               (beginning-of-line)
+               (looking-at go-func-meth-regexp)))
+    ;; Point is already somewhere on the function definition. Move to the end of line so that searching backwards finds
+    ;; it. We don't go to the end of line unconditionally because that confuses evil-mode
+    ;; (https://github.com/dominikh/go-mode.el/issues/186)
+    ;;
+    ;; If point is already at the beginning of line and looking at a function, then we want go-beginning-of-defun to
+    ;; jump to the previous function instead.
+    (end-of-line))
   (setq count (or count 1))
   (let (first failure)
     (dotimes (i (abs count))
@@ -1957,7 +1957,7 @@ arguments can be set as a list via ‘gofmt-args’."
                   (message "Applied gofmt"))
                 (if errbuf (gofmt--kill-error-buffer errbuf)))
             (message "Could not apply gofmt")
-            (if errbuf (gofmt--process-errors (buffer-file-name) tmpfile errbuf))))
+            (if errbuf (gofmt--process-errors (or (buffer-file-name) (buffer-name)) tmpfile errbuf))))
 
       (kill-buffer patchbuf)
       (delete-file tmpfile))))
@@ -2384,14 +2384,14 @@ description at POINT."
   "Jump to the definition of the expression at POINT."
   (interactive "d")
   (condition-case nil
-	  (let ((file (car (godef--call point))))
-		(if (not (godef--successful-p file))
-			(message "%s" (godef--error file))
-		  (push-mark)
-		  ;; TODO: Integrate this facility with XRef.
-		  (xref-push-marker-stack)
-		  (godef--find-file-line-column file other-window)))
-	(file-error (message "Could not run godef binary"))))
+      (let ((file (car (godef--call point))))
+        (if (not (godef--successful-p file))
+            (message "%s" (godef--error file))
+          (push-mark)
+          ;; TODO: Integrate this facility with XRef.
+          (xref-push-marker-stack)
+          (godef--find-file-line-column file other-window)))
+    (file-error (message "Could not run godef binary"))))
 
 (defun godef-jump-other-window (point)
   (interactive "d")
