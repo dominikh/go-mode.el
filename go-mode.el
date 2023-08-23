@@ -2841,7 +2841,7 @@ If BUFFER, return the number of characters in that buffer instead."
   "Syntax table for `go-dot-mod-mode'.")
 
 (defconst go-dot-mod-mode-keywords
-  '("module" "go" "require" "replace" "exclude")
+  '("module" "go" "toolchain" "require" "exclude" "replace" "retract")
   "All keywords for go.mod files.  Used for font locking.")
 
 (defgroup go-dot-mod nil
@@ -2891,7 +2891,7 @@ If BUFFER, return the number of characters in that buffer instead."
 (add-to-list 'auto-mode-alist '("go\\.mod\\'" . go-dot-mod-mode))
 
 (defconst go-dot-work-mode-keywords
-  '("go" "replace" "use")
+  '("go" "toolchain" "use" "replace")
   "All keywords for go.work files.  Used for font locking.")
 
 ;;;###autoload
