@@ -325,6 +325,7 @@ If BUFFER, return the number of characters in that buffer instead."
 set the point to it, switching the current buffer."
   (let ((file-line-pos (split-string posn ":")))
     (funcall (if other-window #'find-file-other-window #'find-file) (car file-line-pos))
+    (if widen-automatically (widen))
     (goto-char (point-min))
     (forward-line (1- (string-to-number (cadr file-line-pos))))
     (go-guru--goto-byte-column (string-to-number (cl-caddr file-line-pos)))))
