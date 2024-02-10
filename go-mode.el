@@ -2472,7 +2472,7 @@ divisor for FILE-NAME."
                (rest (split-string (nth 1 parts) "[., ]")))
 
           (cl-destructuring-bind
-              (start-line start-column end-line end-column num count)
+              (start-line start-column end-line end-column _ count)
               (mapcar #'string-to-number rest)
 
             (when (string= (file-name-nondirectory file) file-name)
