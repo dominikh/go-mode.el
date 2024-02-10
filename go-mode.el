@@ -2132,20 +2132,19 @@ code to the Playground. You can disable the confirmation by setting
            (url-request-data
             (encode-coding-string
              (buffer-substring-no-properties start end)
-             'utf-8))
-
-           (content-buf (url-retrieve
-                         "https://play.golang.org/share"
-                         (lambda (arg)
-                           (cond
-                            ((equal :error (car arg))
-                             (signal 'go-play-error (cdr arg)))
-                            (t
-                             (re-search-forward "\n\n")
-                             (let ((url (format "https://play.golang.org/p/%s"
-                                                (buffer-substring (point) (point-max)))))
-                               (when go-play-browse-function
-                                 (funcall go-play-browse-function url))))))))))))
+             'utf-8)))
+      (url-retrieve
+       "https://play.golang.org/share"
+       (lambda (arg)
+         (cond
+          ((equal :error (car arg))
+           (signal 'go-play-error (cdr arg)))
+          (t
+           (re-search-forward "\n\n")
+           (let ((url (format "https://play.golang.org/p/%s"
+                              (buffer-substring (point) (point-max)))))
+             (when go-play-browse-function
+               (funcall go-play-browse-function url))))))))))
 
 ;;;###autoload
 (defun go-download-play (url)
