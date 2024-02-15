@@ -79,11 +79,12 @@ This must be at least the length of the longest string matched by
 ‘go-dangling-operators-regexp’ and must be updated whenever that
 constant is changed.")
 
-(defconst go-identifier-regexp "[[:word:][:multibyte:]]+")
-(defconst go-type-name-no-prefix-regexp "\\(?:[[:word:][:multibyte:]]+\\.\\)?[[:word:][:multibyte:]]+")
+(defconst go-identifier-char-regexp "[[:word:]_[:multibyte:]]")
+(defconst go-identifier-regexp (concat go-identifier-char-regexp "+"))
+(defconst go-type-name-no-prefix-regexp (concat "\\(?:" go-identifier-regexp "\\.\\)?" go-identifier-regexp))
 (defconst go-qualified-identifier-regexp (concat go-identifier-regexp "\\." go-identifier-regexp))
 (defconst go-label-regexp go-identifier-regexp)
-(defconst go-type-regexp "[[:word:][:multibyte:]*]+")
+(defconst go-type-regexp (concat "[" go-identifier-char-regexp "*]+"))
 (defconst go-func-regexp (concat "\\_<func\\_>\\s *\\(" go-identifier-regexp "\\)"))
 (defconst go-func-meth-regexp (concat
                                "\\_<func\\_>\\s *\\(?:(\\s *"
@@ -401,8 +402,6 @@ For mode=set, all covered lines will have this weight."
     (modify-syntax-entry ?\' "\"" st)
     (modify-syntax-entry ?`  "\"" st)
     (modify-syntax-entry ?\\ "\\" st)
-    ;; TODO make _ a symbol constituent now that xemacs is gone
-    (modify-syntax-entry ?_  "w" st)
 
     st)
   "Syntax table for Go mode.")
@@ -475,7 +474,7 @@ statements."
        ;; Function call/method name
        `((,(concat "\\(" go-identifier-regexp "\\)[[:space:]]*(") 1 font-lock-function-name-face)
          ;; Bracketed function call
-         (,(concat "[^[:word:][:multibyte:]](\\(" go-identifier-regexp "\\))[[:space:]]*(") 1 font-lock-function-name-face))
+         (,(concat "[^" go-identifier-char-regexp "](\\(" go-identifier-regexp "\\))[[:space:]]*(") 1 font-lock-function-name-face))
      ;; Method name
      `((,go-func-meth-regexp 2 font-lock-function-name-face)))
 
@@ -487,7 +486,7 @@ statements."
      (go--match-type-alias 2 font-lock-type-face)
 
      ;; Arrays/slices: []<type> | [123]<type> | [some.Const]<type> | [someConst]<type> | [...]<type>
-     (,(concat "\\(?:^\\|[^[:word:][:multibyte:]]\\)\\[\\(?:[[:digit:]]+\\|" go-qualified-identifier-regexp "\\|" go-identifier-regexp "\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 1 font-lock-type-face)
+     (,(concat "\\(?:^\\|[^" go-identifier-char-regexp "]\\)\\[\\(?:[[:digit:]]+\\|" go-qualified-identifier-regexp "\\|" go-identifier-regexp "\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 1 font-lock-type-face)
 
      ;; Unary "!"
      ("\\(!\\)[^=]" 1 font-lock-negation-char-face)
