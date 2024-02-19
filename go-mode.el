@@ -2894,6 +2894,10 @@ If BUFFER, return the number of characters in that buffer instead."
   '("go" "toolchain" "use" "replace")
   "All keywords for go.work files.  Used for font locking.")
 
+(defvar go-dot-work-font-lock-keywords
+  `((,(concat "^\\s-*\\(" (regexp-opt go-dot-work-mode-keywords t) "\\)\\s-") 1 font-lock-keyword-face))
+  "Keyword highlighting specification for `go-dot-work-mode'.")
+
 ;;;###autoload
 (define-derived-mode go-dot-work-mode fundamental-mode "Go Work"
   "A major mode for editor go.work files."
@@ -2904,7 +2908,7 @@ If BUFFER, return the number of characters in that buffer instead."
   (set (make-local-variable 'comment-start-skip) "\\(//+\\)\\s *")
 
   (set (make-local-variable 'font-lock-defaults)
-       '(go-dot-work-mode-keywords))
+       '(go-dot-work-font-lock-keywords))
   (set (make-local-variable 'indent-line-function) 'go-mode-indent-line)
 
   ;; Go style
