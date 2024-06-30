@@ -71,7 +71,7 @@ manager, and the
 an up-to-date version of go-mode.
 
 If you're not familiar with ELPA yet, consider reading
-[this guide](http://ergoemacs.org/emacs/emacs_package_system.html).
+[this guide](http://xahlee.info/emacs/emacs/emacs_package_system.html).
 
 ## Manual
 
