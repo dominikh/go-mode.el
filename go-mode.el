@@ -1751,10 +1751,16 @@ The following extra functions are defined:
 - `godef-describe' and `godef-jump'
 - `go-coverage'
 
-If you want to automatically run `gofmt' before saving a file,
-add the following hook to your Emacs configuration:
+If you want to automatically run `gofmt' before saving a file enable the
+gofmt minor mode.  To do so you can add the following to to your Emacs
+configuration:
 
-\(add-hook 'before-save-hook #'gofmt-before-save)
+\(add-hook 'go-mode-hook #'gofmt-mode)
+
+Or if you use `use-package':
+
+\(use-package go-mode
+  :hook ((go-mode . gofmt-mode)))
 
 If you want to use `godef-jump' instead of etags (or similar),
 consider binding godef-jump to `M-.', which is the default key
@@ -1995,15 +2001,13 @@ arguments can be set as a list via ‘gofmt-args’."
       (kill-buffer errbuf))))
 
 ;;;###autoload
-(defun gofmt-before-save ()
-  "Add this to .emacs to run gofmt on the current buffer when saving:
-\(add-hook 'before-save-hook 'gofmt-before-save).
-
-Note that this will cause ‘go-mode’ to get loaded the first time
-you save any file, kind of defeating the point of autoloading."
-
-  (interactive)
-  (when (eq major-mode 'go-mode) (gofmt)))
+(define-minor-mode gofmt-mode
+  "Runs gofmt before saving the file."
+  :lighter "gofmt"
+  :global nil
+  (if gofmt-mode
+      (add-hook 'before-save-hook 'gofmt nil 'local)
+    (remove-hook 'before-save-hook 'gofmt 'local)))
 
 (defun godoc--read-query ()
   "Read a godoc query from the minibuffer."
