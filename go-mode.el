@@ -1957,7 +1957,7 @@ arguments can be set as a list via ‘gofmt-args’."
                   (message "Applied gofmt"))
                 (if errbuf (gofmt--kill-error-buffer errbuf)))
             (message "Could not apply gofmt")
-            (if errbuf (gofmt--process-errors (buffer-file-name) tmpfile errbuf))))
+            (if errbuf (gofmt--process-errors (or buffer-file-name (buffer-name)) tmpfile errbuf))))
 
       (kill-buffer patchbuf)
       (delete-file tmpfile))))
