@@ -45,6 +45,55 @@ QD// DQ(
 QKfuncK (VfV TintT) {}
 "))
 
+(ert-deftest go--fontify-generic-signature ()
+  (go--should-fontify "KfuncK FfooF[VaV TintT](VaV TintT) { }")
+  (go--should-fontify "KfuncK FfooF[VaV TintT](TintT) { }"))
+
+(ert-deftest go--fontify-generic-type-decl ()
+  (go--should-fontify "KtypeK TfooT[VaV, VbV TcT[TdT]] TbarT[e]")
+  (go--should-fontify "KtypeK (
+	TfooT[VaV TbT] TbarT[c]
+)")
+  (go--should-fontify "KtypeK (
+	TfooT = TbarT[TcT]
+)")
+
+  (go--should-fontify "KtypeK TfooT[VaV KfuncK(TbT[TcT])]")
+  (go--should-fontify "KtypeK TfooT[VaV KfuncK(VaV TbT[TcT])]"))
+
+(ert-deftest go--fontify-make-new ()
+  (go--should-fontify "BmakeB(TfooT)")
+  (go--should-fontify "BmakeB(TfooT[TbarT])")
+  (go--should-fontify "BmakeB(TfooT[TbarT[TbazT]])")
+  (go--should-fontify "BnewB(TfooT)")
+  (go--should-fontify "BnewB(TfooT[TbarT])"))
+
+(ert-deftest go--fontify-type-union ()
+  (go--should-fontify "KfuncK FfooF[VaV TintT | TstringT | KstructK{} | *Tfoo.ZebraT](TintT) { }")
+  (go--should-fontify "KinterfaceK { TintT | Tfloat64T }")
+  (go--should-fontify "KfuncK FfooF[VaV TfooT[TbarT[TbazT]] | TfooT[TbarT[TbazT]]](TintT) { }"))
+
+(ert-deftest go--fontify-func ()
+  (go--should-fontify "KfuncK FfooF()")
+  (go--should-fontify "KfuncK FfooF[VAV TanyT]()")
+  (go--should-fontify "KfuncK (VfV TfooT) FfooF[A TanyT]()")
+  (go--should-fontify "KfuncK FfooF[VAV TanyT]() TbarT")
+  (go--should-fontify "KfuncK FfooF[VAV TanyT]() TbarT[TbazT]")
+  (go--should-fontify "FfooF(bar)")
+  (go--should-fontify "foo.FfooF(bar)")
+  (go--should-fontify "(FfooF)(foo)(foo)")
+  (go--should-fontify "{ foo[int](123) }")
+  (go--should-fontify "FfooF[TintT, TstringT](123)"))
+
+(ert-deftest go--fontify-type-instantiation ()
+  (go--should-fontify "BnewB(TfooT[TbarT])")
+  (go--should-fontify "foo.(*TbarT[TbazT])")
+  (go--should-fontify "KchanK TfooT[TbarT]")
+  (go--should-fontify "KmapK[TaT[TbT]]TcT[TdT]")
+  (go--should-fontify "KmapK[TaT[TbT]]KmapK[TcT[TdT]]TeT[TfT]")
+  (go--should-fontify "[]TfooT[TbarT[TbazT]]")
+  (go--should-fontify "KtypeK TfooT = TbarT[TbazT]"))
+
 (ert-deftest go--fontify-struct ()
   (go--should-fontify "KstructK { i TintT }")
   (go--should-fontify "KstructK { a, b TintT }")
@@ -98,6 +147,7 @@ KcaseK string:
   (go--should-fontify "TfooT{")
   (go--should-fontify "[]TfooT{")
   (go--should-fontify "Tfoo.ZarT{")
+  (go--should-fontify "Tfoo.ZarT[TintT]{")
   (go--should-fontify "[]Tfoo.ZarT{")
 
   (go--should-fontify "TfooT{CbarC:baz, CquxC: 123}")
@@ -167,6 +217,7 @@ KtypeK (
   (go--should-fontify "KvarK VfooV, VbarV = bar, baz")
   (go--should-fontify "KvarK VfooV TbarT D// DQcoolQ")
   (go--should-fontify "KvarK VfooV TbarT = baz")
+  (go--should-fontify "KvarK VfooV TbarT[TbazT] = qux")
   (go--should-fontify "KvarK VfooV KstructK { i TintT } = baz")
   (go--should-fontify "KvarK VfooV []*Tfoo.ZarT D// DQcoolQ")
 
@@ -244,7 +295,7 @@ represent expected font lock face names. For example:
 
 BmakeB([]TintT, 0)
 
-expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
+expects \"make\" to be a (B)uiltin and \"int\" to be a (T)ype."
   (with-temp-buffer
     (setq mode (or mode 'go-mode))
     (funcall mode)
@@ -253,7 +304,9 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
 
     ;; First pass through buffer looks for the face tags. We delete
     ;; the tags and record the expected face ranges in `faces'.
-    (let ((case-fold-search nil) faces start start-pos)
+    (let ((case-fold-search nil)
+          (go-fontify-variables t)
+          faces start start-pos)
       (while (re-search-forward "[TBKCFSNVDQ]" nil t)
         (let ((found-char (char-before)))
           (backward-delete-char 1)

@@ -443,12 +443,25 @@ statements."
        ;; flag to allow optional regex groups.
        (2 font-lock-type-face nil t)))
 
+     ;; Anchored matcher for generic type param lists. This handles
+     ;; type param lists for type/func declarations, and type lists
+     ;; nested within other type lists.
+     (go--match-type-list-start
+      (go--match-type-list-item
+       nil
+       (go--match-type-list-post)
+       (1 font-lock-variable-name-face nil t)
+       (2 font-lock-type-face nil t)))
+
      ;; Special case to match non-parenthesized function results. For
      ;; example, "func(i int) string".
-     (go--match-single-func-result 1 font-lock-type-face)
+     (eval . (go--make-type-matcher 'go--match-single-func-result))
 
      ;; Match name+type pairs, such as "foo bar" in "var foo bar".
-     (go--match-ident-type-pair 2 font-lock-type-face)
+     (eval . (go--make-type-matcher 'go--match-ident-type-pair 2))
+
+     ;; Match type unions such as "int | string" in "interface { int | string }".
+     (eval . (go--make-type-matcher 'go--match-type-union))
 
      ;; An anchored matcher for type switch case clauses.
      (go--match-type-switch-case
@@ -473,9 +486,9 @@ statements."
 
    (if go-fontify-function-calls
        ;; Function call/method name
-       `((,(concat "\\(" go-identifier-regexp "\\)[[:space:]]*(") 1 font-lock-function-name-face)
-         ;; Bracketed function call
-         (,(concat "[^[:word:][:multibyte:]](\\(" go-identifier-regexp "\\))[[:space:]]*(") 1 font-lock-function-name-face))
+       `((go--match-func-name
+          (1 font-lock-function-name-face nil t)
+          (2 font-lock-function-name-face nil t)))
      ;; Method name
      `((,go-func-meth-regexp 2 font-lock-function-name-face)))
 
@@ -484,31 +497,31 @@ statements."
      ("\\(`[^`]*`\\)" 1 font-lock-multiline)
 
      ;; RHS of type alias.
-     (go--match-type-alias 2 font-lock-type-face)
+     (eval . (go--make-type-matcher 'go--match-type-alias 2))
 
      ;; Arrays/slices: []<type> | [123]<type> | [some.Const]<type> | [someConst]<type> | [...]<type>
-     (,(concat "\\(?:^\\|[^[:word:][:multibyte:]]\\)\\[\\(?:[[:digit:]]+\\|" go-qualified-identifier-regexp "\\|" go-identifier-regexp "\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 1 font-lock-type-face)
+     (eval . (go--make-type-matcher (concat "\\(?:^\\|[^[:word:][:multibyte:]]\\)\\[\\(?:[[:digit:]]+\\|" go-qualified-identifier-regexp "\\|" go-identifier-regexp "\\|\\.\\.\\.\\)?\\]" go-type-name-regexp)))
 
      ;; Unary "!"
      ("\\(!\\)[^=]" 1 font-lock-negation-char-face)
 
      ;; Composite literal type
-     (,(concat go-type-name-regexp "{") 1 font-lock-type-face)
+     (eval . (go--make-type-matcher 'go--match-composite-literal))
 
      ;; Map value type
-     (go--match-map-value 1 font-lock-type-face)
+     (eval . (go--make-type-matcher 'go--match-map-value))
 
      ;; Map key type
-     (,(concat "\\_<map\\_>\\[" go-type-name-regexp) 1 font-lock-type-face)
+     (eval . (go--make-type-matcher (concat "\\_<map\\_>\\[" go-type-name-regexp)))
 
      ;; Channel type
-     (,(concat "\\_<chan\\_>[[:space:]]*\\(?:<-[[:space:]]*\\)?" go-type-name-regexp) 1 font-lock-type-face)
+     (eval . (go--make-type-matcher (concat "\\_<chan\\_>[[:space:]]*\\(?:<-[[:space:]]*\\)?" go-type-name-regexp)))
 
      ;; "new()"/"make()" type
-     (,(concat "\\_<\\(?:new\\|make\\)\\_>\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp) 1 font-lock-type-face)
+     (eval . (go--make-type-matcher (concat "\\_<\\(?:new\\|make\\)\\_>\\(?:[[:space:]]\\|)\\)*(" go-type-name-regexp)))
 
      ;; Type assertion
-     (,(concat "\\.\\s *(" go-type-name-regexp) 1 font-lock-type-face)
+     (eval . (go--make-type-matcher (concat "\\.\\s *(" go-type-name-regexp)))
 
      ;; Composite literal field names and label definitions.
      (go--match-ident-colon 1 font-lock-constant-face)
@@ -733,6 +746,16 @@ case keyword. It returns nil for the case line itself."
 (defun go--in-type-switch-p ()
   "Return non-nil if point is inside a type switch statement."
   (go--in-paren-with-prefix-p ?{ ".(type)"))
+
+(defun go--in-type-params-p ()
+  "Return non-nil if point is inside a type param list."
+  (save-excursion
+    (and
+     (go-goto-opening-parenthesis)
+     (eq (char-after) ?\[)
+     (backward-word)
+     (skip-syntax-backward " ")
+     (member (thing-at-point 'word 'no-properties) '("type" "func")))))
 
 (defun go--open-paren-position ()
   "Return non-nil if point is between '(' and ')'.
@@ -1295,12 +1318,12 @@ INDENT is the normal indent of this line, i.e. that of the case body."
       (forward-char))))
 
 
-(defvar go--fontify-param-has-name nil
+(defvar-local go--fontify-param-has-name nil
   "Whether the current params list has names.
 
 This is used during fontification of function signatures.")
 
-(defvar go--fontify-param-beg nil
+(defvar-local go--fontify-param-beg nil
   "Position of \"(\" starting param list.
 
 This is used during fontification of function signatures.")
@@ -1358,24 +1381,23 @@ declarations are also included."
   (let (found-match)
     (while (and
             (not found-match)
-            (re-search-forward (concat "\\(\\_<" go-identifier-regexp "\\)?(") end t))
+            (search-forward "(" end t))
       (when (not (go-in-string-or-comment-p))
         (save-excursion
-          (goto-char (match-beginning 0))
+          (backward-char)
 
-          (let ((name (match-string 1)))
-            (when name
-              ;; We are in a param list if "func" preceded the "(" (i.e.
-              ;; func literal), or if we are in an interface
-              ;; declaration, e.g. "interface { foo(i int) }".
-              (setq found-match (or (string= name "func") (go--in-interface-p))))
+          ;; If we see a type param list, jump backwards over it.
+          (when (eq (char-before) ?\])
+            (backward-char)
+            (go-goto-opening-parenthesis))
 
-            ;; Otherwise we are in a param list if our "(" is preceded
-            ;; by ") " or "func ".
-            (when (and (not found-match) (not (zerop (skip-syntax-backward " "))))
-              (setq found-match (or
-                                 (eq (char-before) ?\))
-                                 (looking-back "\\_<func" (- (point) 4)))))))))
+          (setq found-match
+                (or
+                 (looking-back
+                  ;; We are either preceeded by "func", "func foo", ") ", or ") foo".
+                  (concat "\\(\\_<func\\s-*\\|)\\s-+\\)\\(?:" go-identifier-regexp "\\)?")
+                  (line-beginning-position))
+                 (go--in-interface-p))))))
     found-match))
 
 
@@ -1386,7 +1408,7 @@ declarations are also included."
 func(i int, s *string) { }")
 
 (defconst go--unnamed-param-re
-  (concat "\\(\\)[[:space:]\n]*\\(?:\\.\\.\\.\\)?" go-type-name-regexp "[[:space:]]*[,)]")
+  (concat "\\(\\)[[:space:]\n]*\\(?:\\.\\.\\.\\)?" go-type-name-regexp "[[:space:]]*[,)[]")
   "Regexp to match unnamed param such as \"*string\" in:
 
 func(int, *string) { }
@@ -1421,19 +1443,20 @@ the next comma or to the closing paren."
           (setq found-match t)))
 
       ;; Advance to next comma. We are done if there are no more commas.
-      (setq done (not (go--search-next-comma end))))
+      (setq done (not (go--search-next-comma end ?\)))))
     found-match))
 
-(defun go--search-next-comma (end)
+(defun go--search-next-comma (end closer)
   "Search forward from point for a comma whose nesting level is
 the same as point. If it reaches a closing parenthesis before a
 comma, it stops at it. Return non-nil if comma was found."
+  (setq closer (or closer ?\)))
   (let ((orig-level (go-paren-level)))
     (while (and (< (point) end)
-                (or (looking-at-p "[^,)]")
+                (or (not (member (char-after) `(?, ,closer)))
                     (> (go-paren-level) orig-level)))
       (forward-char))
-    (when (and (looking-at-p ",")
+    (when (and (eq (char-after) ?,)
                (< (point) (1- end)))
       (forward-char)
       t)))
@@ -1465,7 +1488,7 @@ comma, it stops at it. Return non-nil if comma was found."
         (goto-char (match-end 1))
         (unless (member (match-string 1) go-constants)
           (setq found-match t)))
-      (setq done (not (go--search-next-comma end))))
+      (setq done (not (go--search-next-comma end ?\)))))
     found-match))
 
 (defun go--containing-decl ()
@@ -1577,7 +1600,39 @@ succeeds."
 
     found-match))
 
-(defconst go--single-func-result-re (concat ")[[:space:]]+" go-type-name-regexp "\\(?:$\\|[[:space:]),]\\)"))
+(defconst go--type-union-re
+  (concat go-type-name-regexp "\\(?:\\[.*?\\]\\)?\\s-*|\\||\\s-*" go-type-name-regexp))
+
+(defun go--match-type-union (end)
+  "Search for type unions in interfaces and constraints."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            ;; Look for "foo |" or "| foo" (i.e. a type name before or
+            ;; after a pipe).
+            (re-search-forward go--type-union-re end t))
+
+      (if (match-string 2)
+          ;; If second group matched, move it into the first group to
+          ;; keep other logic simpler.
+          (let ((md (match-data)))
+            (setf (nth 2 md) (nth 4 md) (nth 3 md) (nth 5 md))
+            (set-match-data md)))
+
+      (let ((level (go-paren-level)))
+        (goto-char (match-end 1))
+        ;; We have a dumb "\\[.*?\\]" in the regex which can match
+        ;; more than we want, so make sure our paren level is the same
+        ;; before and after the matched type name.
+        (when (= level (go-paren-level))
+          (setq found-match (and
+                             (not (member (match-string 1) go-mode-keywords))
+                             (or
+                              (go--in-interface-p)
+                              (go--in-type-params-p)))))))
+    found-match))
+
+(defconst go--single-func-result-re (concat ")[[:space:]]+" go-type-name-regexp "\\(?:\\[.*\\]\\)?\\(?:$\\|[[:space:]),]\\)"))
 
 (defun go--match-single-func-result (end)
   "Match single result types.
@@ -1614,16 +1669,76 @@ We are looking for the right-hand-side of the type alias"
     found-match))
 
 
-(defconst go--map-value-re
-  (concat "\\_<map\\_>\\[\\(?:\\[[^]]*\\]\\)*[^]]*\\]" go-type-name-regexp))
+(defconst go--match-func-name-re
+  (concat "\\(?:^\\|[^)]\\)(\\(" go-identifier-regexp "\\))(\\|\\(" go-identifier-regexp "\\)[[(]"))
+
+(defun go--match-func-name (end)
+  "Search for func names in decls and invocations."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            ;; Match "(foo)(" or "foo[" or "foo(".
+            (re-search-forward go--match-func-name-re end t))
+      (if (eq (char-before) ?\()
+          ;; Followed directly by "(" is a match.
+          (setq found-match t)
+        ;; Followed by "[". We are a match if there is at least one
+        ;; comma between the "[" and "]", and if "]" is followed by
+        ;; "(".
+        (let ((commas 0))
+          (save-excursion
+            (while (go--search-next-comma end ?\])
+              (cl-incf commas))
+            (forward-char)
+            (setq found-match (and
+                               ;; We found a comma (so we are sure these are type
+                               ;; params), or we are at file level (so we are sure
+                               ;; it is a func decl).
+                               (or (> commas 0) (= 0 (go-paren-level)))
+                               (eq (char-after) ?\()))))))
+    found-match))
+
+(defconst go--map-value-re (concat "\\]" go-type-name-regexp))
 
 (defun go--match-map-value (end)
   "Search for map value types."
-  (when (re-search-forward go--map-value-re end t)
-    ;; Move point to beginning of map value in case value itself is
-    ;; also a map (we will match it next iteration).
-    (goto-char (match-beginning 1))
-    t))
+  (let (found-match)
+    ;; search for "]someType", then bounce to opening "[" and check if
+    ;; preceded by "map".
+    (while (and
+            (not found-match)
+            (search-forward-regexp go--map-value-re end t))
+      (goto-char (match-beginning 0))
+      (forward-char)
+      (save-excursion
+        (save-match-data
+          (backward-char)
+          (go-goto-opening-parenthesis)
+          (backward-word)
+          (setq found-match (looking-at-p "map")))))
+    found-match))
+
+(defconst go--match-composite-literal-re (concat go-type-name-regexp "[[{]"))
+
+(defun go--match-composite-literal (end)
+  "Search for composite literals."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            ;; Match "foo{" or "foo[".
+            (re-search-forward go--match-composite-literal-re end t))
+
+      (setq found-match
+            (if (eq (char-before) ?\[)
+                ;; In "foo[" case, skip to closing "]".
+                (progn
+                  (while (go--search-next-comma end ?\]))
+                  ;; See if closing "]" is followed by "{".
+                  (eq (char-after (1+ (point))) ?{))
+              ;; The "foo{" case (definitely composite literal).
+              (eq (char-before) ?{))))
+
+    found-match))
 
 (defconst go--label-re (concat "\\(" go-label-regexp "\\):"))
 
@@ -1664,7 +1779,7 @@ after '('."
            (goto-char (match-end 0))
            (go--parameter-list-type end))
           ((or (looking-at go-qualified-identifier-regexp)
-               (looking-at (concat go-type-name-no-prefix-regexp "[[:space:]\n]*\\(?:)\\|\\'\\)"))
+               (looking-at (concat go-type-name-no-prefix-regexp "[[:space:]\n]*\\(?:)\\|\\[\\|\\'\\)"))
                (go--looking-at-keyword)
                (looking-at "[*\\[]\\|\\.\\.\\.\\|\\'"))
            'absent)
@@ -3049,7 +3164,132 @@ This handles multi-line comments with a * prefix on each line."
   (go--with-comment-fill-prefix
    (lambda () (comment-indent-new-line arg))))
 
+(defun go--make-type-matcher (regex-or-func &optional match-idx)
+  "Wrap a simple type matcher so we automatically match an abutting
+type param list, if present."
+  (setq match-idx (or match-idx 1))
+  `(,regex-or-func
+    (,match-idx font-lock-type-face)
+    (go--match-type-list-item
+     (go--match-type-list-piggyback-pre ,match-idx)
+     nil
+     (2 font-lock-type-face nil t))))
 
+(defvar-local go--type-list-has-names nil)
+(defvar-local go--type-list-start nil)
+(defvar-local go--type-list-end nil)
+(defvar-local go--type-list-paren-level nil)
+
+(defun go--match-type-list-start (end)
+  "Search for [ starting a type list"
+  (let (found-match)
+    (while (and
+            (not found-match)
+            (search-forward "[" end t))
+      (when (not (go-in-string-or-comment-p))
+        (if (and
+             go--type-list-start
+             go--type-list-end
+             (< go--type-list-start (point))
+             (> go--type-list-end (point)))
+            ;; A "[" within an outer type list is always a type list.
+            (progn
+              (setq found-match t)
+              (setq go--type-list-has-names nil))
+
+          (setq go--type-list-start nil
+                go--type-list-end nil
+                go--type-list-has-names nil)
+            (if (save-excursion
+                    (backward-char)
+                    (or
+                     ;; Directly in a "type" or "func" type list
+                     (go--looking-back-p (concat "^[[:space:]]*\\(?:func\\|type\\)[[:space:]]+" go-identifier-regexp "$"))
+                     (and
+                      ;; Or on LHS of item in type decl
+                      (equal (go--containing-decl) "type")
+                      (go--looking-back-p (concat "^[[:space:]]*" go-identifier-regexp "$")))))
+            (setq found-match t
+                  go--type-list-start (point)
+                  go--type-list-has-names t)
+            (when (save-excursion (go--search-next-comma end ?\]))
+              ;; If we aren't in a "func" or "type" decl and there is
+              ;; more than one item in the list, it must be a type
+              ;; list.
+              (setq found-match t
+                    go--type-list-start (point)
+                    go--type-list-has-names nil))))))
+    found-match))
+
+(defun go--match-type-list-piggyback-pre (match-idx)
+  ;; match-idx corresponds to a type, so if the next char is "[", we
+  ;; know it is a type list.
+  (if (and
+       (not (member (match-string match-idx) go-mode-keywords))
+       (eq (char-after (match-end match-idx)) ?\[))
+      (progn
+        (goto-char (match-end match-idx))
+        (forward-char)
+        (setq go--type-list-has-names nil)
+        (setq go--type-list-start (point))
+        (setq go--type-list-paren-level (1+ (go-paren-level))))
+    (setq go--type-list-start nil)))
+
+(defun go--match-type-list-post ()
+  "Jump back to start of list so we can find nested lists"
+  (setq go--type-list-end (point))
+  (goto-char go--type-list-start))
+
+(defconst go--type-list-item-with-name-re
+  (concat "\\(" go-identifier-regexp "\\)\\(?:[[:space:]]+" go-type-name-regexp "\\)?"))
+
+(defconst go--type-list-item-without-name-re
+  ;; Add a dummy capture group so things are balanced with above re.
+  (concat "\\(\\)" go-type-name-regexp))
+
+(defun go--match-type-list-item (end)
+  "Advance through each type param in a type instantion param list."
+  (let (found-match done name type)
+    ;; Make sure we are at the start of a list item.
+    (when (not (member (char-before) '(?, ?\[)))
+      (setq done t))
+
+    (while (and go--type-list-start (not found-match) (not done))
+      (skip-syntax-forward " ")
+
+      (if go--type-list-has-names
+          (setq found-match (looking-at go--type-list-item-with-name-re))
+        (setq found-match (looking-at go--type-list-item-without-name-re)))
+
+      (when found-match
+        (let ((md (match-data)))
+          (when (not go-fontify-variables)
+            ;; Zero out match data to disable variable fontification.
+            (setf (nth 2 md) nil (nth 3 md) nil))
+          (when (member (match-string 2) go-mode-keywords)
+            ;; Zero out second match if it was a keyword (e.g. "[A interface { ... }]"
+            (setf (nth 4 md) nil (nth 5 md) nil))
+          (set-match-data md)))
+
+      (if go--type-list-paren-level
+          (if (and
+               found-match
+               (not go--type-list-has-names)
+               (match-string 2)
+               (goto-char (match-end 2))
+               (eq (char-after) ?\[))
+              ;; If there is "[" after match, recurse into the nested
+              ;; param list.
+              (forward-char)
+            (when (not (go--search-next-comma end ?\]))
+              (while (eq (char-after) ?\])
+                (forward-char))
+              ;; We made it to the end of a "[]" list. Check if it was our
+              ;; starting paren depth.
+              (setq done (<= (go-paren-level) go--type-list-paren-level))))
+        (setq done (not (go--search-next-comma end ?\])))))
+
+    found-match))
 
 ;; Convenient go-* functions for gopls features available through code
 ;; actions, that work across LSP clients:
