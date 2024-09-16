@@ -66,6 +66,11 @@
   :type 'string
   :group 'go-guru)
 
+(defcustom go-guru-truncate-file-length 20
+  "The length to truncate the file name to in the output buffer."
+  :type 'integer
+  :group 'go-guru)
+
 (defvar go-guru--scope-history
   nil
   "History of values supplied to `go-guru-set-scope'.")
@@ -231,9 +236,10 @@ output of the Go guru tool."
 	  (setq p (1- p)) ; exclude final space
 	  (let* ((posn (buffer-substring-no-properties start p))
 		 (flen (cl-search ":" posn)) ; length of filename
-		 (filename (if (< flen 19)
+		 (truncate (- (max go-guru-truncate-file-length 20) 1))
+		 (filename (if (< flen truncate)
 			       (substring posn 0 flen)
-			     (concat "…" (substring posn (- flen 19) flen)))))
+			     (concat "…" (substring posn (- flen truncate) flen)))))
 	    (put-text-property start p 'display filename)
 	    (forward-line 1)
 	    (setq start (point))))))))
