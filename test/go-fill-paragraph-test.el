@@ -67,7 +67,7 @@ func main() {
 }"
    ))
 
-(ert-deftest go--fill-paragraph-block-region ()
+(ert-deftest go--fill-paragraph-block-region-1 ()
   (go--should-fill
    "
 func main() {
@@ -139,7 +139,7 @@ func main() {
 }"
    ))
 
-(ert-deftest go--fill-paragraph-block-region ()
+(ert-deftest go--fill-paragraph-block-region-2 ()
   (go--should-fill
    "
 func main() {
