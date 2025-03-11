@@ -1,4 +1,4 @@
-;;; go-guru.el --- Integration of the Go 'guru' analysis tool into Emacs.
+;;; go-guru.el --- Integration of the Go 'guru' analysis tool into Emacs.  -*- lexical-binding: t; -*-
 
 ;; Copyright 2016 The Go Authors. All rights reserved.
 ;; Use of this source code is governed by a BSD-style
@@ -155,7 +155,7 @@ Its value is a comma-separated list of patterns of these forms:
 	golang.org/x/tools/...          # all packages beneath dir
 	...                             # the entire workspace.
 
-A pattern preceded by '-' is negative, so the scope
+A pattern preceded by `-' is negative, so the scope
 	encoding/...,-encoding/xml
 matches all encoding packages except encoding/xml."
   (interactive)
@@ -396,7 +396,7 @@ function containing the current point."
 
 ;;;###autoload
 (defun go-guru-implements ()
-  "Describe the 'implements' relation for types in the package
+  "Describe the `implements' relation for types in the package
 containing the current point."
   (interactive)
   (go-guru--start "implements"))
@@ -425,19 +425,19 @@ identifier."
 ;;;###autoload
 (defun go-guru-whicherrs ()
   "Show globals, constants and types to which the selected
-expression (of type 'error') may refer."
+expression (of type `error') may refer."
   (interactive)
   (go-guru--set-scope-if-empty)
   (go-guru--start "whicherrs"))
 
 (defun go-guru-what ()
-  "Run a 'what' query and return the parsed JSON response as an
+  "Run a `what' query and return the parsed JSON response as an
 association list."
   (go-guru--json "what"))
 
 (defun go-guru--hl-symbols (posn face id)
   "Highlight the symbols at the positions POSN by creating
-overlays with face FACE. The attribute 'go-guru-overlay on the
+overlays with face FACE. The attribute `go-guru-overlay' on the
 overlays will be set to ID."
   (save-excursion
     (mapc (lambda (pos)
