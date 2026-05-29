@@ -377,7 +377,7 @@ function containing the current point."
 
 ;;;###autoload
 (defun go-guru-definition-other-window ()
-  "Jump to the defintion of the selected identifier in another window"
+  "Jump to the definition of the selected identifier in another window"
   (interactive)
   (go-guru-definition t))
 
