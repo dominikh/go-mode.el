@@ -35,6 +35,11 @@
   :type 'string
   :group 'go-rename)
 
+(defun go-rename--go-buffer-p ()
+  "Return non-nil when the current buffer visits a Go source file."
+  (and buffer-file-name
+       (equal (file-name-extension buffer-file-name) "go")))
+
 ;;;###autoload
 (defun go-rename (new-name &optional force)
   "Rename the entity denoted by the identifier at point, using
@@ -52,9 +57,7 @@ the `gorename' tool. With FORCE, call `gorename' with the
   (if (buffer-modified-p)
       (error "Please save the current buffer before invoking go-rename"))
   ;; Prompt-save all other modified Go buffers, since they might get written.
-  (save-some-buffers nil #'(lambda ()
-              (and (buffer-file-name)
-                   (string= (file-name-extension (buffer-file-name)) ".go"))))
+  (save-some-buffers nil #'go-rename--go-buffer-p)
   (let* ((posflag (format "-offset=%s:#%d"
                           buffer-file-name
                           (1- (position-bytes (point)))))
