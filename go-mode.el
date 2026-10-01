@@ -623,8 +623,12 @@ The return value is cached based on the current `line-beginning-position'."
          (val (gethash line-begin go-dangling-cache 'nope)))
     (when (or (go--buffer-narrowed-p) (equal val 'nope))
       (save-excursion
-        (go--forward-line -1)
-        (if (go--current-line-has-dangling-op-p)
+        ;; `forward-line' from a non-BOL position on the first line can
+        ;; succeed by moving to the start of that same line.  Ignore that
+        ;; result unless it reached an earlier line.
+        (if (and (go--forward-line -1)
+                 (< (line-beginning-position) line-begin)
+                 (go--current-line-has-dangling-op-p))
             (setq val (line-end-position))
           (setq val nil))
 
