@@ -50,6 +50,17 @@ var foo = 123 +
 "
    ))
 
+(ert-deftest go--indent-first-line-ending-in-dangling-operator ()
+  ;; The first line of an Org source block may be an expression without
+  ;; the package declaration that normally precedes Go source.
+  (with-temp-buffer
+    (go-mode)
+    (insert "s := \"a\" +")
+    (goto-char (point-max))
+    (let ((inhibit-message t))
+      (go-mode-indent-line))
+    (should (equal (buffer-string) "s := \"a\" +"))))
+
 (ert-deftest go--indent-multiline-comment ()
   (go--should-indent
    "
