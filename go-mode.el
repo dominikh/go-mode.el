@@ -2050,11 +2050,18 @@ you save any file, kind of defeating the point of autoloading."
 
 (defun go--godoc (query command)
   (unless (string= query "")
-    (set-process-sentinel
-     (start-process-shell-command "godoc" (godoc--get-buffer query)
-                                  (concat command " " query))
-     'godoc--buffer-sentinel)
+    (let* ((command-args (go--godoc-command-args command query))
+           (proc (apply #'start-process "godoc" (godoc--get-buffer query)
+                        (car command-args) (cdr command-args))))
+      (set-process-sentinel proc 'godoc--buffer-sentinel))
     nil))
+
+(defun go--godoc-command-args (command query)
+  "Return COMMAND's arguments followed by QUERY as a single argument."
+  (let ((command-args (split-string-and-unquote command)))
+    (unless command-args
+      (error "Empty godoc command"))
+    (append command-args (list query))))
 
 (defun godoc-at-point (point)
   "Show Go documentation for the identifier at POINT.
@@ -2169,6 +2176,16 @@ Tries to look for a URL at point."
     (while (search-forward "\\" end t)
       (put-text-property (1- (point)) (point) 'syntax-table (if (= (char-after) ?`) '(1) '(9))))))
 
+(defun go--import-exists-p (import)
+  "Return non-nil if IMPORT already appears in an active import declaration."
+  (save-excursion
+    (goto-char (point-min))
+    (re-search-forward
+     (concat "^[[:space:]]*\\(?:import[[:space:]]+\\)?\\(?:[[:word:]_.]+[[:space:]]+\\)?\""
+             (regexp-quote import)
+             "\"\\(?:[[:space:]]*//.*\\)?$")
+     nil t)))
+
 (defun go-import-add (arg import)
   "Add a new IMPORT to the list of imports.
 
@@ -2196,7 +2213,9 @@ uncommented, otherwise a new import will be added."
         (setq line (format "\"%s\"" import)))
 
       (goto-char (point-min))
-      (if (re-search-forward (concat "^[[:space:]]*//[[:space:]]*import " line "$") nil t)
+      (if (go--import-exists-p import)
+          (message "%s is already imported" import)
+        (if (re-search-forward (concat "^[[:space:]]*//[[:space:]]*import " line "$") nil t)
           (uncomment-region (line-beginning-position) (line-end-position))
         (cl-case (go-goto-imports)
           (fail (message "Could not find a place to add import."))
@@ -2210,7 +2229,7 @@ uncommented, otherwise a new import will be added."
                 (uncomment-region (line-beginning-position) (line-end-position))
               (insert "\n\t" line)))
           (single (insert "import " line "\n"))
-          (none (insert "\nimport (\n\t" line "\n)\n")))))))
+          (none (insert "\nimport (\n\t" line "\n)\n"))))))))
 
 (defun go-root-and-paths ()
   (let* ((output (process-lines go-command "env" "GOROOT" "GOPATH"))
@@ -2449,6 +2468,17 @@ Use DIVISOR to scale absolute counts to a [0,10] scale."
     (overlay-put ov 'face face)
     (overlay-put ov 'help-echo (format "Count: %d" count))))
 
+(defun go--coverage-parse-line (line)
+  "Parse one Go coverage LINE into its file and six numeric fields.
+Return nil for lines that do not match the coverprofile format."
+  (when (string-match
+         "\\`\\(.*\\):\\([0-9]+\\)\\.\\([0-9]+\\),\\([0-9]+\\)\\.\\([0-9]+\\) \\([0-9]+\\) \\([0-9]+\\)\\'"
+         line)
+    (cons (match-string 1 line)
+          (mapcar (lambda (index)
+                    (string-to-number (match-string index line)))
+                  '(2 3 4 5 6 7)))))
+
 (defun go--coverage-clear-overlays ()
   "Remove existing overlays and put a single untracked overlay
 over the entire buffer."
@@ -2466,24 +2496,20 @@ divisor for FILE-NAME."
       (insert-file-contents coverage-file)
       (go--goto-line 2) ;; Skip over mode
       (while (not (eobp))
-        (let* ((parts (split-string (buffer-substring (line-beginning-position) (line-end-position)) ":"))
-               (file (car parts))
-               (rest (split-string (nth 1 parts) "[., ]")))
-
-          (cl-destructuring-bind
-              (start-line start-column end-line end-column _num count)
-              (mapcar #'string-to-number rest)
-
-            (when (string= (file-name-nondirectory file) file-name)
-              (if (> count max-count)
-                  (setq max-count count))
-              (push (make-go--covered :start-line start-line
-                                      :start-column start-column
-                                      :end-line end-line
-                                      :end-column end-column
-                                      :covered (/= count 0)
-                                      :count count)
-                    ranges)))
+        (let ((record (go--coverage-parse-line
+                       (buffer-substring (line-beginning-position) (line-end-position)))))
+          (when record
+            (pcase-let ((`(,file ,start-line ,start-column ,end-line ,end-column ,_num ,count) record))
+              (when (string= (file-name-nondirectory file) file-name)
+                (if (> count max-count)
+                    (setq max-count count))
+                (push (make-go--covered :start-line start-line
+                                        :start-column start-column
+                                        :end-line end-line
+                                        :end-column end-column
+                                        :covered (/= count 0)
+                                        :count count)
+                      ranges))))
 
           (forward-line)))
 
@@ -2820,7 +2846,6 @@ current buffer in the format specified by guru's -modified flag."
   (insert-buffer-substring buffer))
 
 (defun go--buffer-size-bytes (&optional buffer)
-  (message "buffer; %s" buffer)
   "Return the number of bytes in the current buffer.
 If BUFFER, return the number of characters in that buffer instead."
   (with-current-buffer (or buffer (current-buffer))

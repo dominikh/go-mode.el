@@ -194,13 +194,22 @@ Parse and return the resulting JSON object."
 	    (with-current-buffer json-buffer
 	      (unless (zerop exitcode)
 		;; Failed: use buffer contents (sans final \n) as an error.
-		(error "%s" (buffer-substring (point-min) (1- (point-max)))))
+		(error "%s" (go-guru--error-output json-buffer)))
 	      ;; Success: parse JSON.
 	      (goto-char (point-min))
 	      (json-read))))
       ;; Clean up temporary buffers.
       (kill-buffer json-buffer)
       (kill-buffer input-buffer))))
+
+(defun go-guru--error-output (buffer)
+  "Return BUFFER contents, removing one trailing newline if present."
+  (with-current-buffer buffer
+    (let ((end (point-max)))
+      (when (and (> end (point-min))
+                 (eq (char-before end) ?\n))
+        (setq end (1- end)))
+      (buffer-substring-no-properties (point-min) end))))
 
 (define-compilation-mode go-guru-output-mode "Go guru"
   "Go guru output mode is a variant of `compilation-mode' for the
@@ -230,11 +239,15 @@ output of the Go guru tool."
 	    (setq start end) ; break out of loop
 	  (setq p (1- p)) ; exclude final space
 	  (let* ((posn (buffer-substring-no-properties start p))
-		 (flen (cl-search ":" posn)) ; length of filename
-		 (filename (if (< flen 19)
-			       (substring posn 0 flen)
-			     (concat "…" (substring posn (- flen 19) flen)))))
-	    (put-text-property start p 'display filename)
+		 (filename (when (string-match "\\`\\(.+\\):[0-9]+:[0-9]+:\\'" posn)
+			     (match-string 1 posn))))
+	    (when filename
+	      (let ((flen (length filename)))
+		(put-text-property
+		 start p 'display
+		 (if (< flen 19)
+		     filename
+		   (concat "…" (substring filename (- flen 19)))))))
 	    (forward-line 1)
 	    (setq start (point))))))))
 
@@ -323,19 +336,28 @@ If BUFFER, return the number of characters in that buffer instead."
 (defun go-guru--goto-pos (posn other-window)
   "Find the file containing the position POSN (of the form `file:line:col')
 set the point to it, switching the current buffer."
-  (let ((file-line-pos (split-string posn ":")))
-    (funcall (if other-window #'find-file-other-window #'find-file) (car file-line-pos))
+  (pcase-let ((`(,filename ,line ,column) (go-guru--parse-position posn)))
+    (funcall (if other-window #'find-file-other-window #'find-file) filename)
     (goto-char (point-min))
-    (forward-line (1- (string-to-number (cadr file-line-pos))))
-    (go-guru--goto-byte-column (string-to-number (cl-caddr file-line-pos)))))
+    (forward-line (1- line))
+    (go-guru--goto-byte-column column)))
+
+(defun go-guru--parse-position (posn)
+  "Parse guru POSN in `file:line:column' form.
+The file part may itself contain colons, as in a Windows drive path."
+  (if (and (string-match "\\`\\(.+\\):\\([0-9]+\\):\\([0-9]+\\)\\'" posn))
+      (list (match-string 1 posn)
+            (string-to-number (match-string 2 posn))
+            (string-to-number (match-string 3 posn)))
+    (error "Invalid guru position: %s" posn)))
 
 (defun go-guru--goto-pos-no-file (posn)
   "Given `file:line:col', go to the line and column. The file
 component will be ignored."
-  (let ((file-line-pos (split-string posn ":")))
+  (pcase-let ((`(,_filename ,line ,column) (go-guru--parse-position posn)))
     (goto-char (point-min))
-    (forward-line (1- (string-to-number (cadr file-line-pos))))
-    (go-guru--goto-byte-column (string-to-number (cl-caddr file-line-pos)))))
+    (forward-line (1- line))
+    (go-guru--goto-byte-column column)))
 
 ;;;###autoload
 (defun go-guru-callees ()
