@@ -450,6 +450,14 @@ statements."
      ;; Match name+type pairs, such as "foo bar" in "var foo bar".
      (go--match-ident-type-pair 2 font-lock-type-face)
 
+     ;; Match the name of a struct field, such as "foo" in "foo int".
+     ;; `font-lock-property-name-face' was added in Emacs 29 and,
+     ;; unlike the older font-lock faces, is not also a variable, so
+     ;; it has to be quoted: `font-lock-apply-highlight' evaluates the
+     ;; face expression.
+     ,@(when (facep 'font-lock-property-name-face)
+         '((go--match-struct-field 1 'font-lock-property-name-face)))
+
      ;; An anchored matcher for type switch case clauses.
      (go--match-type-switch-case
       (go--fontify-type-switch-case
@@ -1573,6 +1581,47 @@ succeeds."
           (goto-char (match-end 2))
         (if (member (match-string 1) go-mode-keywords)
             (goto-char (match-end 1))
+          (setq found-match t))))
+
+    found-match))
+
+(defconst go--struct-field-name-re
+  ;; A name starts a field declaration: it is at the beginning of a
+  ;; line, or follows a comma or a semicolon.
+  (concat "\\(?:^\\|[,{;]\\)[ \t]*\\(" go-identifier-regexp "\\)"))
+
+(defun go--match-struct-field (end)
+  "Search for the name of a field in a struct definition.
+
+A field consists of the names of the field followed by its type,
+as in \"foo int\" or \"foo, bar int\", or of a type alone, in which
+case the field is embedded and has no name.  Return non-nil if
+search succeeds, yielding match-data for a name -- subexp 1 -- so
+that it can be fontified with `font-lock-property-name-face'."
+  (let (found-match)
+    (while (and
+            (not found-match)
+            (re-search-forward go--struct-field-name-re end t))
+
+      (let ((name (match-string 1)) (name-end (match-end 1)))
+        (when (and
+               ;; A name is never a keyword.
+               (not (member name go-mode-keywords))
+
+               ;; Only fields of a struct are properties.  A type has
+               ;; to follow the names, on the same line, which rules
+               ;; out the embedded "foo", a qualified type such as
+               ;; "io.Reader", and a composite literal key "foo:".
+               (save-match-data
+                 (and
+                  (go--in-struct-definition-p)
+                  (save-excursion
+                    (goto-char name-end)
+                    (while (looking-at (concat "[ \t]*,[ \t]*"
+                                               go-identifier-regexp))
+                      (goto-char (match-end 0)))
+                    ;; A type starts with a name, "[", "*" or "<".
+                    (looking-at "[ \t]+[[:alpha:]_*<[]")))))
           (setq found-match t))))
 
     found-match))
