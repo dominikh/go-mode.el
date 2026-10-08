@@ -46,13 +46,22 @@ QKfuncK (VfV TintT) {}
 "))
 
 (ert-deftest go--fontify-struct ()
-  (go--should-fontify "KstructK { i TintT }")
-  (go--should-fontify "KstructK { a, b TintT }")
+  (go--should-fontify "KstructK { PiP TintT }")
+  (go--should-fontify "KstructK { PaP, PbP TintT }")
 
   (go--should-fontify "
 KstructK {
-  a TboolT
-  c KstructK { f *Tfoo.ZebraT }
+  PaP TboolT
+  PcP KstructK { PfP *Tfoo.ZebraT }
+}")
+
+  ;; A field's type may start with a keyword, and a field may have no
+  ;; name at all, in which case it is embedded.
+  (go--should-fontify "
+KstructK {
+  PiP KchanK TstringT
+  io.Reader
+  PjP []TstringT
 }"))
 
 (ert-deftest go--fontify-interface ()
@@ -86,7 +95,7 @@ KdefaultK:
 
   (go--should-fontify "
 KswitchK foo.(KtypeK) {
-KcaseK KinterfaceK { FfooF(TintT, TstringT) }, KstructK { i, j TintT }, TstringT:
+KcaseK KinterfaceK { FfooF(TintT, TstringT) }, KstructK { PiP, PjP TintT }, TstringT:
 }")
 
   (go--should-fontify "
@@ -167,7 +176,7 @@ KtypeK (
   (go--should-fontify "KvarK VfooV, VbarV = bar, baz")
   (go--should-fontify "KvarK VfooV TbarT D// DQcoolQ")
   (go--should-fontify "KvarK VfooV TbarT = baz")
-  (go--should-fontify "KvarK VfooV KstructK { i TintT } = baz")
+  (go--should-fontify "KvarK VfooV KstructK { PiP TintT } = baz")
   (go--should-fontify "KvarK VfooV []*Tfoo.ZarT D// DQcoolQ")
 
   (go--should-fontify "
@@ -254,7 +263,7 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
     ;; First pass through buffer looks for the face tags. We delete
     ;; the tags and record the expected face ranges in `faces'.
     (let ((case-fold-search nil) faces start start-pos)
-      (while (re-search-forward "[TBKCFSNVDQ]" nil t)
+      (while (re-search-forward "[TBKCFSNVDPQ]" nil t)
         (let ((found-char (char-before)))
           (backward-delete-char 1)
           (if start
@@ -269,6 +278,7 @@ expects \"make\" to be a (B)uiltin and \"int\" to be a (T)type."
                               (?S (if (eq mode 'go-mode) 'font-lock-string-face 'go-dot-mod-module-semver))
                               (?N (if (eq mode 'go-mode) 'font-lock-negation-char-face 'go-dot-mod-module-name))
                               (?V (if (eq mode 'go-mode) 'font-lock-variable-name-face 'go-dot-mod-module-version))
+                              (?P 'font-lock-property-name-face)
                               (?D 'font-lock-comment-delimiter-face)
                               (?Q 'font-lock-comment-face))))
                   (setq faces (append faces `((,face ,start-pos ,(point))))))
